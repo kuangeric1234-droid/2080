@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>20-80 — The Complete Business Masterplan</title>
+<style>
+  :root{
+    --bg:#F4F6F5; --surface:#FFFFFF; --surface-2:#EDF1EF; --rail:#132029;
+    --ink:#1C2A33; --muted:#5B6C75; --line:#D8E0DD;
+    --accent:#0E7C7B; --accent-soft:#E0F0EE;
+    --blue:#2C5FA8; --blue-soft:#E6EDF7;
+    --warn:#A96F14; --warn-soft:#F6ECD9;
+    --crit:#B23A32; --crit-soft:#F6E3E0;
+    --ok:#2E7D4F; --ok-soft:#E2F0E7;
+    --mono:"Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+    --sans:"Segoe UI Variable Text","Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0F171C;--surface:#17222A;--surface-2:#1D2B34;--rail:#0A1115;--ink:#E4ECEA;--muted:#8FA3AB;--line:#2B3B44;
+    --accent:#41B8AC;--accent-soft:#153733;--blue:#7FA9DE;--blue-soft:#1C2C42;--warn:#D9A04C;--warn-soft:#3A2E15;
+    --crit:#E07A6E;--crit-soft:#3F221E;--ok:#6FBF8F;--ok-soft:#1B3326}
+  }
+  :root[data-theme="dark"]{--bg:#0F171C;--surface:#17222A;--surface-2:#1D2B34;--rail:#0A1115;--ink:#E4ECEA;--muted:#8FA3AB;--line:#2B3B44;
+    --accent:#41B8AC;--accent-soft:#153733;--blue:#7FA9DE;--blue-soft:#1C2C42;--warn:#D9A04C;--warn-soft:#3A2E15;
+    --crit:#E07A6E;--crit-soft:#3F221E;--ok:#6FBF8F;--ok-soft:#1B3326}
+  :root[data-theme="light"]{--bg:#F4F6F5;--surface:#FFFFFF;--surface-2:#EDF1EF;--rail:#132029;--ink:#1C2A33;--muted:#5B6C75;--line:#D8E0DD;
+    --accent:#0E7C7B;--accent-soft:#E0F0EE;--blue:#2C5FA8;--blue-soft:#E6EDF7;--warn:#A96F14;--warn-soft:#F6ECD9;
+    --crit:#B23A32;--crit-soft:#F6E3E0;--ok:#2E7D4F;--ok-soft:#E2F0E7}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+  .wrap{max-width:1100px;margin:0 auto;padding:44px 22px 90px}
+  a{color:var(--accent)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+  h1{font-family:var(--disp);font-size:clamp(28px,4vw,42px);line-height:1.12;margin:0 0 12px;font-weight:650;text-wrap:balance}
+  .lede{font-size:17px;color:var(--muted);max-width:76ch;margin:0 0 16px}
+  header{border-bottom:2px solid var(--ink);padding-bottom:30px;margin-bottom:34px}
+  .doclinks{display:flex;flex-wrap:wrap;gap:6px;font-size:12px}
+  .doclinks a{font-family:var(--mono);font-size:11px;text-decoration:none;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 11px;color:var(--muted)}
+  .doclinks a:hover{color:var(--accent);border-color:var(--accent)}
+
+  nav.toc{position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:34px;display:flex;gap:6px;flex-wrap:wrap}
+  .toc a{font-family:var(--mono);font-size:11.5px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 11px;white-space:nowrap}
+  .toc a:hover{border-color:var(--accent);color:var(--accent)}
+
+  section{margin:0 0 60px;scroll-margin-top:64px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:20px}
+  .sec-num{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.08em}
+  h2{font-family:var(--disp);font-size:25px;margin:0;font-weight:650;text-wrap:balance}
+  h3{font-family:var(--disp);font-size:17.5px;margin:28px 0 10px;font-weight:650}
+  h4{font-family:var(--disp);font-size:15px;margin:0 0 8px;font-weight:650}
+  p{max-width:76ch}
+  .note{color:var(--muted);font-size:13.5px;max-width:80ch}
+
+  .pill{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;padding:2px 9px;border-radius:99px;border:1px solid var(--line);background:var(--surface-2);white-space:nowrap;vertical-align:1px}
+  .pill.ai{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+  .pill.crit{background:var(--crit-soft);color:var(--crit);border-color:transparent}
+  .pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+  .pill.blue{background:var(--blue-soft);color:var(--blue);border-color:transparent}
+  .sk{font-family:var(--mono);font-size:12px;color:var(--accent);font-weight:600;white-space:nowrap}
+
+  /* engines strip */
+  .engines{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:16px 0}
+  @media (max-width:860px){.engines{grid-template-columns:1fr}}
+  .engine{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;border-top:4px solid var(--accent)}
+  .engine.e1{border-top-color:var(--blue)} .engine.e3{border-top-color:var(--warn)}
+  .engine .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px}
+  .engine b.t{font-family:var(--disp);font-size:16px;font-weight:650;display:block;margin-bottom:6px}
+  .engine p{font-size:13.5px;color:var(--muted);margin:0}
+  .engine .n{font-family:var(--mono);font-size:11px;color:var(--accent);display:block;margin-top:8px}
+
+  /* journey phases */
+  .phase{background:var(--surface);border:1px solid var(--line);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .phase-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;padding:12px 18px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+  .phase-head .pid{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.08em;font-weight:600}
+  .phase-head h4{margin:0;font-size:15px}
+  .phase-head .who{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--muted)}
+  .steps{padding:8px 18px 12px}
+  .st{display:flex;gap:12px;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line);font-size:13.5px;flex-wrap:wrap}
+  .st:last-child{border-bottom:none}
+  .st .trig{font-family:var(--mono);font-size:10.5px;color:var(--blue);min-width:170px;flex-shrink:0}
+  .st .body{flex:1;min-width:260px}
+  .st .g{font-family:var(--mono);font-size:10px;flex-shrink:0}
+  .g0{color:var(--muted)} .g1{color:var(--accent)} .g2{color:var(--warn)} .g3{color:var(--crit)}
+
+  table{border-collapse:collapse;width:100%;font-size:13px;background:var(--surface)}
+  .twrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-top:10px}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;text-align:left;color:var(--muted);background:var(--surface-2);padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.skc{font-family:var(--mono);font-size:12px;color:var(--accent);white-space:nowrap;font-weight:600}
+  td .gg{display:block;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:860px){.grid2{grid-template-columns:1fr}}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:15px 17px}
+  .card p{font-size:13.5px;color:var(--muted);margin:0}
+  .card ul{font-size:13.5px;margin:6px 0 0;padding-left:18px}
+  .card li{margin:3px 0}
+
+  /* dashboard mini-mockups */
+  .mock{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:4px;box-shadow:0 4px 16px rgba(10,25,30,.06)}
+  .mock-bar{background:var(--rail);color:#C8D6D3;font-family:var(--mono);font-size:10.5px;padding:7px 14px;display:flex;gap:10px;align-items:center}
+  .mock-bar em{color:#57C9BC;font-style:normal;font-weight:700}
+  .mock-body{padding:12px 14px}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px;margin-bottom:10px}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  .tile b{display:block;font-family:var(--mono);font-size:16px;font-variant-numeric:tabular-nums}
+  .tile span{font-size:10px;color:var(--muted);line-height:1.3;display:block}
+  .tile.crit b{color:var(--crit)} .tile.warn b{color:var(--warn)} .tile.ok b{color:var(--ok)} .tile.acc b{color:var(--accent)}
+  .flag{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-left:4px solid var(--crit);border-radius:8px;background:var(--surface);padding:8px 11px;margin-bottom:7px;font-size:12px}
+  .flag.warn{border-left-color:var(--warn)} .flag.ai{border-left-color:var(--accent)} .flag.blue{border-left-color:var(--blue)}
+  .flag .fb{flex:1;min-width:0}
+  .flag .fb b{font-size:12px}
+  .flag .fb p{margin:1px 0 0;font-size:11px;color:var(--muted)}
+  .btn{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:6px;font-size:10.5px;padding:3px 9px;font-weight:600;white-space:nowrap}
+  .btn.g{background:var(--ok);border-color:var(--ok);color:#fff}
+  .btn.p{background:var(--accent);border-color:var(--accent);color:#fff}
+  .mock-cap{font-size:12px;color:var(--muted);margin:6px 2px 18px}
+  .kb{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:7px;overflow-x:auto}
+  .kcol{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:7px;min-width:120px}
+  .kcol h5{font-family:var(--mono);font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+  .kcard{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:10.5px;margin-bottom:6px;line-height:1.35}
+  .kcard b{display:block;font-size:10.5px}
+  .kcard small{color:var(--muted);font-size:9.5px}
+  .msg{border:1px solid var(--line);border-radius:8px;padding:7px 10px;margin-bottom:6px;font-size:11px;background:var(--surface)}
+  .msg .meta{font-family:var(--mono);font-size:9.5px;color:var(--muted);margin-bottom:2px}
+  .fu{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dashed var(--line);padding:6px 0;font-size:11.5px;align-items:center}
+  .fu:last-child{border-bottom:none}
+  .fu small{color:var(--muted);display:block;font-size:10px}
+
+  /* build order */
+  .stage{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:15px 18px;margin-bottom:12px}
+  .stage h4{display:flex;gap:10px;align-items:baseline}
+  .stage h4 .sn{font-family:var(--mono);font-size:11px;color:var(--accent)}
+  .bi{display:flex;gap:10px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:13.5px;align-items:baseline}
+  .bi:last-child{border-bottom:none}
+  .bi::before{content:"☐";color:var(--accent);font-size:13px}
+  .bi .tst{display:block;font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-top:2px}
+
+  .formula{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:13px 16px;font-family:var(--mono);font-size:12px;overflow-x:auto;line-height:1.9}
+  .formula b{color:var(--accent)}
+  footer{border-top:1px solid var(--line);padding-top:18px;font-size:13px;color:var(--muted)}
+  footer a{color:var(--muted)}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">The Complete Business Masterplan · Doc 7 · July 2026</p>
+  <h1>One machine, three engines: how 20-80 acquires, builds, and operates — skill by skill</h1>
+  <p class="lede">The consolidation of everything designed to date: the full client journey with every skill firing in sequence, the workflow stacks behind each engine, dashboard examples, the complete 63-skill registry with gate levels, the skill-authoring recipe, and the build order with its tests. The working source of truth is <b>MASTER-BUILD-PLAN.md</b> in the repo — this document is its visual companion. The operating rule everywhere: <b>humans decide, approve, or talk to clients; skills do everything else.</b></p>
+  <div class="doclinks">
+    <a href="https://claude.ai/code/artifact/52e5db76-c9f1-4f25-a584-baf6692669a3">↗ 1 Blueprint</a>
+    <a href="https://claude.ai/code/artifact/4f1ae519-4330-4104-8114-7c93ea30c623">↗ 2 UI Spec</a>
+    <a href="https://claude.ai/code/artifact/1f1932a6-fc80-4ce1-a041-8dc3d44d8c57">↗ 3 Deep-Dive</a>
+    <a href="https://claude.ai/code/artifact/9d41c30e-be76-42bd-8146-c252ba545341">↗ 4 Live Demo</a>
+    <a href="https://claude.ai/code/artifact/c471d572-de3a-4ceb-a642-55f6cc05cb0a">↗ 5 Master Plan</a>
+    <a href="https://claude.ai/code/artifact/cbd7ef1d-e248-4807-946c-3161de5a55be">↗ 6 Factory Spec</a>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#engines">The 3 engines</a>
+  <a href="#journey">Full client journey</a>
+  <a href="#stacks">Workflow stacks</a>
+  <a href="#dash">Dashboard examples</a>
+  <a href="#registry">Skill registry (63)</a>
+  <a href="#authoring">Skill authoring</a>
+  <a href="#crm">Client engine</a>
+  <a href="#build">Build order</a>
+</nav>
+
+<!-- ================= 01 ENGINES ================= -->
+<section id="engines">
+  <div class="sec-head"><span class="sec-num">01</span><h2>The business as three engines sharing one client record</h2></div>
+  <div class="engines">
+    <div class="engine e1"><span class="k">Engine 1 · Acquire</span><b class="t">Sales &amp; marketing funnel</b>
+      <p>Awareness channels → cold lead → auto-generated audit ("effortful value" at zero marginal cost) → warm lead → proposal → deposit. Absorbs Agile CRM; deal stages fire on events, not data entry.</p>
+      <span class="n">11 skills · Prospects tab</span></div>
+    <div class="engine e2"><span class="k">Engine 2 · Build</span><b class="t">The website factory</b>
+      <p>Deposit → portal in 1 minute → adaptive intake → 48-hour first mock → kickoff mined into the PRD → three non-slop concepts → launch chain. 29 flowchart nodes → 5 human decisions → ~15 working days.</p>
+      <span class="n">21 skills · Factory tab</span></div>
+    <div class="engine e3"><span class="k">Engine 3 · Operate</span><b class="t">The support loop</b>
+      <p>Receptionist fleet, inbox, Ads, SEO, meetings, reports, billing, reviews — the monthly loop that runs itself and proves its value with verified (not claimed) numbers. Grow and at-risk playbooks fire from the health score.</p>
+      <span class="n">31 skills · everything else</span></div>
+  </div>
+  <h3>The universal loop and the four gates</h3>
+  <p>Every automation in all three engines is the same machine: <b>signal → skill classifies &amp; drafts → gate → action → audit → precision score → autonomy</b>. Gate levels are declared per skill and graduate per client as measured precision earns it:</p>
+  <div class="twrap"><table>
+    <tr><th>Gate</th><th>Meaning</th><th>Examples</th></tr>
+    <tr><td><span class="pill">G0 silent</span></td><td>Acts alone, internal output only</td><td>entity matching, flag ranking, lead scoring, competitor diffs, sentiment</td></tr>
+    <tr><td><span class="pill ai">G1 auto + visible</span></td><td>Acts alone, logged, human can undo</td><td>task creation ≥0.8 conf, chases, follow-up lists, provisioning, invoices</td></tr>
+    <tr><td><span class="pill warn">G2 approve first</span></td><td>Human clicks before anything client-facing or spend-changing</td><td>client emails, Ads mutations, publishing, proposals, concepts, translations</td></tr>
+    <tr><td><span class="pill crit">G3 restricted</span></td><td>Named senior human; AI may not even draft</td><td>complaints/cancellations (Wally, no AI ack — ever), high-risk Ads structure, refunds, offboarding</td></tr>
+  </table></div>
+  <p class="note" style="margin-top:10px">G2 → G1 graduation: a category unlocks auto-send for a client after a measured streak (e.g. 50 completion emails sent unedited). A human flips the switch, informed by the precision-ledger number — never automatic. The <b>ahpra-checker</b> is outside this system entirely: a hard blocking gate on all client-facing content, agency- or client-initiated, forever.</p>
+</section>
+
+<!-- ================= 02 JOURNEY ================= -->
+<section id="journey">
+  <div class="sec-head"><span class="sec-num">02</span><h2>The full client journey — every skill, in firing order</h2></div>
+  <p class="note">One practice, cold lead to renewal. Left column: the trigger. Body: the skill(s) that fire and what they produce. Right: gate. This is the whole business as one run.</p>
+
+  <div class="phase">
+    <div class="phase-head"><span class="pid">PHASE A · ACQUIRE</span><h4>Cold lead → signed deposit</h4><span class="who">owner: Wally · Prospects tab</span></div>
+    <div class="steps">
+      <div class="st"><span class="trig">form / popup / Messenger / missed call / conference add</span><div class="body"><span class="sk">lead-capture</span> — one intake for every channel; dedupe; Deal created at <b>Cold Lead</b>, source-tagged for CAC</div><span class="g g1">G1</span></div>
+      <div class="st"><span class="trig">deal created</span><div class="body"><span class="sk">prospect-researcher</span> — scrapes their site, GBP, reviews, competitor set, rank baseline → research pack</div><span class="g g0">G0</span></div>
+      <div class="st"><span class="trig">research pack ready</span><div class="body"><span class="sk">audit-report-generator</span> — Online Presence Audit + Suburb &amp; Competitor Report as a <b>live microsite</b> within minutes; portfolio proof auto-selected; CTA = book a meeting. The funnel's economic unlock: effortful value at zero marginal team time</div><span class="g g2">G2 → G1 after 90d</span></div>
+      <div class="st"><span class="trig">audit opened · sections viewed · reply</span><div class="body"><span class="sk">lead-scorer</span> promotes to <b>Warm Lead</b> · <span class="sk">nurture-writer</span> runs follow-ups + the regular-mailout eDM loop</div><span class="g g0">G0 / G1</span></div>
+      <div class="st"><span class="trig">warm lead</span><div class="body"><span class="sk">meeting-scheduler</span> — booking link (absorbs Calendly), reminders, no-show rebook → meet &amp; greet happens (human — the relationship is the moat)</div><span class="g g1">G1</span></div>
+      <div class="st"><span class="trig">meeting held</span><div class="body"><span class="sk">proposal-writer</span> — proposal + costings from rate card + meeting transcript; fleet stats auto-embedded; personalised warm-lead video script for Wally to record (3 min) · Deal → <b>Proposal</b></div><span class="g g2">G2 always</span></div>
+      <div class="st"><span class="trig">accept → deposit link paid</span><div class="body"><span class="sk">deposit-runner</span> watches the Stripe/Xero webhook · Deal → <b>Won</b> → fires Phase B automatically. Reject → <span class="sk">loss-miner</span> captures the reason; quarterly pattern report feeds pricing</div><span class="g g1">G1</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="pid">PHASE B · BUILD</span><h4>Deposit → live website (~15 working days, 5 human decisions)</h4><span class="who">owner: strategist + designer · Factory tab</span></div>
+    <div class="steps">
+      <div class="st"><span class="trig">payment webhook (minute 0)</span><div class="body"><span class="sk">portal-provisioner</span> — client record (→ Onboarding), workspace, magic-link login, Getting Started checklist with every client obligation dated</div><span class="g g1">G1</span></div>
+      <div class="st"><span class="trig">before they type anything</span><div class="body"><span class="sk">practice-researcher</span> pre-fills half the questionnaire · <span class="sk">intake-interviewer</span> makes it adaptive — pushes back on thin answers until differentiators actually differentiate</div><span class="g g1">G1</span></div>
+      <div class="st"><span class="trig">intake submitted</span><div class="body"><span class="sk">prd-generator</span> → PRD v1 · <span class="sk">ia-planner</span> → sitemap + page briefs · <span class="sk">concept-sketcher</span> → watermarked style-tile + hero mock <b>in the portal within 48h</b></div><span class="g g1">G1</span></div>
+      <div class="st"><span class="trig">kickoff booked → held</span><div class="body"><span class="sk">kickoff-agenda-builder</span> from PRD gaps · <span class="sk">kickoff-miner</span> → PRD v2 diff with the owner's verbatim quotes — <b>human decision #1: strategist approves the diff</b></div><span class="g g2">G2</span></div>
+      <div class="st"><span class="trig">PRD v2 approved</span><div class="body"><span class="sk">asset-requester</span> → upload slots · <span class="sk">asset-validator</span> rejects the 40px logo politely · <span class="sk">chase-scheduler</span> +3d/+6d → call task · <span class="sk">shot-list-writer</span> if a shoot is booked</div><span class="g g1">G1</span></div>
+      <div class="st"><span class="trig">assets ≥ minimum set</span><div class="body"><span class="sk">design-director</span> casts 3 directions vs the local competitive scan — <b>#2: designer approves briefs</b> · <span class="sk">site-composer</span> + <span class="sk">content-writer</span> build 3 complete sites from the block library · <span class="sk">slop-critic</span> fails generic output until it passes · <span class="sk">build-qa-checker</span> technical pass — <b>#3: designer reviews with kill authority</b></div><span class="g g2">G2</span></div>
+      <div class="st"><span class="trig">concept gallery live</span><div class="body">Client <b>chooses</b> (replaces approval #1) · <span class="sk">feedback-interpreter</span> turns "wife hates green" into a scoped revision set · build-out completes · client edits copy via <span class="sk">cms-edit-assistant</span> (CMS live pre-launch = product training)</div><span class="g g1">G1</span></div>
+      <div class="st"><span class="trig">pages content-complete</span><div class="body"><span class="sk">metadata-writer</span> — AHPRA-safe titles/descriptions batch · <span class="sk">launch-readiness-scorer</span> — approval #2 as a portal checklist, chased if idle</div><span class="g g2">G2</span></div>
+      <div class="st"><span class="trig"><b>#4: launch button</b></span><div class="body"><span class="sk">launch-runner</span> — DNS, SSL, redirects, GA4/GSC, uptime + form-canary · <span class="sk">gsuite-provisioner</span> · <span class="sk">gbp-builder</span> · <span class="sk">watchtower-enroller</span> (W4 "new site" mode) · <span class="sk">campaign-builder</span> builds Ads <b>paused</b> — <b>#5: specialist enables</b></div><span class="g g2">G2</span></div>
+      <div class="st"><span class="trig">launch stable +48h</span><div class="body"><span class="sk">handover-builder</span> — role-personalised training packs · <span class="sk">invoice-runner</span> final invoice · <span class="sk">survey-runner</span> +7d (low score → Wally same day) · <span class="sk">retro-writer</span> — the debrief writes itself from pipeline telemetry · lifecycle → <b>Operate</b></div><span class="g g1">G1</span></div>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="phase-head"><span class="pid">PHASE C · OPERATE</span><h4>The monthly loop — steady state, mostly silent</h4><span class="who">owner: account owner · whole dashboard</span></div>
+    <div class="steps">
+      <div class="st"><span class="trig">phone rings, front desk busy</span><div class="body"><span class="sk">clinic-call-agent</span> answers as the practice EN/普通话 · <span class="sk">call-summary</span> → follow-up list + SMS both ways · outcomes → monthly report + fleet view · <span class="sk">outage-sentinel</span> + <span class="sk">call-qa-sampler</span> keep it honest</div><span class="g g1">G1</span></div>
+      <div class="st"><span class="trig">email lands at support@</span><div class="body"><span class="sk">email-triage</span> splits/classifies/routes · <span class="sk">reply-drafter</span> or tasks + ack · work done → <span class="sk">completion-writer</span> "it's done" with evidence · <span class="sk">chase-scheduler</span> on anything the client owes · <span class="sk">sentiment-sentinel</span> watches tone</div><span class="g g2">G2→G1</span></div>
+      <div class="st"><span class="trig">06:00 daily</span><div class="body"><span class="sk">ads-optimiser</span> (behind tracking/seasonality gates) → ranked recs with rollback plans → approve → implement → <span class="sk">change-watch</span> 7-day verify · <span class="sk">budget-pacer</span> · <span class="sk">ad-copy-writer</span> · offline conversions from rescued calls teach Google what a patient looks like</div><span class="g g2">tiered</span></div>
+      <div class="st"><span class="trig">05:30 nightly</span><div class="body"><span class="sk">seo-diagnose</span> on confirmed drops (reads our own deploy log first) · <span class="sk">opportunity-writer</span> cards with fixes drafted · <span class="sk">gbp-post-writer</span> · <span class="sk">competitor-watch</span> · <span class="sk">schema-validator</span> · <span class="sk">uptime-sentinel</span> + <span class="sk">form-canary</span></div><span class="g g1">G1/G2</span></div>
+      <div class="st"><span class="trig">meeting cadence</span><div class="body"><span class="sk">agenda-builder</span> T-24h · <span class="sk">brief-pack-writer</span> T-2h · Fathom → <span class="sk">meeting-summariser</span> (dedupes vs open work) · <span class="sk">client-summary-writer</span> · "theirs" actions chased automatically</div><span class="g g2">G2</span></div>
+      <div class="st"><span class="trig">month-end</span><div class="body"><span class="sk">invoice-runner</span> + <span class="sk">dunning-writer</span> · <span class="sk">new-patient-reconciler</span> — one-tap confirmation turns claimed ROI into <b>verified</b> ROI · <span class="sk">report-writer</span> + <span class="sk">insight-writer</span> assemble the report from data structured all along · <span class="sk">engagement-tracker</span> watches opens · <span class="sk">review-requester</span> + <span class="sk">review-responder</span> grow reputation</div><span class="g g2">G2→G1</span></div>
+      <div class="st"><span class="trig">healthy + headroom</span><div class="body"><span class="sk">upsell-writer</span> — accumulated opportunity cards → expansion brief on the next QBR agenda (中文 enablement, receptionist deploy, suburb #2) — never a cold pitch · <span class="sk">guarantee-scorer</span> tracks month 1–6 promise vs actuals</div><span class="g g2">G2</span></div>
+      <div class="st"><span class="trig">health &lt; 40 · sentiment drop · unpaid 30d</span><div class="body"><b>At-risk playbook:</b> Wally alerted with a save-plan brief (receipts from the timeline), cadence doubled, G1 privileges suspended for this client. Cancellation confirmed → offboard: one-click export (the no-lock-in promise), win-back check +6mo</div><span class="g g3">G3</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 03 STACKS ================= -->
+<section id="stacks">
+  <div class="sec-head"><span class="sec-num">03</span><h2>Workflow stacks — the automation chains behind each surface</h2></div>
+  <p class="note">Each stack: trigger → skill chain → gate → output, with the rules that keep it safe. Full execution traces with payloads live in Doc 3; node-by-node process maps in Doc 6 and MASTER-BUILD-PLAN.md §5–7.</p>
+
+  <div class="twrap"><table>
+    <tr><th>Stack</th><th>Chain (skills in firing order)</th><th>Hard rules</th></tr>
+    <tr><td><b>Sales funnel</b><br><span class="pill blue">Prospects</span></td><td><span class="sk">lead-capture</span> → <span class="sk">prospect-researcher</span> → <span class="sk">audit-report-generator</span> → <span class="sk">lead-scorer</span> ⇄ <span class="sk">nurture-writer</span> → <span class="sk">meeting-scheduler</span> → <span class="sk">proposal-writer</span> → <span class="sk">deposit-runner</span> · loss → <span class="sk">loss-miner</span></td><td>Speed-to-lead in minutes; every deal-stage transition is event-fired; proposals always G2</td></tr>
+    <tr><td><b>W1 Receptionist</b><br><span class="pill ai">fleet</span></td><td>unanswered call → <span class="sk">clinic-call-agent</span> (FAQ from profile only, emergency script, EN⇄中文) → <span class="sk">call-summary</span> → follow-up list + SMS → front desk one-tap → report feed · <span class="sk">faq-pack-builder</span> rebuilds on profile change · <span class="sk">call-qa-sampler</span> weekly · <span class="sk">outage-sentinel</span> 5-min checks</td><td>Never clinical advice; &lt;0.7 conf → "listen to recording"; outage falls back to voicemail, patients never see it</td></tr>
+    <tr><td><b>W2 Inbox</b><br><span class="pill ai">support@ + portal</span></td><td>Gmail push → <span class="sk">email-triage</span> (split · match · urgency) → tasks + drafted ack → work done (AC webhook) → <span class="sk">completion-writer</span> → one-click send · <span class="sk">reply-drafter</span> for questions · <span class="sk">chase-scheduler</span> +3d/+6d · <span class="sk">sentiment-sentinel</span> silent</td><td>Complaint/cancel keywords → Wally direct, <b>no AI ack ever</b>; &lt;0.8 conf → human queue; zero-loss audited weekly</td></tr>
+    <tr><td><b>W3 Ads</b><br><span class="pill warn">spend</span></td><td>06:00 GAQL pull → benchmark + gates (tracking health · seasonality · completeness) → <span class="sk">ads-optimiser</span> ranked recs → human approves → mutation (validateOnly → execute → rollback snapshot → audit) → <span class="sk">change-watch</span> 7d verify → <span class="sk">client-update-writer</span> · <span class="sk">budget-pacer</span> · <span class="sk">ad-copy-writer</span></td><td>Tier A auto (negatives, assets) · Tier B after trust streak (budget shifts in cap, bids ±15%) · Tier C human forever (total budget, structures, &gt;25% moves); caps enforced in the tool layer, not the prompt</td></tr>
+    <tr><td><b>W4 SEO</b><br><span class="pill ai">watchtower</span></td><td>05:30 sync → diff engine (2-day wobble rule; money kw + 3-pack exit skips wait) → <span class="sk">seo-diagnose</span> (checks our own deploy log first) → task + recovery tracker · near-miss → <span class="sk">opportunity-writer</span> card with fix drafted · <span class="sk">gbp-post-writer</span> · <span class="sk">competitor-watch</span> · <span class="sk">schema-validator</span> every deploy</td><td>Stale data = suppressed alerts for that client only, shown honestly; alert discipline is the product</td></tr>
+    <tr><td><b>W5 Meetings</b></td><td>T-24h <span class="sk">agenda-builder</span> → T-2h <span class="sk">brief-pack-writer</span> → Fathom webhook → <span class="sk">meeting-summariser</span> (dedupes vs open flags/tasks) → accept → tasks + <span class="sk">client-summary-writer</span> → "theirs" chased +5d</td><td>Extraction review is an edit pass, not re-typing; auto-linking prevents duplicate work items</td></tr>
+    <tr><td><b>Factory</b><br><span class="pill ok">build</span></td><td>The Phase B chain above — 21 skills, stages 1–8, three-concept generation with <span class="sk">design-director</span> → <span class="sk">site-composer</span> → <span class="sk">slop-critic</span> at its heart</td><td>5 human decisions; composition over generation; client never waits on the agency</td></tr>
+    <tr><td><b>W8 CMS + editing</b><br><span class="pill blue">portal</span></td><td>request in words → <span class="sk">cms-edit-assistant</span> change set → <span class="sk">propagation-mapper</span> (hours → footer ×14 + schema + GBP) → <span class="sk">ahpra-checker</span> <b>hard gate</b> → <span class="sk">seo-guard</span> (money pages → agency review) → preview → publish → versioned rollback · <span class="sk">translator-zh</span> + <span class="sk">tone-checker</span> for bilingual · <span class="sk">alt-text-writer</span></td><td>Client tiers: structured edits → prompt-box → visual editor → contractual raw control; risk lanes: safe = instant, sensitive = same-day review, blocked = rewrite loop</td></tr>
+    <tr><td><b>Reports &amp; money</b></td><td>month-end → <span class="sk">new-patient-reconciler</span> → <span class="sk">report-writer</span> → <span class="sk">insight-writer</span> (portfolio benchmarks) → approve → send → <span class="sk">engagement-tracker</span> · <span class="sk">invoice-runner</span> → <span class="sk">dunning-writer</span> · <span class="sk">guarantee-scorer</span> monthly checkpoint</td><td>Reports render from structured monitor data — never hand-assembled; unopened reports ×2 months = churn signal</td></tr>
+    <tr><td><b>System / meta</b></td><td><span class="sk">flag-ranker</span> (dedupes cross-workflow) → Today feed · <span class="sk">daily-briefing-writer</span> 06:30 · <span class="sk">eod-summariser</span> · <span class="sk">nudge-writer</span> on SLA idle · <span class="sk">skill-evaluator</span> + <span class="sk">precision-ledger</span> + <span class="sk">knowledge-diff-writer</span> run the quality loop · <span class="sk">activity-narrator</span> + <span class="sk">season-planner</span> in their modules</td><td>A rank drop W4 saw and the meeting W5 heard about become <b>one</b> flag; no silent truncation anywhere</td></tr>
+  </table></div>
+</section>
+
+<!-- ================= 04 DASHBOARDS ================= -->
+<section id="dash">
+  <div class="sec-head"><span class="sec-num">04</span><h2>Dashboard examples — what the surfaces look like</h2></div>
+  <p class="note">Representative screens (full interactive version: Doc 4 · full tab-by-tab spec: Doc 5). Agency dashboard first, client portal after.</p>
+
+  <div class="mock">
+    <div class="mock-bar">20<em>/</em>80 · Team Dashboard — ▦ Today</div>
+    <div class="mock-body">
+      <div class="tiles">
+        <div class="tile crit"><b>7</b><span>open flags</span></div>
+        <div class="tile warn"><b>4</b><span>approvals waiting</span></div>
+        <div class="tile ok"><b>96%</b><span>at benchmark</span></div>
+        <div class="tile acc"><b>47</b><span>calls rescued 7d</span></div>
+        <div class="tile"><b>2</b><span>meetings today</span></div>
+        <div class="tile ok"><b>$41.2k</b><span>MRR on time</span></div>
+      </div>
+      <div class="flag"><div class="fb"><b>Hearts Dental — "dentist blackburn" 4→9</b> <span class="pill crit">SEO</span><p>seo-diagnose: competitor GBP refresh 55% · lost FAQ snippet 30% — fix drafts attached</p></div><button class="btn p">Create task</button></div>
+      <div class="flag ai"><div class="fb"><b>Ads change — Yarra Hills</b> <span class="pill ai">APPROVAL</span><p>+14 negatives · budget shift · predicted CPL −$9.30 · rollback attached · conf 0.87</p></div><button class="btn g">Approve</button><button class="btn">Reject</button></div>
+      <div class="flag blue"><div class="fb"><b>New warm lead — Preston Physio</b> <span class="pill blue">PROSPECTS</span><p>Audit opened 3× · competitor section viewed · lead-scorer suggests booking link follow-up</p></div><button class="btn g">Send</button></div>
+    </div>
+  </div>
+  <p class="mock-cap"><b>Today</b> — the morning-coffee screen. Every card ends in a button; flag-ranker has already deduped and ordered by severity × client value × age.</p>
+
+  <div class="mock">
+    <div class="mock-bar">20<em>/</em>80 · Team Dashboard — ◈ Prospects (deal board)</div>
+    <div class="mock-body">
+      <div class="kb">
+        <div class="kcol"><h5>Cold Lead</h5><div class="kcard"><b>Glen Iris Dental</b><small>audit generating… 4 min</small></div><div class="kcard"><b>Northcote Osteo</b><small>audit sent · unopened 2d → nurture #2 queued</small></div></div>
+        <div class="kcol"><h5>Warm Lead</h5><div class="kcard"><b>Preston Physio</b><small>audit opened 3× · booking link sent</small></div></div>
+        <div class="kcol"><h5>Meeting Held</h5><div class="kcard"><b>Box Hill Ortho</b><small>proposal-writer drafting from transcript</small></div></div>
+        <div class="kcol"><h5>Proposal</h5><div class="kcard"><b>Coburg Vet</b><small>sent +3d · follow-up tomorrow · 10% deposit offer active</small></div></div>
+        <div class="kcol"><h5>Won / Lost</h5><div class="kcard"><b>Aspire One ✓</b><small>deposit paid → factory stage 1 fired</small></div><div class="kcard"><b>Reservoir Chiro ✗</b><small>loss-miner: price · Q3 pattern</small></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="mock-cap"><b>Prospects</b> — Agile CRM absorbed. Stages transition on events (audit engagement, booking, deposit webhook) — the CRM builds itself as a side effect of the funnel running.</p>
+
+  <div class="mock">
+    <div class="mock-bar">20<em>/</em>80 · Team Dashboard — 👥 Client record · Hearts Dental (timeline)</div>
+    <div class="mock-body">
+      <div class="msg"><div class="meta"><span class="pill crit">FLAG</span> today 05:31 · seo-diagnose</div>"dentist blackburn" 4→9 · diagnosis + fix drafts → task #4388 (Hamza) · auto-added to 14 Jul agenda</div>
+      <div class="msg"><div class="meta"><span class="pill blue">EMAIL</span> today 08:41 · email-triage · 3s</div>2 requests split: Dr Wong page (#4389, bio chase scheduled) · Sat hours 1 Aug (#4390 + CMS job + GBP sync)</div>
+      <div class="msg"><div class="meta"><span class="pill ai">CALL</span> Fri 19:20 · clinic-call-agent</div>Toothache, emergency screen clear → P1 follow-up · seen 11:15 next day ✓</div>
+      <div class="msg"><div class="meta"><span class="pill ok">REPORT</span> 3 Jul · report-writer + new-patient-reconciler</div>June: 41 enquiries (verified — practice one-tap confirmed 38 booked) · $10.90 per $1 · opened same day</div>
+    </div>
+  </div>
+  <p class="mock-cap"><b>Client record</b> — every event from every engine lands on one timeline via the entity matcher; the health dot is computed from it, never set.</p>
+
+  <div class="mock">
+    <div class="mock-bar">🦷 Hearts Dental · Client Portal — ☎ Phone AI (front desk, Monday 8:30)</div>
+    <div class="mock-body">
+      <div class="fu"><div><b>Mrs Lin · 2 children · Sat AM</b> <span class="pill ai">中文</span><small>existing family · Bupa confirmed from profile · SMS confirmed</small></div><button class="btn g">Booked ✓</button><button class="btn">Called</button></div>
+      <div class="fu"><div><b>Mr Adams · toothache</b> <span class="pill crit">P1</span><small>Fri 19:20 · emergency screen clear · wants earliest slot</small></div><button class="btn g">Booked ✓</button></div>
+      <div class="fu"><div><b>Unknown caller · asked about parking</b><small>FAQ answered on-call · no action needed</small></div><span class="pill ok">done</span></div>
+    </div>
+  </div>
+  <p class="mock-cap"><b>Portal · Phone AI</b> — the front desk works this list standing up (PWA + push). One tap per item; outcomes flow to the monthly report and the fleet view automatically. The portal's other tabs: Overview, My Website (tiered editing), Requests, Leads, Approvals, Assets, Reports, Meetings, Reviews, Billing.</p>
+
+  <h3>Full surface map</h3>
+  <div class="twrap"><table>
+    <tr><th>Agency (19 tabs)</th><th>Client portal (12 tabs)</th></tr>
+    <tr><td><b>Operate:</b> Today · Clients (CRM) · Prospects · Inbox · Receptionists<br><b>Monitor:</b> Google Ads · SEO Watchtower · Meetings · Site Health<br><b>Deliver:</b> Website Factory · CMS &amp; Sites · Content Studio · Reports · Calendar<br><b>Grow:</b> Billing · Guarantee Tracker<br><b>System:</b> Audit Log · Knowledge &amp; Skills · Settings (integrations, autonomy dials, notification routing, roles)</td>
+    <td><b>My Practice:</b> Overview · My Website · Requests · Phone AI · Leads · Approvals · Assets · Reports · Meetings · Reviews<br><b>Account:</b> Billing · Settings · Getting Started<br><br><span class="note">Every portal surface is skill-drafted and gate-approved; the portal's job is making 20-80's work visible (retention) and the client's obligations frictionless (velocity).</span></td></tr>
+  </table></div>
+</section>
+
+<!-- ================= 05 REGISTRY ================= -->
+<section id="registry">
+  <div class="sec-head"><span class="sec-num">05</span><h2>The skill registry — all 63, with triggers and gates</h2></div>
+
+  <h3>Sales &amp; marketing (11)</h3>
+  <div class="twrap"><table>
+    <tr><th>Skill</th><th>Trigger</th><th>Does</th></tr>
+    <tr><td class="skc">lead-capture</td><td>any channel inbound</td><td>One intake: dedupe, Deal @ Cold Lead, source/CAC tag<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">prospect-researcher</td><td>deal created / support-only signup</td><td>Site + GBP + reviews + competitors + rank baseline → research pack<span class="gg">G0</span></td></tr>
+    <tr><td class="skc">audit-report-generator</td><td>research pack ready</td><td>Personalised audit + suburb/competitor report as live microsite; case study auto-picked<span class="gg">G2 → G1 @90d</span></td></tr>
+    <tr><td class="skc">lead-scorer</td><td>any prospect event</td><td>Cold→warm scoring from engagement; stale-lead re-nurture triggers<span class="gg">G0</span></td></tr>
+    <tr><td class="skc">nurture-writer</td><td>stage timers</td><td>Follow-up sequences + regular-mailout eDM loop, per vertical<span class="gg">G2 templates · G1 sends</span></td></tr>
+    <tr><td class="skc">proposal-writer</td><td>post meet &amp; greet</td><td>Proposal + costings from rate card + transcript; video script for Wally<span class="gg">G2 always</span></td></tr>
+    <tr><td class="skc">deal-tracker</td><td>all funnel events</td><td>Board, stage automation, cadences, deposit-discount playbook<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">loss-miner</td><td>deal lost</td><td>Reason survey → quarterly pattern report → pricing/proposal fixes<span class="gg">G0</span></td></tr>
+    <tr><td class="skc">marketing-content-writer</td><td>content calendar</td><td>Utility-video scripts, eDM campaigns, social, landing copy — same anti-slop rules<span class="gg">G2</span></td></tr>
+    <tr><td class="skc">landing-page-composer</td><td>campaign brief</td><td>Landing pages from the block library with capture wired (site-composer reuse)<span class="gg">G2</span></td></tr>
+    <tr><td class="skc">deposit-runner</td><td>proposal accepted</td><td>Deposit invoice/link; payment webhook fires the factory<span class="gg">G1</span></td></tr>
+  </table></div>
+
+  <h3>Factory (14) + launch &amp; handover (7)</h3>
+  <div class="twrap"><table>
+    <tr><th>Skill</th><th>Trigger</th><th>Does</th></tr>
+    <tr><td class="skc">portal-provisioner</td><td>payment webhook</td><td>Record + workspace + magic-link login + dated checklist, in 1 minute<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">practice-researcher</td><td>provisioning done</td><td>Pre-fills half the questionnaire before the client types<span class="gg">G0</span></td></tr>
+    <tr><td class="skc">intake-interviewer</td><td>questionnaire opened</td><td>Adaptive intake; pushes back on thin answers; structured differentiators<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">prd-generator</td><td>intake submitted</td><td>Intake + research + knowledge base → PRD v1 (gaps listed → kickoff agenda)<span class="gg">G1 draft · G2 final</span></td></tr>
+    <tr><td class="skc">ia-planner</td><td>PRD exists</td><td>Sitemap + page briefs + money-keyword map + internal-link plan<span class="gg">G2</span></td></tr>
+    <tr><td class="skc">concept-sketcher</td><td>PRD v1 + IA</td><td>48h style-tile + hero mock, watermarked, in the portal<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">meeting-scheduler</td><td>booking needed</td><td>Real-availability links, reminders, reschedules, no-show rebook (absorbs Calendly)<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">kickoff-miner</td><td>kickoff transcript</td><td>Verbatim differentiators, tone, red lines → PRD v2 diff, quote-traceable<span class="gg">G2 · human #1</span></td></tr>
+    <tr><td class="skc">asset-requester / asset-validator</td><td>PRD v2 approved / upload</td><td>Slot manifest with "good" examples; validates vectors/resolution; polite rejects<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">shot-list-writer</td><td>shoot booked</td><td>Shot list from the IA — page-by-page imagery needs, per direction<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">design-director</td><td>assets ≥ minimum</td><td>Casts 3 directions from the curated library vs local competitive scan<span class="gg">G2 · human #2</span></td></tr>
+    <tr><td class="skc">site-composer</td><td>briefs approved</td><td>Composes complete sites from the block library — never free-form code<span class="gg">G1 → critic</span></td></tr>
+    <tr><td class="skc">slop-critic</td><td>candidate complete</td><td>Adversarial fail-pass: generic phrases, uniform rhythm, unsourced claims<span class="gg">G0 gate · human #3 after</span></td></tr>
+    <tr><td class="skc">feedback-interpreter</td><td>client comments</td><td>Free-text reactions → scoped revision sets within the design system<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">launch-readiness-scorer</td><td>metadata approved</td><td>Approval #2 as a portal checklist; idle → chased<span class="gg">client gate</span></td></tr>
+    <tr><td class="skc">launch-runner</td><td>human #4 (button)</td><td>DNS/SSL/redirects/analytics/uptime/canary; halt-on-failure with specific task<span class="gg">G2 button · G1 steps</span></td></tr>
+    <tr><td class="skc">gsuite-provisioner</td><td>launch (opt.)</td><td>Workspace mailboxes, DKIM/SPF/DMARC, migration checklist<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">gbp-builder</td><td>site live</td><td>GBP claimed + populated from profile; review link; first posts scheduled<span class="gg">G2</span></td></tr>
+    <tr><td class="skc">campaign-builder</td><td>site live + tracking ✓</td><td>Initial Ads account from PRD: structure, RSAs, negatives, tracking — <b>launches paused</b><span class="gg">G2 · human #5</span></td></tr>
+    <tr><td class="skc">watchtower-enroller</td><td>site live</td><td>BrightLocal keywords × suburbs, baseline, citations, "new site" thresholds<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">handover-builder / survey-runner / retro-writer</td><td>stable +48h / +7d / close</td><td>Role-personalised training · NPS (low → Wally same day) · telemetry retro feeding skill-evaluator<span class="gg">G1 / G1 / G0</span></td></tr>
+  </table></div>
+
+  <h3>Communication (10) · Voice (5)</h3>
+  <div class="twrap"><table>
+    <tr><th>Skill</th><th>Trigger</th><th>Does</th></tr>
+    <tr><td class="skc">email-triage</td><td>Gmail push / portal form</td><td>Classify · split multi-request · match client · urgency · draft ack w/ SLA ETAs<span class="gg">G1 tasks ≥0.8 · G2 ack</span></td></tr>
+    <tr><td class="skc">reply-drafter</td><td>question email</td><td>Answers from the client record; no task; filed to timeline<span class="gg">G2</span></td></tr>
+    <tr><td class="skc">completion-writer</td><td>task-complete webhook</td><td>"It's done" with CMS-change-log evidence, client's language, in-thread<span class="gg">G2 → G1 per category</span></td></tr>
+    <tr><td class="skc">chase-scheduler</td><td>anything a client owes</td><td>+3d/+6d polite chases → human call task; used by inbox, factory, meetings, approvals<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">meeting-summariser</td><td>Fathom webhook</td><td>Summary · decisions · actions w/ owners; <b>dedupes vs open work</b><span class="gg">G2 accept</span></td></tr>
+    <tr><td class="skc">agenda-builder / brief-pack-writer</td><td>T-24h / T-2h</td><td>Agenda from flags + last actions + report highlights · one-pager walk-in brief<span class="gg">G1</span></td></tr>
+    <tr><td class="skc">client-summary-writer / client-update-writer</td><td>actions accepted / changes verified</td><td>"What we discussed / what we did &amp; why" in plain English → send loop<span class="gg">G2</span></td></tr>
+    <tr><td class="skc">review-responder</td><td>new review</td><td>AHPRA-safe response drafts; negative reviews escalate same-day<span class="gg">G2 practice-tap</span></td></tr>
+    <tr><td class="skc">clinic-call-agent</td><td>unanswered / after hours</td><td>Answers as the practice; FAQ from profile only; emergency script; EN⇄普通话<span class="gg">live · rules R1–R7</span></td></tr>
+    <tr><td class="skc">call-summary / faq-pack-builder / call-qa-sampler / outage-sentinel</td><td>call end / profile edit / weekly / 5-min</td><td>Bilingual summary → follow-up list · pack rebuild + drift flag · QA scoring → precision · voicemail fallback<span class="gg">G1 / G2 / G0 / G1</span></td></tr>
+  </table></div>
+
+  <h3>Marketing intelligence (9) · Delivery &amp; guardrails (13)</h3>
+  <div class="twrap"><table>
+    <tr><th>Skill</th><th>Trigger</th><th>Does</th></tr>
+    <tr><td class="skc">ads-optimiser / change-watch / ad-copy-writer / budget-pacer</td><td>flag (gated) / post-mutation / QS decay / daily</td><td>Ranked recs + rollback plans · 7-day predicted-vs-actual + rollback proposals · RSA variants (AHPRA-checked) · pacing cards<span class="gg">G2 tiered · G1 · G2 · G0</span></td></tr>
+    <tr><td class="skc">seo-diagnose / opportunity-writer / gbp-post-writer / competitor-watch / schema-validator</td><td>confirmed drop / pos. 11–15 / post gap / nightly / every deploy</td><td>Ranked hypotheses + fixes (deploy log first) · page-1-reachable cards · EN+中文 posts · tracked-competitor diffs · structured-data sweep<span class="gg">G1 / G2 / G2 / G0 / G1</span></td></tr>
+    <tr><td class="skc">cms-edit-assistant</td><td>change request in words</td><td>Structured, previewable change sets — any scope, composed in-system<span class="gg">G2 preview+confirm; risk lanes</span></td></tr>
+    <tr><td class="skc">propagation-mapper</td><td>any fact change</td><td>Changes every place a fact lives, or none — the consistency guarantee<span class="gg">G0 in change sets</span></td></tr>
+    <tr><td class="skc">ahpra-checker</td><td>ALL client-facing content</td><td>Blocking scan: testimonials, before/after, claims — rewrites suggested<span class="gg">HARD GATE — never graduates</span></td></tr>
+    <tr><td class="skc">seo-guard</td><td>client-initiated edits</td><td>Detects ranking damage; offers the safe alternative; money pages → review<span class="gg">G1 soft-block</span></td></tr>
+    <tr><td class="skc">translator-zh / tone-checker / content-writer / alt-text-writer / metadata-writer / build-qa-checker</td><td>various</td><td>Glossary-driven EN⇄ZH · voice-profile drift flags · sourced-only page copy · alt text · AHPRA-safe metadata batches · technical QA + PRD coverage<span class="gg">G2 / G0 / G2 / G1 / G2 / G1</span></td></tr>
+  </table></div>
+
+  <h3>Business ops (6) · Reputation (3) · Reporting (3) · System (8) · Sentinels (4)</h3>
+  <div class="twrap"><table>
+    <tr><th>Skill</th><th>Trigger</th><th>Does</th></tr>
+    <tr><td class="skc">invoice-runner / dunning-writer</td><td>month-end · go-live / overdue</td><td>Xero-integrated invoicing · graduated reminders → Wally flag<span class="gg">G1 / G1→G3</span></td></tr>
+    <tr><td class="skc">upsell-writer / guarantee-scorer</td><td>healthy + headroom / monthly mo. 1–6</td><td>Expansion briefs onto the QBR agenda · promise-vs-actual checkpoint narratives<span class="gg">G2 / G1</span></td></tr>
+    <tr><td class="skc">reputation-pack-builder / review-requester / new-patient-reconciler</td><td>Operate entry / post-visit / month-end</td><td>Review links + QR + GBP pass + templates · request flows (front-desk one-tap) · verified patient counts (one-tap confirm; PMS phase 2)<span class="gg">G2 / G1 / G1</span></td></tr>
+    <tr><td class="skc">report-writer / insight-writer / engagement-tracker</td><td>month-end / compile / sent</td><td>ROI &amp; SEO report from structured data · narrative + portfolio benchmarks · opens → churn signal<span class="gg">G2→G1 / G2 / G0</span></td></tr>
+    <tr><td class="skc">flag-ranker / daily-briefing-writer / eod-summariser / nudge-writer / sentiment-sentinel</td><td>new flags / 06:30 / 17:30 / SLA idle / every inbound</td><td>Severity ranking + cross-workflow dedupe · per-person briefing · handover note · Slack nudges → escalation · tone-trend → health<span class="gg">G0 / G1 / G1 / G1 / G0</span></td></tr>
+    <tr><td class="skc">skill-evaluator / precision-ledger / knowledge-diff-writer</td><td>nightly + pre-promote / every correction / KB edit</td><td>Golden-set regression (ship only if it beats incumbent) · edits → labelled examples → autonomy scores · KB impact analysis + re-scan plans<span class="gg">G2 promote / G0 / G2</span></td></tr>
+    <tr><td class="skc">uptime-sentinel / form-canary / season-planner / activity-narrator</td><td>continuous / weekly / calendar / weekly</td><td>Uptime + SSL/domain expiry · synthetic form submissions (silent lead-loss catcher) · seasonal hooks · plain-English "what we did for you" in the portal<span class="gg">G1 / G1 / G1 / G1</span></td></tr>
+  </table></div>
+</section>
+
+<!-- ================= 06 AUTHORING ================= -->
+<section id="authoring">
+  <div class="sec-head"><span class="sec-num">06</span><h2>How the skills get built — the anti-slop authoring system</h2></div>
+  <div class="grid2">
+    <div class="card"><h4>Format &amp; runtimes</h4><p>Every skill is authored in the Agent Skills format — a folder with <span class="sk">SKILL.md</span> + resources at <span class="sk">/skills/&lt;name&gt;/</span>. The same folder runs in Claude Code during development, and in production via the API (the hosted Skills API provides create/version/list — exactly our versioning model). Pre-built Anthropic skills (xlsx · docx · pptx · pdf) handle document output inside report-writer, proposal-writer, and audit exports — buy the mechanical layer, build the judgement layer.</p></div>
+    <div class="card"><h4>The raw material already exists</h4><p>The intranet SOPs + ~40 YouTube training videos transcribe into skill drafts. The support@ sent folder is years of labelled triage decisions in the team's actual voice. Past reports, diagnoses, proposals, and live sites are input→output pairs for free. <b>No skill is written from imagination — each distils work the team already does well.</b></p></div>
+    <div class="card"><h4>The per-skill recipe (eval-first)</h4><ul>
+      <li>Collect 30–50 real historical examples</li>
+      <li>Split: golden set (held-out eval) vs 3–5 gold few-shot examples in-prompt — the model imitates Wally's actual voice, not generic-assistant voice</li>
+      <li>SKILL.md: role + SOP rules · versioned KB slices · gold + <b>negative</b> examples · grounding rule (every claim traces to a client-record field) · output schema · gate level</li>
+      <li>Eval to target: classification → exact-match (triage ≥95%); generative → rubric judge + pairwise vs the human original + the blind test</li>
+      <li>Ship at G2; production edits feed the precision-ledger; skill-evaluator regression before any version promotes</li>
+    </ul></div>
+    <div class="card"><h4>The two assets that can't be generated</h4><p>The <b>block library</b> (human-designed components every site and page composes from — the AI arranges, never invents CSS) and the <b>design-directions library</b> (named, versioned taste recipes the design-director casts from). Designer-led sprints, build step 5.2 — and later, part of the licensed SaaS IP alongside the knowledge base. Model tiers: fast tier for high-volume classification; top tier for judgement skills; KB slices sit in the cached prompt prefix so per-run cost stays low.</p></div>
+  </div>
+</section>
+
+<!-- ================= 07 CRM ================= -->
+<section id="crm">
+  <div class="sec-head"><span class="sec-num">07</span><h2>The client engine underneath — lifecycle, health, trust</h2></div>
+  <div class="twrap"><table>
+    <tr><th>Phase</th><th>Enters when</th><th>Active machinery</th><th>Exits when</th></tr>
+    <tr><td><b>1 Prospect</b></td><td>lead captured</td><td>research pack · audit microsite · nurture · proposal</td><td>deposit paid</td></tr>
+    <tr><td><b>2 Onboarding</b></td><td>deposit webhook</td><td>portal + checklist · adaptive intake · PRD v1 · 48h mock</td><td>PRD v2 approved</td></tr>
+    <tr><td><b>3 Build</b></td><td>PRD approved</td><td>factory kanban · 3 concepts · portal approvals · chasing</td><td>client approval #2</td></tr>
+    <tr><td><b>4 Launch</b></td><td>approval #2</td><td>launch chain · baselines · Ads paused→enabled · <b>guarantee clock starts</b> · 30d tight watch</td><td>30 days stable</td></tr>
+    <tr><td><b>5 Operate</b> <span class="pill ai">home</span></td><td>launch stable</td><td>the full monthly loop (Phase C above) · health score live</td><td>—</td></tr>
+    <tr><td><b>6 Grow</b></td><td>healthy + headroom</td><td>upsell briefs on the QBR agenda · expansion mini-onboarding</td><td>signed → back to 5</td></tr>
+    <tr><td><b>7 At-risk</b></td><td>health &lt;40 · sentiment · unpaid 30d · guarantee off-track</td><td>Wally save-plan brief · cadence ×2 · G1 suspended for this client</td><td>recovered · or → 8</td></tr>
+    <tr><td><b>8 Offboard</b> <span class="pill crit">G3</span></td><td>cancellation (Wally only)</td><td>one-click export · handover checklist · dignified exit · win-back +6mo</td><td>archived</td></tr>
+  </table></div>
+  <h3>The health score — computed, never set</h3>
+  <div class="formula">health = <b>35%</b> KPI vs benchmark + <b>20%</b> open flags (severity × age) + <b>15%</b> engagement (logins · report opens · attendance) + <b>10%</b> SLA record + <b>10%</b> sentiment + <b>10%</b> billing<br>≥80 <span style="color:var(--ok)">● healthy</span> · 60–79 <span style="color:var(--warn)">● watch</span> · 40–59 <span style="color:var(--crit)">● attention</span> · &lt;40 <span style="color:var(--crit)">● at-risk → phase 7</span> — humans annotate, never override</div>
+  <p class="note" style="margin-top:10px">Underneath: the <b>entity matcher</b> routes every event to the right record (email domain, phone line, Fathom participants, account-ID maps, portal auth; &lt;0.8 confidence → human queue; unknown domain → prospect flow — never lost mail), and the <b>Ads autonomy ladder</b> (Tier A auto → Tier B trust-earned → Tier C human forever) plus the <b>client editing tiers</b> (structured → prompt-box → visual editor → contractual raw control) apply the same graduated-trust architecture to spend and to websites.</p>
+</section>
+
+<!-- ================= 08 BUILD ================= -->
+<section id="build">
+  <div class="sec-head"><span class="sec-num">08</span><h2>Build order — seven stages, each with its proof</h2></div>
+  <p class="note">Work top to bottom; a step is done when its test passes, not when the code exists. Checkbox tracking lives in MASTER-BUILD-PLAN.md §13.</p>
+
+  <div class="stage"><h4><span class="sn">STAGE 1</span>Spine — everything else writes into this</h4>
+    <div class="bi"><div>Scaffold (React 19 + Tailwind 4 + Watermelon components restyled to tokens) · Postgres schema · skill runner with G0–G3 gate framework · entity matcher + timeline · <b>Inbox (W2)</b> · <b>Today</b> · Audit Log viewer<span class="tst">TEST: Hearts double-request email E2E (split → 2 tasks → ack → bio chase) · zero-loss audit query returns empty · matcher ≥95% on a 30-event golden set</span></div></div></div>
+  <div class="stage"><h4><span class="sn">STAGE 2</span>Receptionist product (W1) + practice portal</h4>
+    <div class="bi"><div>Voice platform per-practice config · call-summary → follow-up list (PWA + push) · fleet view · outage-sentinel · call-qa-sampler<span class="tst">TEST: the Mrs Lin scenario E2E in sandbox (中文 switch · Bupa FAQ from profile · SMS both ways · Monday one-tap) · simulated outage → voicemail fallback + agency-only alert</span></div></div></div>
+  <div class="stage"><h4><span class="sn">STAGE 3</span>Monitors — shipped WITH notification routing, not before</h4>
+    <div class="bi"><div>Notification center + digests · <b>Ads (W3)</b>: MCC + GAQL + gates + optimiser queue + mutation pipeline + change-watch + offline conversions from the fleet · <b>SEO (W4)</b> · <b>Meetings (W5)</b> · Site Health + Integration Health<span class="tst">TEST: Yarra Hills E2E on a test account · a budget-cap violation is REFUSED BY THE TOOL LAYER (code, not prompt) · "dentist blackburn 4→9" produces a diagnosis citing the CMS deploy log · form-canary catches a deliberately broken form &lt;24h</span></div></div></div>
+  <div class="stage"><h4><span class="sn">STAGE 4</span>Money &amp; sales</h4>
+    <div class="bi"><div>Billing (Xero webhooks, invoice-runner, dunning, MRR) · <b>Prospects module</b> with the flagship audit-report-generator · Reports full build · Guarantee tracker · support-loop completion (reputation pack · review-requester · new-patient-reconciler · support-only onboarding)<span class="tst">TEST: fake lead → audit microsite live &lt;15 min → stages fire on events · a seeded month closes with a report whose new-patient number is CONFIRMED, not claimed · Agile CRM deals migrated</span></div></div></div>
+  <div class="stage"><h4><span class="sn">STAGE 5</span>Factory</h4>
+    <div class="bi"><div>Stages 1–4 (deposit → mock → kickoff-miner → asset slots) · <b>the design-libraries sprint (5.2 — designer-led craft)</b> · design-director + site-composer + slop-critic + concept gallery · stages 6–8<span class="tst">TEST: deposit-to-first-mock ≤48h dry run · 3 concepts for a fictional practice pass the critic AND a blind "which is AI?" review vs a past hand-built site · full pipeline dry run = 5 human decisions, zero other manual steps</span></div></div></div>
+  <div class="stage"><h4><span class="sn">STAGE 6</span>CMS &amp; Studio</h4>
+    <div class="bi"><div>W8 core (blocks, versions, rollback, scheduled jobs, propagation-mapper) · cms-edit-assistant + seo-guard + risk lanes · client editing tiers 1–3 + Tier-4 contract mode · translator-zh + glossary + translation memory<span class="tst">TEST: "Saturday hours from 1 Aug" in one sentence → change set touching page + footer ×N + schema + GBP, scheduled, previewed, published, rolled back</span></div></div></div>
+  <div class="stage"><h4><span class="sn">STAGE 7</span>SaaS layer</h4>
+    <div class="bi"><div>Multi-tenant workspaces · white-label theming · knowledge-base + directions-library licensing with per-tenant version pinning · usage metering<span class="tst">The data model was designed for this from stage 1 — this stage is packaging, not rebuild. The licensed IP: the knowledge base, the skill registry with its golden sets, the block + directions libraries, and the audit/gate architecture.</span></div></div></div>
+
+  <h3>Open decisions (pinned to stages — MASTER-BUILD-PLAN.md §14)</h3>
+  <p class="note">Voice platform vendor (before Stage 2) · ActiveCollab keep-or-absorb (after Stage 1 proves itself) · BrightLocal API tier (before Stage 3) · PMS integrations for receptionist phase 2 (partner conversations, non-blocking) · warm-lead video human-vs-assembled A/B (Stage 4) · W8 hosting (static + CDN assumed) · FB group vs portal community (Stage 4+) · review-request trigger mechanics (front-desk one-tap first).</p>
+</section>
+
+<footer>
+  20-80 Platform · The Complete Business Masterplan (doc 7) · July 2026 · Source of truth: <b>MASTER-BUILD-PLAN.md</b> (repo root). Companions:
+  <a href="https://claude.ai/code/artifact/52e5db76-c9f1-4f25-a584-baf6692669a3">Blueprint</a> ·
+  <a href="https://claude.ai/code/artifact/4f1ae519-4330-4104-8114-7c93ea30c623">UI Spec</a> ·
+  <a href="https://claude.ai/code/artifact/1f1932a6-fc80-4ce1-a041-8dc3d44d8c57">Deep-Dive</a> ·
+  <a href="https://claude.ai/code/artifact/9d41c30e-be76-42bd-8146-c252ba545341">Live Demo</a> ·
+  <a href="https://claude.ai/code/artifact/c471d572-de3a-4ceb-a642-55f6cc05cb0a">Master Plan</a> ·
+  <a href="https://claude.ai/code/artifact/cbd7ef1d-e248-4807-946c-3161de5a55be">Factory Spec</a>
+</footer>
+</div>
+</body>
+</html>

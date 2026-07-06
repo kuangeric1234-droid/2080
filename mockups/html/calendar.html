@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Calendar — 20-80 Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+</head><body>
+<div class="app">
+  <aside class="rail">
+    <div class="logo"><div class="logo-mark">20·80</div><div class="logo-name">20-80 <span>Platform</span></div></div>
+    
+      <div class="nav-group">
+        <div class="nav-cap">Operate</div>
+        
+        <a class="nav-item" href="./today.html">
+          <span class="ic">▦</span>Today
+          <span class="nav-badge">7</span>
+        </a>
+        <a class="nav-item" href="./clients.html">
+          <span class="ic">👥</span>Clients
+          
+        </a>
+        <a class="nav-item" href="./inbox.html">
+          <span class="ic">✉</span>Inbox
+          <span class="nav-badge">4</span>
+        </a>
+        <a class="nav-item" href="./receptionists.html">
+          <span class="ic">☎</span>Receptionists
+          
+        </a>
+        <a class="nav-item" href="./meetings.html">
+          <span class="ic">◉</span>Meetings
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Monitor</div>
+        
+        <a class="nav-item" href="./google-ads.html">
+          <span class="ic">◎</span>Google Ads
+          <span class="nav-badge">3</span>
+        </a>
+        <a class="nav-item" href="./seo-watchtower.html">
+          <span class="ic">⌖</span>SEO Watchtower
+          <span class="nav-badge">2</span>
+        </a>
+        <a class="nav-item" href="./site-health.html">
+          <span class="ic">♥</span>Site Health
+          <span class="nav-badge">1</span>
+        </a>
+        <a class="nav-item active" href="./calendar.html">
+          <span class="ic">◷</span>Calendar
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Deliver</div>
+        
+        <a class="nav-item" href="./website-factory.html">
+          <span class="ic">⚒</span>Website Factory
+          
+        </a>
+        <a class="nav-item" href="./cms-sites.html">
+          <span class="ic">▤</span>CMS & Sites
+          
+        </a>
+        <a class="nav-item" href="./content-studio.html">
+          <span class="ic">文</span>Content Studio
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Grow</div>
+        
+        <a class="nav-item" href="./prospects.html">
+          <span class="ic">◈</span>Prospects
+          
+        </a>
+        <a class="nav-item" href="./reports.html">
+          <span class="ic">▥</span>Reports
+          
+        </a>
+        <a class="nav-item" href="./billing.html">
+          <span class="ic">▧</span>Billing
+          
+        </a>
+        <a class="nav-item" href="./guarantee.html">
+          <span class="ic">✓</span>Guarantee Tracker
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">System</div>
+        
+        <a class="nav-item" href="./audit-log.html">
+          <span class="ic">≡</span>Audit Log
+          
+        </a>
+        <a class="nav-item" href="./knowledge-skills.html">
+          <span class="ic">✦</span>Knowledge & Skills
+          
+        </a>
+        <a class="nav-item" href="./settings.html">
+          <span class="ic">⚙</span>Settings
+          
+        </a>
+      </div>
+    <div class="rail-foot"><span class="dot dk-warn"></span> 2 integrations degraded <span style="margin-left:auto" class="mono">v0.9</span></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">Calendar</div>
+      <div class="tb-search">Search clients, flags, runs… <span class="slash">/</span></div>
+      <div class="tb-right">
+        <span class="tb-date">Mon 6 Jul 2026 · 09:42</span>
+        <span class="tb-bell">&#128276;</span>
+        <div class="avatar">WC</div>
+      </div>
+    </div>
+    <div class="content">
+
+<style>
+.cal { display:grid; grid-template-columns:repeat(7,1fr); border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--line); gap:1px; }
+.cal .dh { background:var(--surface); padding:6px 8px; font-size:10px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:var(--faint); }
+.cal .d { background:var(--surface); min-height:88px; padding:5px 6px; font-size:11px; }
+.cal .d .dn { font-size:10.5px; color:var(--muted); font-variant-numeric:tabular-nums; margin-bottom:3px; font-weight:600; }
+.cal .d.out { background:#FAFBFB; } .cal .d.out .dn { color:#C2CCC9; }
+.cal .d.today { box-shadow: inset 0 0 0 2px var(--accent); } .cal .d.today .dn { color:var(--accent); }
+.ev { display:block; font-size:10px; font-weight:600; border-radius:4px; padding:1px 5px; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.ev-pub { background:var(--accent-tint); color:var(--accent); }
+.ev-soc { background:var(--blue-tint); color:var(--blue); }
+.ev-rep { background:#EEF2F0; color:var(--muted); }
+.ev-meet { background:var(--warn-tint); color:var(--warn); }
+.ev-seas { background:none; border:1px dashed #C9D4D0; color:var(--muted); font-weight:500; }
+</style>
+<div class="page-head" style="margin-bottom:10px">
+  <h1>July 2026</h1><span class="sub">publishes · posts · reports · meetings · seasonal</span>
+  <div class="actions">
+    <div class="legend"><span class="k"><span class="sw" style="background:var(--accent-tint);border:1px solid var(--accent)"></span> publish</span><span class="k"><span class="sw" style="background:var(--blue-tint);border:1px solid var(--blue)"></span> GBP/social</span><span class="k"><span class="sw" style="background:var(--warn-tint);border:1px solid var(--warn)"></span> meeting</span><span class="k"><span class="sw" style="background:#EEF2F0;border:1px solid var(--faint)"></span> report</span><span class="k"><span class="sw" style="border:1px dashed #C9D4D0"></span> seasonal</span></div>
+    <span class="btn btn-ghost btn-sm">‹ June</span><span class="btn btn-ghost btn-sm">August ›</span>
+  </div>
+</div>
+<div class="cal">
+  <div class="dh">Mon</div><div class="dh">Tue</div><div class="dh">Wed</div><div class="dh">Thu</div><div class="dh">Fri</div><div class="dh">Sat</div><div class="dh">Sun</div>
+  <div class="d out"><div class="dn">29</div></div>
+  <div class="d out"><div class="dn">30</div></div>
+  <div class="d"><div class="dn">1</div><span class="ev ev-seas">School holidays → 12 Jul</span><span class="ev ev-soc">GBP posts ×4</span></div>
+  <div class="d"><div class="dn">2</div><span class="ev ev-rep">June data close</span></div>
+  <div class="d"><div class="dn">3</div><span class="ev ev-meet">Hearts monthly</span></div>
+  <div class="d"><div class="dn">4</div></div>
+  <div class="d"><div class="dn">5</div></div>
+  <div class="d today"><div class="dn">6 · today</div><span class="ev ev-rep">Reports batch 18/23</span></div>
+  <div class="d"><div class="dn">7</div><span class="ev ev-meet">Preston save call</span><span class="ev ev-soc">GBP posts ×3</span></div>
+  <div class="d"><div class="dn">8</div><span class="ev ev-meet">Yarra Hills QBR</span><span class="ev ev-rep">Reports batch 2</span></div>
+  <div class="d"><div class="dn">9</div><span class="ev ev-meet">Hearts monthly</span></div>
+  <div class="d"><div class="dn">10</div><span class="ev ev-meet">Aspire One kickoff</span></div>
+  <div class="d"><div class="dn">11</div></div>
+  <div class="d"><div class="dn">12</div><span class="ev ev-seas">Holidays end</span></div>
+  <div class="d"><div class="dn">13</div><span class="ev ev-pub">Trowse sciatica page</span></div>
+  <div class="d"><div class="dn">14</div><span class="ev ev-soc">GBP posts ×4</span></div>
+  <div class="d"><div class="dn">15</div><span class="ev ev-meet">Smile Council monthly</span><span class="ev ev-rep">Invoice run</span></div>
+  <div class="d"><div class="dn">16</div><span class="ev ev-pub">Smile Council schema batch</span></div>
+  <div class="d"><div class="dn">17</div></div>
+  <div class="d"><div class="dn">18</div></div>
+  <div class="d"><div class="dn">19</div></div>
+  <div class="d"><div class="dn">20</div><span class="ev ev-pub">Hearts team page live</span><span class="ev ev-soc">Open-day post</span></div>
+  <div class="d"><div class="dn">21</div><span class="ev ev-meet">Northcote monthly</span></div>
+  <div class="d"><div class="dn">22</div><span class="ev ev-soc">GBP posts ×4</span></div>
+  <div class="d"><div class="dn">23</div><span class="ev ev-pub">Smile To Go build-out</span></div>
+  <div class="d"><div class="dn">24</div><span class="ev ev-meet">Trowse QBR</span></div>
+  <div class="d"><div class="dn">25</div></div>
+  <div class="d"><div class="dn">26</div></div>
+  <div class="d"><div class="dn">27</div><span class="ev ev-seas">Dental Health Week prep</span></div>
+  <div class="d"><div class="dn">28</div><span class="ev ev-rep">July reports prep</span></div>
+  <div class="d"><div class="dn">29</div><span class="ev ev-soc">GBP posts ×4</span></div>
+  <div class="d"><div class="dn">30</div></div>
+  <div class="d"><div class="dn">31</div><span class="ev ev-rep">Invoice run · dunning</span></div>
+  <div class="d out"><div class="dn">1</div><span class="ev ev-pub">Hearts Sat hours ×14 surfaces</span></div>
+  <div class="d out"><div class="dn">2</div></div>
+</div>
+<div class="xs faint" style="margin-top:10px">season-planner v1.1 drafts campaign windows from practice type + VIC calendar — Dental Health Week (3–9 Aug) briefs due 27 Jul</div>
+    </div>
+  </div>
+</div>
+</body></html>

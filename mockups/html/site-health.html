@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Site Health — 20-80 Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+</head><body>
+<div class="app">
+  <aside class="rail">
+    <div class="logo"><div class="logo-mark">20·80</div><div class="logo-name">20-80 <span>Platform</span></div></div>
+    
+      <div class="nav-group">
+        <div class="nav-cap">Operate</div>
+        
+        <a class="nav-item" href="./today.html">
+          <span class="ic">▦</span>Today
+          <span class="nav-badge">7</span>
+        </a>
+        <a class="nav-item" href="./clients.html">
+          <span class="ic">👥</span>Clients
+          
+        </a>
+        <a class="nav-item" href="./inbox.html">
+          <span class="ic">✉</span>Inbox
+          <span class="nav-badge">4</span>
+        </a>
+        <a class="nav-item" href="./receptionists.html">
+          <span class="ic">☎</span>Receptionists
+          
+        </a>
+        <a class="nav-item" href="./meetings.html">
+          <span class="ic">◉</span>Meetings
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Monitor</div>
+        
+        <a class="nav-item" href="./google-ads.html">
+          <span class="ic">◎</span>Google Ads
+          <span class="nav-badge">3</span>
+        </a>
+        <a class="nav-item" href="./seo-watchtower.html">
+          <span class="ic">⌖</span>SEO Watchtower
+          <span class="nav-badge">2</span>
+        </a>
+        <a class="nav-item active" href="./site-health.html">
+          <span class="ic">♥</span>Site Health
+          <span class="nav-badge">1</span>
+        </a>
+        <a class="nav-item" href="./calendar.html">
+          <span class="ic">◷</span>Calendar
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Deliver</div>
+        
+        <a class="nav-item" href="./website-factory.html">
+          <span class="ic">⚒</span>Website Factory
+          
+        </a>
+        <a class="nav-item" href="./cms-sites.html">
+          <span class="ic">▤</span>CMS & Sites
+          
+        </a>
+        <a class="nav-item" href="./content-studio.html">
+          <span class="ic">文</span>Content Studio
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Grow</div>
+        
+        <a class="nav-item" href="./prospects.html">
+          <span class="ic">◈</span>Prospects
+          
+        </a>
+        <a class="nav-item" href="./reports.html">
+          <span class="ic">▥</span>Reports
+          
+        </a>
+        <a class="nav-item" href="./billing.html">
+          <span class="ic">▧</span>Billing
+          
+        </a>
+        <a class="nav-item" href="./guarantee.html">
+          <span class="ic">✓</span>Guarantee Tracker
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">System</div>
+        
+        <a class="nav-item" href="./audit-log.html">
+          <span class="ic">≡</span>Audit Log
+          
+        </a>
+        <a class="nav-item" href="./knowledge-skills.html">
+          <span class="ic">✦</span>Knowledge & Skills
+          
+        </a>
+        <a class="nav-item" href="./settings.html">
+          <span class="ic">⚙</span>Settings
+          
+        </a>
+      </div>
+    <div class="rail-foot"><span class="dot dk-warn"></span> 2 integrations degraded <span style="margin-left:auto" class="mono">v0.9</span></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">Site Health</div>
+      <div class="tb-search">Search clients, flags, runs… <span class="slash">/</span></div>
+      <div class="tb-right">
+        <span class="tb-date">Mon 6 Jul 2026 · 09:42</span>
+        <span class="tb-bell">&#128276;</span>
+        <div class="avatar">WC</div>
+      </div>
+    </div>
+    <div class="content">
+
+<div class="tiles">
+  <div class="tile"><div class="lbl">Sites monitored</div><div class="row"><div class="val">24</div><div class="delta d-flat">checks every 60s</div></div></div>
+  <div class="tile"><div class="lbl">Uptime · 30d</div><div class="row"><div class="val">99.97<span class="unit">%</span></div><div class="delta d-flat">13m total downtime</div></div></div>
+  <div class="tile"><div class="lbl">SSL expiring ≤ 30d</div><div class="row"><div class="val">2</div><div class="delta d-flat">auto-renew scheduled</div></div></div>
+  <div class="tile"><div class="lbl">Form canaries passing</div><div class="row"><div class="val">23<span class="unit">/24</span></div><div class="delta d-down">Hearts booking form ✗</div></div></div>
+</div>
+<div class="flag f-crit" style="margin-bottom:14px">
+  <div class="flag-top"><span class="who">Hearts Dental — booking form canary failed</span><span class="pill p-crit">● failing since 06:12</span><span class="when">3 consecutive runs</span></div>
+  <div class="flag-body">Canary submits a test booking every 24h — confirmation email not received within 90s. Form POST returns 200 but the notification hook times out. <b>Task #4183 assigned to Ish · P1.</b> Last human-verified submission: Fri 20:14.</div>
+  <div class="flag-act"><span class="btn btn-pri btn-sm">Open task</span><span class="btn btn-ghost btn-sm">Run canary now</span><span class="btn btn-ghost btn-sm">Form logs</span><span class="xs faint" style="margin-left:auto">est. 3–5 enquiries/day at risk</span></div>
+</div>
+<div class="card">
+  <div class="card-h"><h2>All sites</h2><span class="hint">uptime · SSL · Core Web Vitals · canary</span><span class="link">All 24 →</span></div>
+  <table class="t">
+    <tr><th>Site</th><th class="num">Uptime 30d</th><th class="num">Resp.</th><th class="num">SSL days</th><th>LCP</th><th>CLS</th><th>Canary</th><th>Last incident</th><th></th></tr>
+    <tr style="background:var(--crit-tint)"><td class="main-cell">heartsdental.com.au</td><td class="num">99.98%</td><td class="num">412 ms</td><td class="num">64</td><td><span class="pill p-ok">2.1s</span></td><td><span class="pill p-ok">0.02</span></td><td><span class="pill p-crit">✗ 06:12</span></td><td class="xs">form hook timeout</td><td><span class="btn btn-pri btn-sm">Fix</span></td></tr>
+    <tr><td class="main-cell">yarrahillsdental.com.au</td><td class="num">100%</td><td class="num">388 ms</td><td class="num">211</td><td><span class="pill p-ok">1.9s</span></td><td><span class="pill p-ok">0.01</span></td><td><span class="pill p-ok">✓ 05:40</span></td><td class="xs faint">—</td><td><span class="btn btn-ghost btn-sm">Open</span></td></tr>
+    <tr><td class="main-cell">smilecouncil.com.au</td><td class="num">99.99%</td><td class="num">421 ms</td><td class="num"><span style="color:var(--warn);font-weight:650">21</span></td><td><span class="pill p-ok">2.3s</span></td><td><span class="pill p-ok">0.03</span></td><td><span class="pill p-ok">✓ 05:41</span></td><td class="xs">SSL renews 12 Jul</td><td><span class="btn btn-ghost btn-sm">Open</span></td></tr>
+    <tr><td class="main-cell">trowsechiro.com.au</td><td class="num">100%</td><td class="num">352 ms</td><td class="num">148</td><td><span class="pill p-ok">1.7s</span></td><td><span class="pill p-ok">0.01</span></td><td><span class="pill p-ok">✓ 05:42</span></td><td class="xs faint">—</td><td><span class="btn btn-ghost btn-sm">Open</span></td></tr>
+    <tr><td class="main-cell">northcotephysio.com.au</td><td class="num">99.91%</td><td class="num">640 ms</td><td class="num">92</td><td><span class="pill p-warn">2.9s</span></td><td><span class="pill p-ok">0.04</span></td><td><span class="pill p-ok">✓ 05:44</span></td><td class="xs">4m outage 28 Jun</td><td><span class="btn btn-ghost btn-sm">Perf plan</span></td></tr>
+    <tr><td class="main-cell">prestonfamilydental.com.au</td><td class="num">100%</td><td class="num">401 ms</td><td class="num"><span style="color:var(--warn);font-weight:650">28</span></td><td><span class="pill p-ok">2.2s</span></td><td><span class="pill p-warn">0.11</span></td><td><span class="pill p-ok">✓ 05:45</span></td><td class="xs">CLS from promo banner</td><td><span class="btn btn-ghost btn-sm">Open</span></td></tr>
+    <tr><td class="main-cell">smiletogo.com.au <span class="pill p-blue">staging</span></td><td class="num faint">—</td><td class="num">318 ms</td><td class="num">339</td><td><span class="pill p-ok">1.6s</span></td><td><span class="pill p-ok">0.00</span></td><td class="faint xs">enrols at launch</td><td class="xs faint">—</td><td><span class="btn btn-ghost btn-sm">Open</span></td></tr>
+  </table>
+  <div class="xs faint" style="margin-top:8px">Showing 7 of 24 · WordPress-era sites carry an extra plugin-vulnerability scan until W8 migration</div>
+</div>
+    </div>
+  </div>
+</div>
+</body></html>
