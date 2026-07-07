@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './AppShell'
 import { GatesPage } from './GatesPage'
+import { AuditPage } from './AuditPage'
 import { InboxPage } from './InboxPage'
 import { TodayPage } from './TodayPage'
 import { PagePlaceholder } from './PagePlaceholder'
@@ -9,6 +10,7 @@ import { NAV_ITEMS } from './nav'
 const BUILT: Record<string, () => React.ReactElement> = {
   today: () => <TodayPage />,
   inbox: () => <InboxPage />,
+  audit: () => <AuditPage />,
 }
 
 export function AppRoutes() {

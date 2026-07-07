@@ -39,9 +39,9 @@ describe('app shell', () => {
   it('navigating a rail item swaps the page and topbar title', async () => {
     const user = userEvent.setup()
     renderShell()
-    await user.click(screen.getByRole('link', { name: /Audit Log/ }))
-    expect(screen.getByRole('heading', { level: 1, name: 'Audit Log' })).toBeInTheDocument()
-    expect(screen.getByText(/step 1\.7 of the build plan/)).toBeInTheDocument()
+    await user.click(screen.getByRole('link', { name: /Reports/ }))
+    expect(screen.getByRole('heading', { level: 1, name: 'Reports' })).toBeInTheDocument()
+    expect(screen.getByText(/step 4\.3 of the build plan/)).toBeInTheDocument()
   })
 
   it('theme toggle flips data-theme on <html> and persists', async () => {

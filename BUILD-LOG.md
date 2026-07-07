@@ -4,6 +4,26 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## ⛳ STAGE 1 COMPLETE — human review gate — 2026-07-07
+
+Stage 1 (Spine) is done: 1.1–1.7 all green in one day. **The loop is stopped at this boundary per BUILD-LOOP.md — everything below builds on these contracts, so review before Stage 2+ piles on.**
+
+**What exists:** app shell (rail/topbar, tokens, both themes) · Postgres schema to SPEC-SPINE §2 with DB-enforced append-only timeline/audit · skill runner with G0–G3 gates (frozen payloads, drift invalidation, precision ledger, graduation streaks) · entity matcher (30/30 golden set, learning queue) · W2 inbox pipeline (Hearts E2E green, zero-loss audit, complaint/injection/autoreply guardrails) · Today tab (ranked flags, tiles, approval queue) · Audit Log viewer. Tests: server 52, app 12, all green; every step's DoD verified live in both themes.
+
+**Review suggestions:** (1) run `npm run db:dev` in `server/` + `npm run api` + `npm run dev` in `app/`, click through Today/Inbox/Gates/Audit; (2) skim the schema (`server/migrations/`) — it is the SaaS-era contract; (3) read the four OPEN items in BLOCKERS.md — the API key is 5 minutes of work and makes every skill run real.
+
+**To continue the loop after review:** re-run the same `/loop` prompt. Note Stage 2.0 (voice vendor spike) needs trial accounts + a test number (pre-known blocker) — the loop can prepare the spike harness and scripts but not place calls; if that's the desire, say so, otherwise it will treat 2.0 as blocked and consider Stage 3.1 (notification center) next per the blocked-step rule.
+
+## 1.7 · Audit Log viewer — 2026-07-07
+
+**Built:** `GET /api/audit` — filter by client slug, actor, exact action or action family (`gate.` matches all gate decisions — the workflow lens per §13), latest-200 with facet lists for the dropdowns; the log itself stays append-only at the DB role level (re-verified in this suite). Audit tab UI: comp-style table (When / Actor / Action / Client / Why), actor chips coloured by type (human blue, skill teal, system gray), mono action chips, rollback badge when `rollback_of` is set, filter selects + clear, honest "showing latest 200" cap label, empty state.
+
+**Evidence:** server 52/52 incl. audit 2/2 — one test drives every 1.5–1.6 action family through the real paths (pipeline → task.create/request.create; gate approve → gate.approve + email.send.execute; flag resolve → flag.resolve; match resolve → match.resolve) then asserts all appear in the viewer with non-empty actor and why, and that client/actor/action-family filters each constrain correctly; app 12/12 (render + filter refetch). Live demo screenshots in both themes show human and skill actors side by side with real whys.
+
+**Files:** `server/src/api.ts` (+/api/audit), `server/test/audit.test.ts`, `app/src/app/AuditPage{,.test}.tsx`, routes, shell test retarget.
+
+**Decisions:** the §13 "workflow" filter is implemented as an action-family filter (`verb.` prefix) — audit rows carry verb.noun actions, not W-numbers; when Stage 3 monitors add workflow-tagged flags at volume, a flag-join filter can be added without schema change.
+
 ## 1.6 · Today tab — 2026-07-07
 
 **Built:** (1) **Flag ranking + actions** (`server/src/flags.ts`): deterministic scorer — severity weight (red 100 / amber 40 / info 10) + age (capped 48h) + at-risk lifecycle +25 + health<60 +15; `resolveFlag`/`snoozeFlag` mutate state and write `flag.resolve`/`flag.snooze` audit rows with the human's why; acted flags leave the feed and can't be double-acted (409). (2) **Tiles** from `metrics_daily` only (never live APIs, §2): enquiries 7d vs prior week, cost-per-enquiry (cost/conversions), ads spend, portfolio health (avg + healthy/watch/at-risk counts), each with a 28-day sparkline. (3) **API:** `GET /api/today`, `POST /api/flags/:id/{resolve,snooze}`. (4) **Today page:** time-of-day greeting, 4 tiles with comp-style sparklines, ranked flag feed (severity stripes, workflow chips, reason-required resolve/snooze feeding the audit log), approval queue reusing GateCard with a new readable `email.send` renderer (To/Subject/body, not raw JSON). "N waiting on you" badge.

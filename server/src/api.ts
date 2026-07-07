@@ -95,6 +95,41 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
     return c.json({ clients: rows })
   })
 
+  /* Audit viewer (§13 1.7): filter by client, actor, action family.
+     The log is append-only at the DB level — this is a read surface. */
+  app.get('/api/audit', async (c) => {
+    const client = c.req.query('client') // slug
+    const actor = c.req.query('actor')
+    const action = c.req.query('action') // exact or family prefix (e.g. "gate.")
+    const params: unknown[] = []
+    const where: string[] = []
+    if (client) {
+      params.push(client)
+      where.push(`cl.slug = $${params.length}`)
+    }
+    if (actor) {
+      params.push(actor)
+      where.push(`a.actor_id = $${params.length}`)
+    }
+    if (action) {
+      params.push(action.endsWith('.') ? `${action}%` : action)
+      where.push(`a.action LIKE $${params.length}`)
+    }
+    const { rows } = await db.query(
+      `SELECT a.id, a.at, a.actor_type, a.actor_id, a.action, a.target_type, a.target_id,
+              a.why, a.rollback_of, cl.slug AS client_slug, cl.name AS client_name
+       FROM audit_log a LEFT JOIN clients cl ON cl.id = a.client_id
+       ${where.length ? `WHERE ${where.join(' AND ')}` : ''}
+       ORDER BY a.at DESC LIMIT 200`,
+      params,
+    )
+    const { rows: facets } = await db.query(
+      `SELECT array_agg(DISTINCT a.actor_id) AS actors, array_agg(DISTINCT a.action) AS actions
+       FROM audit_log a`,
+    )
+    return c.json({ entries: rows, actors: facets[0].actors ?? [], actions: facets[0].actions ?? [] })
+  })
+
   app.get('/api/today', async (c) => {
     const [tiles, flags, queue] = await Promise.all([
       todayTiles(db),
