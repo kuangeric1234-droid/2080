@@ -1,0 +1,10 @@
+{
+  "name": "email-triage",
+  "version": "v1",
+  "description": "Classifies inbound support@ email into the W2 request taxonomy. Classify-only: no action surface.",
+  "gate": "G0",
+  "model_tier": "fast",
+  "action": "none",
+  "lifecycle_state": "shadow-blocked",
+  "lifecycle_note": "PROVISIONAL golden set only (10 synthetic cases). Cannot leave shadow mode until the team's 150 labelled emails arrive (BLOCKERS.md: triage-golden-set)."
+}

@@ -1,0 +1,9 @@
+{
+  "name": "ack-writer",
+  "version": "v1",
+  "description": "Drafts the acknowledgement reply for triaged requests. Every send is human-approved (G2).",
+  "gate": "G2",
+  "model_tier": "fast",
+  "action": "email.send",
+  "expires_hours": 24
+}

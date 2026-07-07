@@ -69,6 +69,10 @@ export async function seed(client: pg.Client) {
     ['trowse', 'Dr Ben Trowse', ['ben@trowsedental.com.au'], ['+61419553190'], 'owner', false, null],
     ['aspire-one', 'Dr Sofia Marino', ['sofia@aspireone.dental'], [], 'owner', false, null],
     ['smile-to-go', 'Dr Jack Lee', ['jack@smiletogo.com.au'], [], 'owner', false, null],
+    // Smile Council and Trowse share a management group — their shared
+    // billing domain is the matcher's never-auto-at-2-candidates case
+    ['smile-council', 'Group Admin (Dental Group Vic)', ['sc-admin@dentalgroupvic.com.au', 'billing@dentalgroupvic.com.au'], [], 'billing', false, null],
+    ['trowse', 'Group Admin (Dental Group Vic)', ['tr-admin@dentalgroupvic.com.au', 'billing@dentalgroupvic.com.au'], [], 'billing', false, null],
   ]
   for (const [slug, name, email, phone, role, vip, lang] of contacts) {
     await client.query(
@@ -94,8 +98,8 @@ export async function seed(client: pg.Client) {
   await client.query(
     `INSERT INTO requests (id, workspace_id, client_id, thread_id, type, summary, status, sla_due_at, confidence, source, missing_assets, language)
      VALUES
-       ($1, $3, $4, $5, 'content_update', 'New bio for Dr Sharma', 'waiting_client', $6, 0.97, 'email', '["bio copy","headshot"]', 'en'),
-       ($2, $3, $4, $5, 'website_change', 'Update Invisalign pricing on fees page', 'triaged', $6, 0.97, 'email', '[]', 'en')`,
+       ($1, $3, $4, $5, 'team_member_add', 'New bio for Dr Sharma', 'waiting_client', $6, 0.97, 'email', '["bio copy","headshot"]', 'en'),
+       ($2, $3, $4, $5, 'content_change', 'Update Invisalign pricing on fees page', 'triaged', $6, 0.97, 'email', '[]', 'en')`,
     [reqBio, reqPricing, WORKSPACE_ID, clientId['hearts'], heartsThread, daysAgo(-2, 17)],
   )
   const taskBio = id('task')
@@ -267,6 +271,42 @@ export async function seed(client: pg.Client) {
        ($2, $3, 'WC', 'monitor_flag', 'red', $5, 'Yarra Hills CPA up 38% in 7 days', 'flag:yarra-hills:ads')`,
     [id('ntf'), id('ntf'), WORKSPACE_ID, clientId['hearts'], clientId['yarra-hills']],
   )
+
+  /* ── inbox: the raw mail behind the demo scenarios (W2) ──────────────── */
+  const prospectQueueId = id('mq')
+  await client.query(
+    `INSERT INTO match_queue (id, workspace_id, refs, event, candidates, confidence, state)
+     VALUES ($1, $2, $3, $4, '[]', 0.2, 'prospect')`,
+    [prospectQueueId, WORKSPACE_ID,
+     JSON.stringify({ emailFrom: 'newlead@gmail.com' }),
+     JSON.stringify({
+       type: 'EMAIL_IN', occurredAt: daysAgo(0, 7).toISOString(),
+       title: 'newlead@gmail.com: Do you build dental websites?',
+       body: 'Hi — we are opening a practice in Doncaster next year. Do you build dental websites?',
+       source: 'gmail', sourceRef: 'msg_prospect_001',
+     })],
+  )
+  const inboxRows: Array<[string, string | null, string, string, string, Date, string, string | null, string[], string | null]> = [
+    ['msg_hearts_0707', heartsThread, 'karen@heartsdental.com.au', 'Bio + pricing update',
+     'Hi team — two things: Dr Sharma has a new bio (attached soon), and can we update the Invisalign pricing on the fees page? Thanks!',
+     daysAgo(0, 8), 'triaged', null, [reqBio, reqPricing], null],
+    ['msg_ooo_tom', null, 'tom@yarrahillsdental.com.au', 'Out of office: Re: June report',
+     'I am away until Monday with limited email access.',
+     daysAgo(1, 9), 'filed', 'autoreply', [], null],
+    ['msg_thanks_karen', heartsThread, 'karen@heartsdental.com.au', 'Re: Bio + pricing update',
+     'Thanks so much!',
+     daysAgo(0, 9), 'filed', 'noise', [], null],
+    ['msg_prospect_001', null, 'newlead@gmail.com', 'Do you build dental websites?',
+     'Hi — we are opening a practice in Doncaster next year. Do you build dental websites?',
+     daysAgo(0, 7), 'held', 'prospect', [], prospectQueueId],
+  ]
+  for (const [msgId, threadId, from, subject, body, at, state, disposition, requestIds, mqId] of inboxRows) {
+    await client.query(
+      `INSERT INTO inbox_messages (id, workspace_id, message_id, thread_id, from_email, to_email, subject, body_text, received_at, state, disposition, request_ids, match_queue_id)
+       VALUES ($1, $2, $3, $4, $5, 'support@2080.dental', $6, $7, $8, $9, $10, $11, $12)`,
+      [id('in'), WORKSPACE_ID, msgId, threadId, from, subject, body, at, state, disposition, requestIds, mqId],
+    )
+  }
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])

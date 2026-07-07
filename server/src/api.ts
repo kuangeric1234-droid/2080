@@ -3,13 +3,96 @@ import type pg from 'pg'
 import type { ModelClient } from './skills/model.ts'
 import { approve, reject } from './skills/gates.ts'
 import { runSkill } from './skills/runner.ts'
+import { resolveMatch } from './matcher.ts'
+import { processInboundEmail, zeroLossAudit } from './inbox/pipeline.ts'
+import { onTaskCompleted } from './inbox/completion.ts'
+import {
+  MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
+} from './inbox/connectors.ts'
 
 /** The platform API. Small on purpose — routes land with the §13 step that
     needs them. */
-export function buildApp(db: pg.Client | pg.Pool, model: ModelClient) {
+export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors?: InboxConnectors) {
   const app = new Hono()
+  const inboxConnectors: InboxConnectors =
+    connectors ?? { mail: new MockMailSender(), tasks: new MockActiveCollab() }
+  /* Live is safe while the mail/task connectors are mocks. The moment real
+     Gmail credentials are wired, this must default to shadow until the
+     150-email golden set passes (BLOCKERS.md: triage-golden-set). */
+  const inboxMode = (process.env.INBOX_MODE as 'shadow' | 'live') ?? 'live'
 
   app.get('/api/health', (c) => c.json({ ok: true }))
+
+  /* Webhooks: persist + process. Real Gmail push delivers a historyId and the
+     messages are pulled; the mock form accepts the raw message directly. */
+  app.post('/hooks/gmail', async (c) => {
+    const email = await c.req.json<RawEmail>()
+    if (!email.messageId || !email.from) return c.json({ error: 'messageId and from are required' }, 400)
+    const result = await processInboundEmail(db, model, inboxConnectors, email, { mode: inboxMode })
+    return c.json(result)
+  })
+
+  app.post('/hooks/activecollab', async (c) => {
+    const body = await c.req.json<{ externalRef: string; evidence?: Array<{ label: string; url: string }>; actor?: string }>()
+    if (!body.externalRef) return c.json({ error: 'externalRef is required' }, 400)
+    try {
+      const result = await onTaskCompleted(db, model, {
+        externalRef: body.externalRef, evidence: body.evidence ?? [], actor: body.actor ?? 'system',
+      })
+      return c.json(result)
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
+    }
+  })
+
+  app.get('/api/inbox', async (c) => {
+    const { rows: messages } = await db.query(
+      `SELECT im.id, im.from_email, im.subject, im.state, im.disposition, im.received_at,
+              im.thread_id, im.match_queue_id,
+              COALESCE(json_agg(json_build_object(
+                'id', r.id, 'type', r.type, 'summary', r.summary,
+                'status', r.status, 'sla_due_at', r.sla_due_at,
+                'client_name', cl.name
+              ) ORDER BY r.created_at) FILTER (WHERE r.id IS NOT NULL), '[]') AS requests
+       FROM inbox_messages im
+       LEFT JOIN requests r ON r.id = ANY(im.request_ids)
+       LEFT JOIN clients cl ON cl.id = r.client_id
+       GROUP BY im.id
+       ORDER BY im.received_at DESC`,
+    )
+    const unaccounted = await zeroLossAudit(db)
+    return c.json({ messages, unaccounted: unaccounted.length })
+  })
+
+  app.get('/api/match-queue', async (c) => {
+    const { rows: items } = await db.query(
+      `SELECT id, refs, event, candidates, confidence, state, created_at
+       FROM match_queue WHERE state = 'open' ORDER BY created_at`,
+    )
+    return c.json({ items })
+  })
+
+  app.post('/api/match-queue/:id/resolve', async (c) => {
+    const { clientId, actor } = await c.req.json<{ clientId: string; actor: string }>()
+    if (!clientId || !actor) return c.json({ error: 'clientId and actor are required' }, 400)
+    try {
+      const result = await resolveMatch(db, c.req.param('id'), clientId, actor)
+      // held inbox mail is attached to its client's timeline by resolveMatch
+      await db.query(
+        `UPDATE inbox_messages SET state = 'filed', disposition = 'resolved_by_human'
+         WHERE match_queue_id = $1 AND state = 'held'`,
+        [c.req.param('id')],
+      )
+      return c.json(result)
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 409)
+    }
+  })
+
+  app.get('/api/clients', async (c) => {
+    const { rows } = await db.query(`SELECT id, slug, name, lifecycle FROM clients ORDER BY name`)
+    return c.json({ clients: rows })
+  })
 
   app.get('/api/gate-items', async (c) => {
     const state = c.req.query('state') ?? 'pending'

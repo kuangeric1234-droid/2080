@@ -53,7 +53,7 @@ export function loadSkill(
     throw new Error(`skill ${name}@${resolved}: invalid model_tier ${config.model_tier}`)
   }
   if (typeof config.action !== 'string' || !config.action) {
-    throw new Error(`skill ${name}@${resolved}: action is required`)
+    throw new Error(`skill ${name}@${resolved}: action is required ('none' for classify-only skills)`)
   }
   return {
     name: config.name,

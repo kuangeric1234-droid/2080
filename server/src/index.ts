@@ -8,6 +8,7 @@ const DATABASE_URL =
 const PORT = Number(process.env.PORT ?? 5483)
 
 const pool = new pg.Pool({ connectionString: DATABASE_URL })
+// PROVISIONAL connectors (BLOCKERS.md: gmail-oauth, activecollab-token)
 const app = buildApp(pool, defaultModelClient())
 
 serve({ fetch: app.fetch, port: PORT }, (info) => {

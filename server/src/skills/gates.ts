@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 import { monotonicFactory } from 'ulid'
 import type pg from 'pg'
+import { MockMailSender, type MailSender } from '../inbox/connectors.ts'
 
 const ulid = monotonicFactory()
 export const id = (prefix: string) => `${prefix}_${ulid()}`
@@ -26,9 +27,37 @@ export interface ActionResult {
 
 type Executor = (db: pg.Client | pg.Pool, payload: ActionPayload) => Promise<ActionResult>
 
+/* The mail sender behind email.send. PROVISIONAL default: the recording mock
+   (BLOCKERS.md: gmail-oauth). Swapped for the real Gmail send-as connector
+   at startup once credentials exist — executor code does not change. */
+let mailSender: MailSender = new MockMailSender()
+export function setMailSender(sender: MailSender) {
+  mailSender = sender
+}
+
 /* Skills never hold credentials — they propose actions, and executors are
    the platform tools that perform them (§3.2). */
 export const executors: Record<string, Executor> = {
+  'email.send': async (db, payload) => {
+    if (!payload.client_id) throw new Error('email.send requires client_id')
+    const { to, subject, body, thread_id } = payload.data as {
+      to?: string; subject?: string; body?: string; thread_id?: string | null
+    }
+    if (!to || !subject || !body) throw new Error('email.send payload needs to, subject, body')
+    const { providerMessageId } = await mailSender.send({
+      to, subject, body, inReplyTo: thread_id ?? null,
+    })
+    const evtId = id('evt')
+    await db.query(
+      `INSERT INTO timeline_events (id, workspace_id, client_id, type, occurred_at, title, body, payload, source, source_ref, visibility)
+       VALUES ($1, $2, $3, 'EMAIL_OUT', now(), $4, $5, $6, 'gmail', $7, 'client_visible')`,
+      [
+        evtId, WORKSPACE_ID, payload.client_id, `Sent: ${subject}`, body,
+        JSON.stringify({ to, thread_id: thread_id ?? null }), providerMessageId,
+      ],
+    )
+    return { targetType: 'timeline_event', targetId: evtId }
+  },
   'timeline.note': async (db, payload) => {
     if (!payload.client_id) throw new Error('timeline.note requires client_id')
     const evtId = id('evt')

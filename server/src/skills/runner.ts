@@ -15,6 +15,9 @@ export interface RunOptions {
   trigger: string
   input: unknown
   skillsDir?: string
+  /** Platform-supplied fields merged into the frozen action payload (e.g.
+      the recipient for email.send) — never model-controlled. */
+  actionData?: Record<string, unknown>
 }
 
 export interface RunOutcome {
@@ -79,10 +82,21 @@ export async function runSkill(
     return { runId, definition, error, output: null, gateItemId: null, executed: null }
   }
 
+  /* Classify-only skills (action: none) have no action surface at all —
+     their output is data for pipeline code, never an executable payload
+     (SPEC-INBOX §3 untrusted-input rule). */
+  if (definition.action === 'none') {
+    return { runId, definition, error: null, output, gateItemId: null, executed: null }
+  }
+
   const payload: ActionPayload = {
     kind: definition.action,
     client_id: opts.clientId,
-    data: { ...(output as Record<string, unknown>), created_by: `${definition.name}@${definition.version}` },
+    data: {
+      ...(output as Record<string, unknown>),
+      ...(opts.actionData ?? {}),
+      created_by: `${definition.name}@${definition.version}`,
+    },
   }
 
   /* G0 silent / G1 auto-but-visible: execute immediately; G1 records an

@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "properties": {
+    "confidence": { "type": "number" },
+    "thread_action": { "type": "string", "enum": ["new", "append", "noise"] },
+    "tone": { "type": "string", "enum": ["friendly", "neutral", "terse", "upset"] },
+    "reply_language": { "type": "string" },
+    "requests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "content_change", "team_member_add", "team_member_remove", "hours_change",
+              "new_page", "ads_request", "seo_request", "billing_question", "question",
+              "asset_delivery", "review_help", "complaint", "fyi", "spam", "unknown"
+            ]
+          },
+          "summary": { "type": "string" },
+          "urgency": { "type": "string", "enum": ["normal", "scheduled", "urgent"] },
+          "effective_date": { "type": ["string", "null"] },
+          "assets_missing": { "type": "array", "items": { "type": "string" } },
+          "sla_days": { "type": "number" },
+          "route": {
+            "type": "string",
+            "enum": ["web", "specialist", "coordinator", "reply_only", "assets", "wally", "file", "human_queue"]
+          }
+        },
+        "required": ["type", "summary", "urgency", "assets_missing", "sla_days", "route"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["confidence", "thread_action", "tone", "reply_language", "requests"],
+  "additionalProperties": false
+}

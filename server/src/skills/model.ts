@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
+import { mockAck, mockCompletion, mockTriage } from '../inbox/mockResponders.ts'
 
 /* Model tiers per MASTER-BUILD-PLAN §3.2: high-volume classification/triage
    on the fast tier, drafting/judgement on the top tier. */
@@ -94,10 +95,20 @@ export class MockModelClient implements ModelClient {
   }
 }
 
-/** Real client when a key is configured, mock otherwise (dev/demo only). */
+/** Real client when a key is configured, mock otherwise (dev/demo only).
+    The mock routes on the skill's SKILL.md heading. */
 export function defaultModelClient(): ModelClient {
   if (process.env.ANTHROPIC_API_KEY) return new AnthropicModelClient()
   return new MockModelClient((req) => {
+    if (req.system.startsWith('# email-triage')) {
+      return mockTriage(req.input as Parameters<typeof mockTriage>[0])
+    }
+    if (req.system.startsWith('# ack-writer')) {
+      return mockAck(req.input as Parameters<typeof mockAck>[0])
+    }
+    if (req.system.startsWith('# completion-writer')) {
+      return mockCompletion(req.input as Parameters<typeof mockCompletion>[0])
+    }
     const input = req.input as { name?: string; lifecycle?: string }
     return {
       note_title: `${input.name ?? 'Practice'} is on the platform`,

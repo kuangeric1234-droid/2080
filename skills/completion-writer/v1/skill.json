@@ -1,0 +1,9 @@
+{
+  "name": "completion-writer",
+  "version": "v1",
+  "description": "Drafts the done-email when a request's task completes, grounded in evidence links. G2 — human approves every send.",
+  "gate": "G2",
+  "model_tier": "fast",
+  "action": "email.send",
+  "expires_hours": 48
+}
