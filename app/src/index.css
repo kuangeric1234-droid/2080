@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   20-80 design tokens — source of truth: design-comps/platform.html
+   Light is default; dark via prefers-color-scheme, both overridable
+   with an explicit [data-theme] set by the theme toggle.
+--------------------------------------------------------------------------- */
+:root {
+  --bg: #EEF3F1;
+  --surface: #FFFFFF;
+  --surface-2: #F7FAF9;
+  --ink: #15242B;
+  --muted: #5A6B74;
+  --faint: #8A9CA3;
+  --line: #E1E8E6;
+  --grid: #ECF1EF;
+  --accent: #0E7C7B;
+  --accent-2: #0B6463;
+  --accent-tint: #E4F0EF;
+  --ok: #2E7D4F;
+  --ok-tint: #E8F2EC;
+  --warn: #A96F14;
+  --warn-tint: #F7EFDC;
+  --crit: #B23A32;
+  --crit-tint: #F8EAE8;
+  --blue: #2C5FA8;
+  --blue-tint: #E9EFF7;
+  --shadow: 0 1px 2px rgba(20, 40, 45, .04), 0 4px 16px rgba(20, 40, 45, .05);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0D1416;
+    --surface: #141E1F;
+    --surface-2: #192425;
+    --ink: #E7EEEC;
+    --muted: #94A6A6;
+    --faint: #6C8080;
+    --line: #243231;
+    --grid: #1E2C2B;
+    --accent: #41B8AC;
+    --accent-2: #5BC9BE;
+    --accent-tint: #12312F;
+    --ok: #54B583;
+    --ok-tint: #14291F;
+    --warn: #D69A3C;
+    --warn-tint: #2E2410;
+    --crit: #DE6A61;
+    --crit-tint: #2F1512;
+    --blue: #7BA3DE;
+    --blue-tint: #16243A;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .2), 0 6px 20px rgba(0, 0, 0, .28);
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #0D1416;
+  --surface: #141E1F;
+  --surface-2: #192425;
+  --ink: #E7EEEC;
+  --muted: #94A6A6;
+  --faint: #6C8080;
+  --line: #243231;
+  --grid: #1E2C2B;
+  --accent: #41B8AC;
+  --accent-2: #5BC9BE;
+  --accent-tint: #12312F;
+  --ok: #54B583;
+  --ok-tint: #14291F;
+  --warn: #D69A3C;
+  --warn-tint: #2E2410;
+  --crit: #DE6A61;
+  --crit-tint: #2F1512;
+  --blue: #7BA3DE;
+  --blue-tint: #16243A;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .2), 0 6px 20px rgba(0, 0, 0, .28);
+}
+
+:root[data-theme="light"] {
+  --bg: #EEF3F1;
+  --surface: #FFFFFF;
+  --surface-2: #F7FAF9;
+  --ink: #15242B;
+  --muted: #5A6B74;
+  --faint: #8A9CA3;
+  --line: #E1E8E6;
+  --grid: #ECF1EF;
+  --accent: #0E7C7B;
+  --accent-2: #0B6463;
+  --accent-tint: #E4F0EF;
+  --ok: #2E7D4F;
+  --ok-tint: #E8F2EC;
+  --warn: #A96F14;
+  --warn-tint: #F7EFDC;
+  --crit: #B23A32;
+  --crit-tint: #F8EAE8;
+  --blue: #2C5FA8;
+  --blue-tint: #E9EFF7;
+  --shadow: 0 1px 2px rgba(20, 40, 45, .04), 0 4px 16px rgba(20, 40, 45, .05);
+}
+
+/* Tailwind utility names for the token set.
+   `inline` keeps var() indirection so theme switches without re-generation.
+   Shadcn semantic names map onto the same tokens so vendored Watermelon
+   registry components pick up 20-80 styling with zero per-file edits. */
+@theme inline {
+  /* 20-80 palette */
+  --color-canvas: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--muted);
+  --color-ink-faint: var(--faint);
+  --color-line: var(--line);
+  --color-grid: var(--grid);
+  --color-teal: var(--accent);
+  --color-teal-deep: var(--accent-2);
+  --color-teal-tint: var(--accent-tint);
+  --color-ok: var(--ok);
+  --color-ok-tint: var(--ok-tint);
+  --color-warn: var(--warn);
+  --color-warn-tint: var(--warn-tint);
+  --color-crit: var(--crit);
+  --color-crit-tint: var(--crit-tint);
+  --color-info: var(--blue);
+  --color-info-tint: var(--blue-tint);
+
+  /* shadcn semantic aliases (vendored components) */
+  --color-background: var(--bg);
+  --color-foreground: var(--ink);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--ink);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--ink);
+  --color-primary: var(--accent);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--ink);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--muted);
+  --color-accent: var(--accent-tint);
+  --color-accent-foreground: var(--accent);
+  --color-destructive: var(--crit);
+  --color-border: var(--line);
+  --color-input: var(--line);
+  --color-ring: var(--accent);
+
+  --font-sans: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Segoe UI Variable Display", "Segoe UI Semibold", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "Cascadia Code", ui-monospace, "SF Mono", Consolas, monospace;
+
+  --shadow-card: var(--shadow);
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
