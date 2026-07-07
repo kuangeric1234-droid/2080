@@ -1,0 +1,29 @@
+{
+  "name": "platform-server",
+  "version": "0.1.0",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "db:dev": "tsx src/db/dev.ts",
+    "db:reseed": "tsx src/db/dev.ts --reseed",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:seed": "tsx src/db/seed.ts"
+  },
+  "type": "module",
+  "dependencies": {
+    "pg": "^8.22.0",
+    "ulid": "^3.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "@types/pg": "^8.20.0",
+    "embedded-postgres": "^18.4.0-beta.17",
+    "tsx": "^4.23.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10"
+  },
+  "private": true
+}
