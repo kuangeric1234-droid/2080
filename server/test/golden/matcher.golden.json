@@ -1,0 +1,40 @@
+{
+  "description": "Entity matcher golden set — 30 inbound events with expected routing (SPEC-SPINE §3/§7). Extra fixture mappings and shared-domain contacts are seeded by matcher.test.ts before the sweep.",
+  "cases": [
+    { "name": "voice call on known DID", "refs": { "phoneDid": "+61390001112" }, "expect": { "decision": "auto", "client": "hearts", "method": "phone_did" } },
+    { "name": "ads alert on mapped MCC account", "refs": { "adsAccount": "493-201-8876" }, "expect": { "decision": "auto", "client": "yarra-hills", "method": "ads_account" } },
+    { "name": "portal session", "refs": { "portalSession": "psn_hearts_77" }, "expect": { "decision": "auto", "client": "hearts", "method": "portal_session" } },
+    { "name": "ActiveCollab project webhook", "refs": { "acProject": "ac_5512" }, "expect": { "decision": "auto", "client": "smile-council", "method": "ac_project" } },
+    { "name": "GBP review notification", "refs": { "gbpAccount": "gbp_trowse_1" }, "expect": { "decision": "auto", "client": "trowse", "method": "gbp" } },
+    { "name": "BrightLocal export row", "refs": { "brightlocalAccount": "bl_9981" }, "expect": { "decision": "auto", "client": "smile-to-go", "method": "brightlocal" } },
+    { "name": "SMS from known DID", "refs": { "phoneDid": "+61390001112" }, "expect": { "decision": "auto", "client": "hearts", "method": "phone_did" } },
+
+    { "name": "email from Dr Sharma", "refs": { "emailFrom": "priya@heartsdental.com.au" }, "expect": { "decision": "auto", "client": "hearts", "method": "contact_email" } },
+    { "name": "email from Karen Wu", "refs": { "emailFrom": "karen@heartsdental.com.au" }, "expect": { "decision": "auto", "client": "hearts", "method": "contact_email" } },
+    { "name": "email from Dr Nguyen", "refs": { "emailFrom": "tom@yarrahillsdental.com.au" }, "expect": { "decision": "auto", "client": "yarra-hills", "method": "contact_email" } },
+    { "name": "email from Yarra Hills reception", "refs": { "emailFrom": "reception@yarrahillsdental.com.au" }, "expect": { "decision": "auto", "client": "yarra-hills", "method": "contact_email" } },
+    { "name": "email from Dr Rossi", "refs": { "emailFrom": "angela@smilecouncil.com.au" }, "expect": { "decision": "auto", "client": "smile-council", "method": "contact_email" } },
+    { "name": "email from Dr Trowse", "refs": { "emailFrom": "ben@trowsedental.com.au" }, "expect": { "decision": "auto", "client": "trowse", "method": "contact_email" } },
+    { "name": "email from Dr Marino", "refs": { "emailFrom": "sofia@aspireone.dental" }, "expect": { "decision": "auto", "client": "aspire-one", "method": "contact_email" } },
+    { "name": "email from Dr Lee, shouty caps", "refs": { "emailFrom": "JACK@SMILETOGO.COM.AU" }, "expect": { "decision": "auto", "client": "smile-to-go", "method": "contact_email" } },
+
+    { "name": "reply on known Gmail thread, sender stripped", "refs": { "threadId": "gm_thread_hearts_0707" }, "expect": { "decision": "auto", "client": "hearts", "method": "thread" } },
+    { "name": "reply on mapped Yarra Hills thread", "refs": { "threadId": "th_yh_88" }, "expect": { "decision": "auto", "client": "yarra-hills", "method": "thread" } },
+
+    { "name": "new starter on Hearts domain", "refs": { "emailFrom": "newstarter@heartsdental.com.au" }, "expect": { "decision": "auto", "client": "hearts", "method": "domain" } },
+    { "name": "front desk alias on Yarra Hills domain", "refs": { "emailFrom": "frontdesk@yarrahillsdental.com.au" }, "expect": { "decision": "auto", "client": "yarra-hills", "method": "domain" } },
+    { "name": "hygienist on Smile Council contact domain", "refs": { "emailFrom": "hygiene@smilecouncil.com.au" }, "expect": { "decision": "auto", "client": "smile-council", "method": "domain" } },
+    { "name": "accounts alias on Trowse domain", "refs": { "emailFrom": "accounts@trowsedental.com.au" }, "expect": { "decision": "auto", "client": "trowse", "method": "domain" } },
+
+    { "name": "shared management-group domain", "refs": { "emailFrom": "practice@dentalgroupvic.com.au" }, "expect": { "decision": "queue", "method": "domain_shared", "candidates": 2 } },
+    { "name": "shared billing address on two clients", "refs": { "emailFrom": "billing@dentalgroupvic.com.au" }, "expect": { "decision": "queue", "method": "contact_email_tie", "candidates": 2 } },
+    { "name": "Dr Trowse writing from personal gmail", "refs": { "emailFrom": "bentrowse@gmail.com", "signatureName": "Dr Ben Trowse" }, "expect": { "decision": "queue", "method": "fuzzy" } },
+    { "name": "voicemail transcript quoting Karen's mobile", "refs": { "bodyPhone": "+61 412 335 668" }, "expect": { "decision": "queue", "method": "fuzzy" } },
+    { "name": "Melissa Grant signature plus her mobile", "refs": { "emailFrom": "mgrant.personal@outlook.com", "signatureName": "Melissa Grant", "bodyPhone": "0401 887 220" }, "expect": { "decision": "queue", "method": "fuzzy" } },
+
+    { "name": "cold enquiry from gmail", "refs": { "emailFrom": "newlead@gmail.com" }, "expect": { "decision": "prospect" } },
+    { "name": "unknown practice domain", "refs": { "emailFrom": "info@brandnewdental.com.au" }, "expect": { "decision": "prospect" } },
+    { "name": "unknown signature only", "refs": { "emailFrom": "someone@bigpond.com", "signatureName": "Dr Nobody Special" }, "expect": { "decision": "prospect" } },
+    { "name": "webhook with no identifying refs", "refs": {}, "expect": { "decision": "prospect" } }
+  ]
+}

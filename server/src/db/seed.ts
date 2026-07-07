@@ -60,21 +60,21 @@ export async function seed(client: pg.Client) {
   }
 
   /* ── contacts ────────────────────────────────────────────────────────── */
-  const contacts: Array<[string, string, string[], string, boolean, string | null]> = [
-    ['hearts', 'Dr Priya Sharma', ['priya@heartsdental.com.au'], 'owner', false, null],
-    ['hearts', 'Karen Wu', ['karen@heartsdental.com.au'], 'practice_manager', true, 'zh'],
-    ['yarra-hills', 'Dr Tom Nguyen', ['tom@yarrahillsdental.com.au'], 'owner', false, null],
-    ['yarra-hills', 'Melissa Grant', ['reception@yarrahillsdental.com.au'], 'front_desk', false, null],
-    ['smile-council', 'Dr Angela Rossi', ['angela@smilecouncil.com.au'], 'owner', false, null],
-    ['trowse', 'Dr Ben Trowse', ['ben@trowsedental.com.au'], 'owner', false, null],
-    ['aspire-one', 'Dr Sofia Marino', ['sofia@aspireone.dental'], 'owner', false, null],
-    ['smile-to-go', 'Dr Jack Lee', ['jack@smiletogo.com.au'], 'owner', false, null],
+  const contacts: Array<[string, string, string[], string[], string, boolean, string | null]> = [
+    ['hearts', 'Dr Priya Sharma', ['priya@heartsdental.com.au'], [], 'owner', false, null],
+    ['hearts', 'Karen Wu', ['karen@heartsdental.com.au'], ['+61412335668'], 'practice_manager', true, 'zh'],
+    ['yarra-hills', 'Dr Tom Nguyen', ['tom@yarrahillsdental.com.au'], [], 'owner', false, null],
+    ['yarra-hills', 'Melissa Grant', ['reception@yarrahillsdental.com.au'], ['+61401887220'], 'front_desk', false, null],
+    ['smile-council', 'Dr Angela Rossi', ['angela@smilecouncil.com.au'], [], 'owner', false, null],
+    ['trowse', 'Dr Ben Trowse', ['ben@trowsedental.com.au'], ['+61419553190'], 'owner', false, null],
+    ['aspire-one', 'Dr Sofia Marino', ['sofia@aspireone.dental'], [], 'owner', false, null],
+    ['smile-to-go', 'Dr Jack Lee', ['jack@smiletogo.com.au'], [], 'owner', false, null],
   ]
-  for (const [slug, name, email, role, vip, lang] of contacts) {
+  for (const [slug, name, email, phone, role, vip, lang] of contacts) {
     await client.query(
-      `INSERT INTO contacts (id, workspace_id, client_id, name, email, role, portal_access, is_vip, language_pref)
-       VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8)`,
-      [id('ct'), WORKSPACE_ID, clientId[slug], name, email, role, vip, lang],
+      `INSERT INTO contacts (id, workspace_id, client_id, name, email, phone, role, portal_access, is_vip, language_pref)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $9)`,
+      [id('ct'), WORKSPACE_ID, clientId[slug], name, email, phone, role, vip, lang],
     )
   }
 
