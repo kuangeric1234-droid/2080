@@ -1,0 +1,9 @@
+{
+  "name": "hello-world",
+  "version": "v1",
+  "description": "Pipeline-proving skill: drafts a short welcome note for a practice's timeline.",
+  "gate": "G2",
+  "model_tier": "fast",
+  "action": "timeline.note",
+  "expires_hours": 72
+}

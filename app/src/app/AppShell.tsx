@@ -46,8 +46,9 @@ export function AppShell() {
   const searchRef = useRef<HTMLInputElement>(null)
   const [clock, setClock] = useState(nowInMelbourne)
 
-  const active = navItemById(location.pathname.replace(/^\//, ''))
-  const title = active?.label ?? 'Today'
+  const path = location.pathname.replace(/^\//, '')
+  const OFF_RAIL_TITLES: Record<string, string> = { gates: 'Gate items' }
+  const title = navItemById(path)?.label ?? OFF_RAIL_TITLES[path] ?? 'Today'
 
   useEffect(() => {
     const tick = setInterval(() => setClock(nowInMelbourne()), 30_000)

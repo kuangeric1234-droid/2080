@@ -415,7 +415,7 @@ Composition over generation · specificity by construction (every claim traces t
 ### Stage 1 — Spine *(everything else writes into this)*
 - [x] 1.1 Repo scaffold: Vite + React 19 + Tailwind 4, token set, Watermelon components vendored & restyled. **DoD:** app shell with rail/topbar in both themes.
 - [x] 1.2 Postgres schema: clients, contacts, timeline_events, tasks, requests, skill_runs, audit_log, deals. **DoD:** migrations + seed with demo portfolio (Hearts, Yarra Hills, Smile Council, Trowse, Aspire One, Smile To Go).
-- [ ] 1.3 Skill runner: versioned prompts from `/skills/`, structured outputs, run logging, gate framework (G0–G3). **DoD:** a hello-world skill runs, logs, and renders its gate card.
+- [x] 1.3 Skill runner: versioned prompts from `/skills/`, structured outputs, run logging, gate framework (G0–G3). **DoD:** a hello-world skill runs, logs, and renders its gate card.
 - [ ] 1.4 Entity matcher + timeline. **Test:** golden set of 30 emails/events routes ≥95% correctly, <0.8 goes to queue.
 - [ ] 1.5 **Inbox (W2):** Gmail push webhook → email-triage → task creation (ActiveCollab API) → ack drafts → completion-writer on webhook. **Test:** the Hearts double-request email E2E (split into 2 tasks, ack drafted, bio chase scheduled); zero-loss audit query returns empty.
 - [ ] 1.6 **Today tab:** flag-ranker + approval queue + tiles. **Test:** approve/reject flows mutate state + audit log.

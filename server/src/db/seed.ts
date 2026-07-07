@@ -228,7 +228,11 @@ export async function seed(client: pg.Client) {
     `INSERT INTO gate_items (id, workspace_id, skill_run_id, gate, state, payload, expires_at)
      VALUES ($1, $2, $3, 'G2', 'pending', $4, $5)`,
     [id('gate'), WORKSPACE_ID, runAck,
-     JSON.stringify({ action: 'email.send', to: 'karen@heartsdental.com.au', subject: 'Re: Bio + pricing update' }),
+     JSON.stringify({
+       kind: 'email.send',
+       client_id: clientId['hearts'],
+       data: { to: 'karen@heartsdental.com.au', subject: 'Re: Bio + pricing update' },
+     }),
      daysAgo(-1, 8)],
   )
   await client.query(

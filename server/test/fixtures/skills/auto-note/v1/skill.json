@@ -1,0 +1,9 @@
+{
+  "name": "auto-note",
+  "version": "v1",
+  "description": "Test fixture: G1 auto-executing note.",
+  "gate": "G1",
+  "model_tier": "fast",
+  "action": "timeline.note",
+  "expires_hours": null
+}

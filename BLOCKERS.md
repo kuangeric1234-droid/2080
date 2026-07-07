@@ -7,4 +7,4 @@ Format per entry:
 
 ---
 
-*(none yet — the pre-known list lives in BUILD-LOOP.md)*
+- **[OPEN] Anthropic API key** — needed for §13 step 1.3+ (skill runner real model calls) · The runner is built and tested against `MockModelClient` (PROVISIONAL, clearly labelled in output); `AnthropicModelClient` is implemented (`server/src/skills/model.ts`, official SDK, structured outputs, fast tier `claude-haiku-4-5` / top tier `claude-opus-4-8`) but has never made a live call · Provide: create a dev-workspace key at console.anthropic.com, set `ANTHROPIC_API_KEY` in the server environment (never commit it). The runner auto-switches to the real client when the variable is present. Resolving unblocks: live hello-world run, then email-triage (1.5) drafting on real inputs.

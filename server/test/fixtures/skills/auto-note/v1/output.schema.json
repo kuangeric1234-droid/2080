@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "note_title": { "type": "string" },
+    "note_body": { "type": "string" }
+  },
+  "required": ["note_title", "note_body"],
+  "additionalProperties": false
+}

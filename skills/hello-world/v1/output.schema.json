@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "properties": {
+    "note_title": {
+      "type": "string",
+      "description": "One-line note title naming the practice"
+    },
+    "note_body": {
+      "type": "string",
+      "description": "1-2 sentences, plain words, mentions the lifecycle stage from the input"
+    }
+  },
+  "required": ["note_title", "note_body"],
+  "additionalProperties": false
+}
