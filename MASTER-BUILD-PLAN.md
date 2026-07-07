@@ -418,7 +418,7 @@ Composition over generation · specificity by construction (every claim traces t
 - [x] 1.3 Skill runner: versioned prompts from `/skills/`, structured outputs, run logging, gate framework (G0–G3). **DoD:** a hello-world skill runs, logs, and renders its gate card.
 - [x] 1.4 Entity matcher + timeline. **Test:** golden set of 30 emails/events routes ≥95% correctly, <0.8 goes to queue.
 - [x] 1.5 **Inbox (W2):** Gmail push webhook → email-triage → task creation (ActiveCollab API) → ack drafts → completion-writer on webhook. **Test:** the Hearts double-request email E2E (split into 2 tasks, ack drafted, bio chase scheduled); zero-loss audit query returns empty. *(Gmail/AC/model behind PROVISIONAL mocks; email-triage shadow-blocked — see BLOCKERS.md)*
-- [ ] 1.6 **Today tab:** flag-ranker + approval queue + tiles. **Test:** approve/reject flows mutate state + audit log.
+- [x] 1.6 **Today tab:** flag-ranker + approval queue + tiles. **Test:** approve/reject flows mutate state + audit log.
 - [ ] 1.7 Audit Log viewer. **DoD:** filter by client/actor/workflow; every 1.5–1.6 action appears.
 
 ### Stage 2 — Receptionist product (W1) — build to `specs/SPEC-VOICE.md` (honest sizing: 6–8 wks + pilots in parallel with Stage 3; the pilot calendar is the critical path)

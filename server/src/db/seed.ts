@@ -14,7 +14,9 @@ const daysAgo = (n: number, hour = 9) => {
   d.setHours(hour, 0, 0, 0)
   return d
 }
-const dateStr = (d: Date) => d.toISOString().slice(0, 10)
+// local date, not toISOString(): UTC conversion shifts AEST mornings back a day
+const dateStr = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
 /* Deterministic daily wave so charts look alive without Math.random. */
 const wave = (base: number, amp: number, day: number, phase = 0) =>

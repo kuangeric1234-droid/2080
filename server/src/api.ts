@@ -4,6 +4,7 @@ import type { ModelClient } from './skills/model.ts'
 import { approve, reject } from './skills/gates.ts'
 import { runSkill } from './skills/runner.ts'
 import { resolveMatch } from './matcher.ts'
+import { rankFlags, resolveFlag, snoozeFlag, todayTiles } from './flags.ts'
 import { processInboundEmail, zeroLossAudit } from './inbox/pipeline.ts'
 import { onTaskCompleted } from './inbox/completion.ts'
 import {
@@ -92,6 +93,37 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
   app.get('/api/clients', async (c) => {
     const { rows } = await db.query(`SELECT id, slug, name, lifecycle FROM clients ORDER BY name`)
     return c.json({ clients: rows })
+  })
+
+  app.get('/api/today', async (c) => {
+    const [tiles, flags, queue] = await Promise.all([
+      todayTiles(db),
+      rankFlags(db),
+      db.query(`SELECT count(*)::int AS n FROM gate_items WHERE state = 'pending'`),
+    ])
+    return c.json({ tiles, flags, pendingGateItems: queue.rows[0].n })
+  })
+
+  app.post('/api/flags/:id/resolve', async (c) => {
+    const { actor, why } = await c.req.json<{ actor: string; why: string }>()
+    if (!actor || !why) return c.json({ error: 'actor and why are required' }, 400)
+    try {
+      await resolveFlag(db, c.req.param('id'), actor, why)
+      return c.json({ ok: true })
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 409)
+    }
+  })
+
+  app.post('/api/flags/:id/snooze', async (c) => {
+    const { actor, why } = await c.req.json<{ actor: string; why: string }>()
+    if (!actor || !why) return c.json({ error: 'actor and why are required' }, 400)
+    try {
+      await snoozeFlag(db, c.req.param('id'), actor, why)
+      return c.json({ ok: true })
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 409)
+    }
   })
 
   app.get('/api/gate-items', async (c) => {

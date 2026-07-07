@@ -29,9 +29,11 @@ describe('app shell', () => {
     }
   })
 
-  it('redirects / to /today and shows the tab title in the topbar', () => {
+  it('redirects / to /today, which renders the Today page', () => {
     renderShell()
-    expect(screen.getByRole('heading', { level: 1, name: 'Today' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 1, name: /Good (morning|afternoon|evening)\./ }),
+    ).toBeInTheDocument()
   })
 
   it('navigating a rail item swaps the page and topbar title', async () => {

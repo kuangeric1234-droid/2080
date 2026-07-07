@@ -55,6 +55,20 @@ function PayloadBody({ payload }: { payload: GateItem['payload'] }) {
       </p>
     )
   }
+  if (payload.kind === 'email.send') {
+    return (
+      <div className="rounded-lg border border-line bg-canvas px-3 py-2">
+        <div className="text-[11px] text-ink-muted">
+          To <b className="font-semibold text-ink">{String(payload.data.to ?? '')}</b>
+          {' · '}
+          <b className="font-semibold text-ink">{String(payload.data.subject ?? '')}</b>
+        </div>
+        {typeof payload.data.body === 'string' && (
+          <p className="mt-1.5 text-[12px] whitespace-pre-wrap text-ink-muted">{payload.data.body}</p>
+        )}
+      </div>
+    )
+  }
   return (
     <pre className="overflow-x-auto rounded-lg bg-canvas p-2 font-mono text-[11px] text-ink-muted">
       {JSON.stringify(payload.data, null, 2)}
