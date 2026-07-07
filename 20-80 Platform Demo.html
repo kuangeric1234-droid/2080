@@ -1,0 +1,832 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<title>20-80 Platform — Live Demo (Agency Dashboard + Client Portal)</title>
+<style>
+  :root{
+    --bg:#F1F4F3; --surface:#FFFFFF; --surface-2:#E9EEEC; --rail:#132029; --rail-ink:#C8D6D3; --rail-act:#1D3038;
+    --ink:#1C2A33; --muted:#5B6C75; --line:#D8E0DD;
+    --accent:#0E7C7B; --accent-soft:#DFF0ED;
+    --blue:#2C5FA8; --blue-soft:#E6EDF7;
+    --warn:#A96F14; --warn-soft:#F6ECD9;
+    --crit:#B23A32; --crit-soft:#F6E3E0;
+    --ok:#2E7D4F; --ok-soft:#E2F0E7;
+    --mono:"Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+    --sans:"Segoe UI Variable Text","Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0E161B;--surface:#161F26;--surface-2:#1C2830;--rail:#0A1115;--rail-ink:#93A7A4;--rail-act:#16242C;
+      --ink:#E4ECEA;--muted:#8FA3AB;--line:#2B3B44;
+      --accent:#41B8AC;--accent-soft:#14332F;--blue:#7FA9DE;--blue-soft:#1B2A3F;
+      --warn:#D9A04C;--warn-soft:#382C15;--crit:#E07A6E;--crit-soft:#3D211D;--ok:#6FBF8F;--ok-soft:#1A3125}
+  }
+  :root[data-theme="dark"]{--bg:#0E161B;--surface:#161F26;--surface-2:#1C2830;--rail:#0A1115;--rail-ink:#93A7A4;--rail-act:#16242C;
+      --ink:#E4ECEA;--muted:#8FA3AB;--line:#2B3B44;
+      --accent:#41B8AC;--accent-soft:#14332F;--blue:#7FA9DE;--blue-soft:#1B2A3F;
+      --warn:#D9A04C;--warn-soft:#382C15;--crit:#E07A6E;--crit-soft:#3D211D;--ok:#6FBF8F;--ok-soft:#1A3125}
+  :root[data-theme="light"]{--bg:#F1F4F3;--surface:#FFFFFF;--surface-2:#E9EEEC;--rail:#132029;--rail-ink:#C8D6D3;--rail-act:#1D3038;
+      --ink:#1C2A33;--muted:#5B6C75;--line:#D8E0DD;
+      --accent:#0E7C7B;--accent-soft:#DFF0ED;--blue:#2C5FA8;--blue-soft:#E6EDF7;
+      --warn:#A96F14;--warn-soft:#F6ECD9;--crit:#B23A32;--crit-soft:#F6E3E0;--ok:#2E7D4F;--ok-soft:#E2F0E7}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14.5px;line-height:1.55}
+  button{font-family:inherit;cursor:pointer}
+
+  .intro{max-width:1220px;margin:0 auto;padding:26px 20px 6px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .intro h1{font-family:var(--disp);font-size:20px;margin:0;font-weight:650}
+  .intro p{margin:2px 0 0;color:var(--muted);font-size:13px}
+  .ws-switch{display:flex;gap:8px}
+  .ws-btn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:8px 18px;font-size:13.5px;font-weight:600}
+  .ws-btn small{display:block;font-weight:400;font-size:11px;color:var(--muted)}
+  .ws-btn.active{border-color:var(--accent);background:var(--accent-soft)}
+  .ws-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  .app{max-width:1220px;margin:10px auto 60px;padding:0 20px}
+  .frame{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(10,25,30,.10)}
+  .topbar{display:flex;align-items:center;gap:14px;background:var(--rail);color:#fff;padding:10px 18px;flex-wrap:wrap}
+  .logo{font-family:var(--mono);font-weight:700;font-size:15px}
+  .logo em{color:#57C9BC;font-style:normal}
+  .search{flex:1;min-width:140px;max-width:340px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--rail-ink);font-size:12.5px;padding:6px 12px}
+  .topbar .who{font-size:12px;color:var(--rail-ink);margin-left:auto;white-space:nowrap}
+  .body{display:flex;min-height:660px}
+  nav.rail{width:214px;flex:0 0 214px;background:var(--rail);padding:10px 8px 18px;display:flex;flex-direction:column;gap:2px}
+  .rail .grp{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#5E7680;padding:12px 12px 4px}
+  .nav-btn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;color:var(--rail-ink);font-size:13.5px;padding:8px 12px;border-radius:8px}
+  .nav-btn:hover{background:var(--rail-act)}
+  .nav-btn.active{background:var(--rail-act);color:#fff;font-weight:600;box-shadow:inset 3px 0 0 #57C9BC}
+  .nav-btn:focus-visible{outline:2px solid #57C9BC;outline-offset:-2px}
+  .nav-btn .n{margin-left:auto;font-family:var(--mono);font-size:10.5px;background:#B23A32;color:#fff;border-radius:99px;padding:1px 7px}
+  .nav-btn .n.t{background:#0E7C7B}
+  main.stage{flex:1;min-width:0;padding:20px 24px 30px;background:var(--bg)}
+  .screen{display:none}
+  .screen.on{display:block}
+  .scr-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .scr-head h2{font-family:var(--disp);font-size:19px;margin:0;font-weight:650}
+  .scr-head p{margin:2px 0 0;color:var(--muted);font-size:12.5px}
+  @media (max-width:860px){
+    .body{flex-direction:column}
+    nav.rail{width:100%;flex:none;flex-direction:row;overflow-x:auto;padding:8px}
+    .rail .grp{display:none}
+    .nav-btn{white-space:nowrap;width:auto}
+  }
+
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:14px}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+  .tile b{display:block;font-family:var(--mono);font-size:20px;font-variant-numeric:tabular-nums}
+  .tile span{font-size:11.5px;color:var(--muted)}
+  .tile.crit b{color:var(--crit)} .tile.warn b{color:var(--warn)} .tile.ok b{color:var(--ok)} .tile.acc b{color:var(--accent)}
+  .delta{font-family:var(--mono);font-size:10.5px;margin-left:4px}
+  .up{color:var(--ok)} .dn{color:var(--crit)}
+  .spark{vertical-align:middle;margin-left:6px}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+  .panel h3{font-family:var(--disp);font-size:14.5px;margin:0 0 10px;font-weight:650;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .cols31{display:grid;grid-template-columns:1.6fr 1fr;gap:14px}
+  @media (max-width:920px){.cols2,.cols31{grid-template-columns:1fr}}
+
+  .chipp{display:inline-block;font-family:var(--mono);font-size:10.5px;padding:2px 9px;border-radius:99px;white-space:nowrap}
+  .c-crit{background:var(--crit-soft);color:var(--crit)} .c-warn{background:var(--warn-soft);color:var(--warn)}
+  .c-ok{background:var(--ok-soft);color:var(--ok)} .c-ai{background:var(--accent-soft);color:var(--accent)}
+  .c-blue{background:var(--blue-soft);color:var(--blue)} .c-mut{background:var(--surface-2);color:var(--muted)}
+
+  .flag{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-left:4px solid var(--crit);border-radius:10px;background:var(--surface);padding:11px 13px;margin-bottom:9px;transition:opacity .3s}
+  .flag.warn{border-left-color:var(--warn)} .flag.ai{border-left-color:var(--accent)} .flag.blue{border-left-color:var(--blue)} .flag.okf{border-left-color:var(--ok)}
+  .flag .fb{flex:1;min-width:0}
+  .flag .fb b{font-size:13px}
+  .flag .fb p{margin:2px 0 0;font-size:12px;color:var(--muted)}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+  .btn{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:7px;font-size:12px;padding:5px 12px;font-weight:600}
+  .btn.p{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.g{background:var(--ok);border-color:var(--ok);color:#fff}
+  .btn.d{background:var(--crit);border-color:var(--crit);color:#fff}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  table{border-collapse:collapse;width:100%;font-size:13px;background:var(--surface)}
+  .twrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:12px}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;text-align:left;color:var(--muted);background:var(--surface-2);padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+  tr.rowlink{cursor:pointer}
+  tr.rowlink:hover td{background:var(--surface-2)}
+
+  .kb{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(196px,1fr);gap:10px;overflow-x:auto;padding-bottom:6px}
+  .kcol{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:196px}
+  .kcol h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+  .kcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:12.5px;margin-bottom:8px}
+  .kcard b{display:block;font-size:12.5px}
+  .kcard small{color:var(--muted);font-size:11px;display:block;margin-top:2px}
+
+  .msg{border:1px solid var(--line);border-radius:10px;padding:10px 13px;margin-bottom:8px;font-size:12.5px;background:var(--surface)}
+  .msg .meta{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .msg.draft{background:var(--accent-soft);border-color:transparent}
+
+  .tog{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px dashed var(--line);padding:8px 0;font-size:13px}
+  .tog:last-child{border-bottom:none}
+  .tog small{display:block;color:var(--muted);font-size:11.5px}
+  .sw{width:34px;height:19px;border-radius:99px;background:var(--line);position:relative;flex-shrink:0;border:none;padding:0}
+  .sw.on{background:var(--accent)}
+  .sw::after{content:"";position:absolute;top:2.5px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .15s,right .15s}
+  .sw.on::after{left:17px}
+
+  .cms{display:grid;grid-template-columns:170px 1fr;gap:12px}
+  @media (max-width:820px){.cms{grid-template-columns:1fr}}
+  .pane{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12.5px}
+  .pg{padding:6px 9px;border-radius:6px;margin-bottom:2px;cursor:pointer}
+  .pg.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .blk{border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:9px;position:relative}
+  .blk.ed{border-color:var(--ok)} .blk.lk{background:var(--surface-2);color:var(--muted)}
+  .blk .tag{position:absolute;top:-9px;right:10px;font-family:var(--mono);font-size:9.5px;padding:1px 8px;border-radius:99px}
+  .blk.ed .tag{background:var(--ok);color:#fff} .blk.lk .tag{background:var(--muted);color:var(--surface)}
+  .blk [contenteditable]{outline:none;border-radius:4px}
+  .blk [contenteditable]:focus{background:var(--ok-soft)}
+
+  .steps{counter-reset:st}
+  .step{display:flex;gap:12px;padding:8px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .step:last-child{border-bottom:none}
+  .step::before{counter-increment:st;content:counter(st,decimal-leading-zero);font-family:var(--mono);color:var(--accent);font-size:12px;padding-top:1px}
+  .step b{display:block;font-size:13px}
+  .step small{color:var(--muted)}
+  .step .done{color:var(--ok);font-family:var(--mono);font-size:11px;margin-left:auto;white-space:nowrap;padding-top:2px}
+
+  .zh{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:760px){.zh{grid-template-columns:1fr}}
+  .zh .pane h5{margin:0 0 8px;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:var(--muted)}
+  .hl{background:var(--warn-soft);border-radius:3px;padding:0 3px}
+
+  .chart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px 8px;margin-bottom:14px}
+  .chart h3{font-family:var(--disp);font-size:14.5px;margin:0 0 2px;font-weight:650}
+  .chart .sub{font-size:12px;color:var(--muted);margin:0 0 8px}
+  .chart svg{width:100%;height:auto;display:block}
+  .bar{fill:var(--accent)}
+  .bar.dim{opacity:.45}
+  .axis{stroke:var(--line);stroke-width:1}
+  .lbl{font-family:var(--mono);font-size:10px;fill:var(--muted)}
+  .lbl.em{fill:var(--ink);font-weight:600;font-size:11px}
+  .lline{fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round}
+  .ldot{fill:var(--accent)}
+
+  #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--rail);color:#fff;font-size:13px;padding:10px 18px;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .25s;z-index:50;max-width:90vw}
+  #toast.show{opacity:1}
+  .back{background:none;border:none;color:var(--accent);font-size:12.5px;font-weight:600;padding:0;margin-bottom:8px}
+  .subtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+  .subtab{border:1px solid var(--line);background:var(--surface);border-radius:99px;font-size:12px;padding:4px 13px;font-weight:600}
+  .subtab.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+  .health{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:1px}
+  .h-ok{background:var(--ok)} .h-warn{background:var(--warn)} .h-crit{background:var(--crit)} .h-blue{background:var(--blue)}
+</style>
+
+<div class="intro">
+  <div>
+    <h1>20<span style="color:var(--accent)">/</span>80 Platform <span class="chipp c-ai" style="vertical-align:2px">LIVE DEMO</span></h1>
+    <p>Interactive prototype — buttons work: approve things, edit content, submit requests, watch counts change.</p>
+  </div>
+  <div class="ws-switch" role="tablist" aria-label="Workspace">
+    <button class="ws-btn active" id="wsA" onclick="ws('A')">🏢 Agency<small>the 20-80 team</small></button>
+    <button class="ws-btn" id="wsC" onclick="ws('C')">🦷 Client Portal<small>Hearts Dental</small></button>
+  </div>
+</div>
+
+<div class="app"><div class="frame">
+  <div class="topbar">
+    <span class="logo">20<em>/</em>80 <span id="tbmode">· Team Dashboard</span></span>
+    <input class="search" placeholder="Search clients, tasks, calls, pages…" aria-label="Search">
+    <span class="who" id="tbwho">Hamza C. · Mon 6 Jul · <u id="apprN">4 approvals</u></span>
+  </div>
+  <div class="body">
+
+  <nav class="rail" id="navA" aria-label="Agency navigation">
+    <div class="grp">Operate</div>
+    <button class="nav-btn active" data-s="a-today">▦ Today <span class="n" id="bToday">7</span></button>
+    <button class="nav-btn" data-s="a-clients">👥 Clients</button>
+    <button class="nav-btn" data-s="a-inbox">✉ Inbox <span class="n" id="bInbox">3</span></button>
+    <button class="nav-btn" data-s="a-calls">☎ Receptionists <span class="n t">6</span></button>
+    <div class="grp">Monitor</div>
+    <button class="nav-btn" data-s="a-ads">◎ Google Ads <span class="n" id="bAds">2</span></button>
+    <button class="nav-btn" data-s="a-seo">⌖ SEO <span class="n" id="bSeo">2</span></button>
+    <button class="nav-btn" data-s="a-meet">◉ Meetings</button>
+    <div class="grp">Deliver</div>
+    <button class="nav-btn" data-s="a-factory">⚒ Factory</button>
+    <button class="nav-btn" data-s="a-cms">▤ CMS</button>
+    <button class="nav-btn" data-s="a-studio">文 Studio <span class="n t">1</span></button>
+    <button class="nav-btn" data-s="a-reports">▥ Reports</button>
+    <div class="grp">System</div>
+    <button class="nav-btn" data-s="a-skills">✦ Skills</button>
+    <button class="nav-btn" data-s="a-set">⚙ Settings</button>
+  </nav>
+
+  <nav class="rail" id="navC" aria-label="Client navigation" style="display:none">
+    <div class="grp">My Practice</div>
+    <button class="nav-btn active" data-s="c-home">▦ Overview</button>
+    <button class="nav-btn" data-s="c-site">▤ My Website</button>
+    <button class="nav-btn" data-s="c-req">✉ Requests <span class="n t" id="bReq">2</span></button>
+    <button class="nav-btn" data-s="c-calls">☎ Phone AI</button>
+    <button class="nav-btn" data-s="c-reports">▥ Reports</button>
+    <button class="nav-btn" data-s="c-meet">◉ Meetings</button>
+    <button class="nav-btn" data-s="c-rep">★ Reviews</button>
+    <div class="grp">Account</div>
+    <button class="nav-btn" data-s="c-bill">▧ Billing</button>
+    <button class="nav-btn" data-s="c-set">⚙ Settings</button>
+  </nav>
+
+  <main class="stage">
+
+  <!-- ============ AGENCY: TODAY ============ -->
+  <section class="screen on" id="a-today">
+    <div class="scr-head"><div><h2>Today</h2><p>Monday 6 July · 7 items need a decision · overnight sync completed 05:31 ✓</p></div><button class="btn" onclick="toast('All caught up items collapsed')">Hide handled</button></div>
+    <div class="tiles">
+      <div class="tile crit"><b id="tFlags">7</b><span>open flags</span></div>
+      <div class="tile warn"><b id="tAppr">4</b><span>approvals waiting</span></div>
+      <div class="tile warn"><b>3</b><span>requests overdue</span></div>
+      <div class="tile ok"><b>96%</b><span>clients at benchmark</span></div>
+      <div class="tile acc"><b>47</b><span>patient calls rescued (fleet, 7d)</span></div>
+      <div class="tile"><b>2</b><span>meetings today</span></div>
+    </div>
+    <div class="cols2">
+      <div class="panel"><h3>⚑ Needs attention</h3>
+        <div class="flag"><div class="fb"><b>Hearts Dental — "dentist blackburn" 4→9</b> <span class="chipp c-crit">SEO · 3-pack exit</span><p>Diagnosis ready: competitor GBP refresh (55%) · lost FAQ snippet (30%). Fix drafts attached.</p></div><div class="acts"><button class="btn p" onclick="resolve(this,'Task #4388 created → Hamza, diagnosis attached')">Create task</button></div></div>
+        <div class="flag warn"><div class="fb"><b>Yarra Hills — CPL $38 vs $25, day 9</b> <span class="chipp c-warn">ADS</span><p>2 optimisations proposed, est. CPL −$9. Waiting in the Ads approval queue.</p></div><div class="acts"><button class="btn" onclick="go('a-ads')">Open queue</button></div></div>
+        <div class="flag warn"><div class="fb"><b>Trowse — staff photo request idle 6 days</b> <span class="chipp c-warn">SUPPORT</span><p>Task #4310 assigned to Ish, no activity. SLA breached yesterday.</p></div><div class="acts"><button class="btn" onclick="resolve(this,'Nudge sent to Ish in Slack · escalates to Wally in 24h if still idle')">Nudge</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Receptionist rescue — Smile To Go (普通话)</b> <span class="chipp c-ai">FLEET</span><p>Saturday: 2-child booking captured, SMS confirmed. Front desk booked it Monday 8:32 ✓</p></div><div class="acts"><button class="btn" onclick="resolve(this,'Marked as seen — stays in Smile To Go\'s monthly report')">Nice ✓</button></div></div>
+        <div class="flag blue"><div class="fb"><b>Aspire One — vector logo still missing</b> <span class="chipp c-blue">ONBOARDING</span><p>Chase #2 sent Friday. Next step per sequence: human call task tomorrow.</p></div><div class="acts"><button class="btn" onclick="resolve(this,'Call task created for tomorrow 9:30')">Create call task</button></div></div>
+      </div>
+      <div class="panel"><h3>✓ Approval queue <span class="chipp c-mut">nothing client-facing goes out without a click here</span></h3>
+        <div class="flag ai"><div class="fb"><b>Ads change — Yarra Hills</b><p>+14 negatives · budget shift Back Pain $25→$40. Predicted −12% waste. Rollback attached.</p></div><div class="acts"><button class="btn g" onclick="approve(this,'Implemented via Ads API · mut_88/89 · change-watch running 7 days')">Approve</button><button class="btn" onclick="resolve(this,'Rejected — reason logged, model will avoid re-suggesting')">Reject</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Client email — "hours updated" (Hearts)</b><p>Drafted after task #4312 completed. EN, tone-checked.</p></div><div class="acts"><button class="btn g" onclick="approve(this,'Sent in-thread to Hearts Dental ✓')">Send</button><button class="btn" onclick="toast('Draft opened for editing')">Edit</button></div></div>
+        <div class="flag ai"><div class="fb"><b>中文 translation — Smile Council services</b><p>3 glossary judgement-calls highlighted for review.</p></div><div class="acts"><button class="btn p" onclick="go('a-studio')">Review pair</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Metadata batch — Aspire One (12 pages)</b><p>1 AHPRA auto-rewrite applied · 0 blocks · all within limits.</p></div><div class="acts"><button class="btn g" onclick="approve(this,'12 pages published · keywords registered in BrightLocal · W4 baseline started')">Approve all</button><button class="btn" onclick="toast('Batch table opened')">Table</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: CLIENTS ============ -->
+  <section class="screen" id="a-clients">
+    <div class="scr-head"><div><h2>Clients</h2><p>15 practices · click a row to open the record</p></div><button class="btn p" onclick="toast('New client → onboarding wizard link generated')">+ New client</button></div>
+    <div class="twrap"><table>
+      <tr><th>Practice</th><th>Type</th><th>Health</th><th>CPL / target</th><th>Leads 30d</th><th>Rank</th><th>Next meeting</th></tr>
+      <tr class="rowlink" onclick="go('a-client-detail')"><td><span class="health h-crit"></span><b>Hearts Dental</b></td><td>General dental</td><td><span class="chipp c-crit">attention</span></td><td class="num">$21 / $25</td><td class="num">41 <svg class="spark" width="56" height="16" viewBox="0 0 56 16" aria-hidden="true"><polyline class="lline" points="2,12 11,10 20,11 29,8 38,6 47,3"/><circle class="ldot" cx="47" cy="3" r="2.4"/></svg></td><td class="num dn">▼2</td><td>Tue 14 Jul</td></tr>
+      <tr class="rowlink" onclick="toast('Demo: full record wired for Hearts Dental — click that row')"><td><span class="health h-warn"></span><b>Yarra Hills Chiropractic</b></td><td>Chiro</td><td><span class="chipp c-warn">watch</span></td><td class="num dn">$38 / $25</td><td class="num">22 <svg class="spark" width="56" height="16" viewBox="0 0 56 16" aria-hidden="true"><polyline class="lline" points="2,5 11,6 20,8 29,9 38,11 47,12"/><circle class="ldot" cx="47" cy="12" r="2.4"/></svg></td><td class="num">stable</td><td>Thu 23 Jul</td></tr>
+      <tr class="rowlink" onclick="toast('Demo: full record wired for Hearts Dental — click that row')"><td><span class="health h-ok"></span><b>Smile Council Orthodontics</b></td><td>Ortho · EN+中文</td><td><span class="chipp c-ok">healthy</span></td><td class="num">$31 / $40</td><td class="num">38 <svg class="spark" width="56" height="16" viewBox="0 0 56 16" aria-hidden="true"><polyline class="lline" points="2,13 11,11 20,12 29,9 38,7 47,4"/><circle class="ldot" cx="47" cy="4" r="2.4"/></svg></td><td class="num up">▲</td><td>Mon 20 Jul</td></tr>
+      <tr class="rowlink" onclick="toast('Demo: full record wired for Hearts Dental — click that row')"><td><span class="health h-ok"></span><b>Trowse Chiropractic</b></td><td>Chiro</td><td><span class="chipp c-ok">healthy</span></td><td class="num">$19 / $25</td><td class="num">27</td><td class="num">stable</td><td>Aug (Q)</td></tr>
+      <tr class="rowlink" onclick="toast('Demo: full record wired for Hearts Dental — click that row')"><td><span class="health h-blue"></span><b>Aspire One Dental</b></td><td>General dental</td><td><span class="chipp c-blue">onboarding</span></td><td class="num">—</td><td class="num">—</td><td class="num">baseline</td><td>Kickoff Fri</td></tr>
+      <tr class="rowlink" onclick="toast('Demo: full record wired for Hearts Dental — click that row')"><td><span class="health h-ok"></span><b>Smile To Go</b></td><td>Mobile dental · EN+中文</td><td><span class="chipp c-ok">healthy</span></td><td class="num">$24 / $30</td><td class="num">31</td><td class="num">stable</td><td>Jul 28</td></tr>
+    </table></div>
+  </section>
+
+  <!-- ============ AGENCY: CLIENT DETAIL ============ -->
+  <section class="screen" id="a-client-detail">
+    <button class="back" onclick="go('a-clients')">← All clients</button>
+    <div class="scr-head"><div><h2><span class="health h-crit"></span>Hearts Dental</h2><p>General dental · Blackburn VIC · Support &amp; Growth plan · owner: Hamza · client since 2021</p></div>
+      <div class="acts"><button class="btn" onclick="toast('Meeting agenda drafted from open flags + June report')">Build agenda</button><button class="btn p" onclick="toast('June report opened')">June report</button></div></div>
+    <div class="subtabs" data-group="cd">
+      <button class="subtab on" data-t="cd-time" onclick="subtab(this)">Timeline</button>
+      <button class="subtab" data-t="cd-prof" onclick="subtab(this)">Practice profile</button>
+      <button class="subtab" data-t="cd-kpi" onclick="subtab(this)">KPIs</button>
+      <button class="subtab" data-t="cd-tasks" onclick="subtab(this)">Tasks (4)</button>
+    </div>
+    <div class="sub on" id="cd-time">
+      <div class="msg"><div class="meta"><span class="chipp c-crit">FLAG</span> today 05:31 · SEO Watchtower</div>"dentist blackburn" 4→9, 3-pack exit · diagnosis drafted · <u>view flag</u></div>
+      <div class="msg"><div class="meta"><span class="chipp c-blue">EMAIL</span> today 08:41 · support@ · triaged in 3 s</div>2 requests extracted: add Dr Wong (task #4389) · Saturday hours from 1 Aug (task #4390 + scheduled CMS job + GBP sync)</div>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">MEETING</span> 30 Jun · monthly review · Fathom → 3 actions</div>2 ours (both linked to existing work — no duplicates created) · 1 theirs: fee schedule, chase scheduled +5d</div>
+      <div class="msg"><div class="meta"><span class="chipp c-ok">PUBLISHED</span> 27 Jun · CMS v217</div>Opening-hours change live · footer ×14 pages + schema + GBP verified ✓ · client auto-notified</div>
+      <div class="msg"><div class="meta"><span class="chipp c-mut">REPORT</span> 3 Jul</div>June ROI &amp; SEO report sent · opened same day · "41 enquiries, $10.90 per $1"</div>
+    </div>
+    <div class="sub" id="cd-prof" style="display:none">
+      <div class="cols2">
+        <div class="panel"><h3>Differentiators <span class="chipp c-ai">feeds every AI skill</span></h3>
+          <div class="msg">Family-focused, anxiety-aware dentistry · Mandarin-speaking hygienist · 25 years in Blackburn · same-week emergency slots</div>
+          <h3>Money keywords</h3>
+          <div class="msg">dentist blackburn · emergency dentist blackburn · dentist nunawading · children's dentist blackburn + 5 more</div>
+        </div>
+        <div class="panel"><h3>Facts &amp; integrations</h3>
+          <div class="tog"><div>Suburbs<small>Blackburn, Nunawading, Forest Hill</small></div><button class="btn" onclick="toast('Editing suburbs re-runs W7 metadata for affected pages on save')">Edit</button></div>
+          <div class="tog"><div>Languages<small>EN (中文 pages: not enabled — opportunity?)</small></div><button class="btn" onclick="toast('中文 enablement quote drafted — Mandarin-speaking hygienist is a differentiator')">Propose 中文</button></div>
+          <div class="tog"><div>PMS / booking<small>Praktika · HealthEngine</small></div><button class="btn" onclick="toast('Integration settings opened')">Edit</button></div>
+          <div class="tog"><div>Knowledge versions in use<small>philosophy 3.2 · seo 2.1 · ahpra 4.0</small></div><span class="chipp c-ok">current</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="sub" id="cd-kpi" style="display:none">
+      <div class="chart"><h3>New patient enquiries</h3><p class="sub">per month · website + calls + forms</p>
+        <svg viewBox="0 0 560 150" role="img" aria-label="Bar chart: new patient enquiries January to June, rising from 28 to 41">
+          <line class="axis" x1="36" y1="122" x2="548" y2="122"/>
+          <g><title>Jan — 28 enquiries</title><rect class="bar dim" x="52"  y="66" width="56" height="56" rx="4"/><text class="lbl" x="80"  y="138" text-anchor="middle">Jan</text></g>
+          <g><title>Feb — 26 enquiries</title><rect class="bar dim" x="136" y="70" width="56" height="52" rx="4"/><text class="lbl" x="164" y="138" text-anchor="middle">Feb</text></g>
+          <g><title>Mar — 29 enquiries</title><rect class="bar dim" x="220" y="64" width="56" height="58" rx="4"/><text class="lbl" x="248" y="138" text-anchor="middle">Mar</text></g>
+          <g><title>Apr — 31 enquiries</title><rect class="bar dim" x="304" y="60" width="56" height="62" rx="4"/><text class="lbl" x="332" y="138" text-anchor="middle">Apr</text></g>
+          <g><title>May — 34 enquiries</title><rect class="bar dim" x="388" y="54" width="56" height="68" rx="4"/><text class="lbl" x="416" y="138" text-anchor="middle">May</text></g>
+          <g><title>Jun — 41 enquiries</title><rect class="bar" x="472" y="40" width="56" height="82" rx="4"/><text class="lbl em" x="500" y="32" text-anchor="middle">41</text><text class="lbl" x="500" y="138" text-anchor="middle">Jun</text></g>
+        </svg>
+      </div>
+      <div class="tiles">
+        <div class="tile ok"><b>$10.90</b><span>Ads return per $1 (target $10)</span></div>
+        <div class="tile"><b>$21</b><span>cost per lead (target $25)</span></div>
+        <div class="tile"><b>14</b><span>page-1 keywords</span></div>
+        <div class="tile ok"><b>4.9 ★</b><span>132 reviews <span class="delta up">+6/mo</span></span></div>
+      </div>
+    </div>
+    <div class="sub" id="cd-tasks" style="display:none">
+      <div class="twrap"><table>
+        <tr><th>Task</th><th>Source</th><th>Assignee</th><th>Due</th><th>Status</th></tr>
+        <tr><td>#4388 Blackburn drop — fix &amp; recover</td><td>Watchtower</td><td>Hamza</td><td>11 Jul</td><td><span class="chipp c-blue">in progress</span></td></tr>
+        <tr><td>#4389 Add Dr Wong profile page</td><td>Inbox</td><td>Ish</td><td>Thu</td><td><span class="chipp c-blue">in progress</span></td></tr>
+        <tr><td>#4390 Sat hours (scheduled 1 Aug)</td><td>Inbox → CMS</td><td>auto</td><td>1 Aug</td><td><span class="chipp c-ok">scheduled ✓</span></td></tr>
+        <tr><td>Fee schedule from client</td><td>Meeting 30 Jun</td><td><i>theirs</i></td><td>chase +5d</td><td><span class="chipp c-warn">waiting on client</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: INBOX ============ -->
+  <section class="screen" id="a-inbox">
+    <div class="scr-head"><div><h2>Inbox — support@</h2><p>Sorted by SLA risk · AI has pre-triaged everything below</p></div></div>
+    <div class="cols31">
+      <div>
+        <div class="flag blue"><div class="fb"><b>Hearts Dental — 2 requests</b> <span class="chipp c-ai">auto-triaged</span><p>① Add Dr Wong (photo ✓, bio missing) ② Sat hours from 1 Aug. Tasks #4389/#4390 created. Ack drafted ↓</p></div><div class="acts"><button class="btn g" onclick="approve(this,'Ack sent in-thread · bio chase scheduled +3d/+6d')">Send ack</button></div></div>
+        <div class="flag warn"><div class="fb"><b>Smile To Go — Ads request</b> <span class="chipp c-warn">specialist review</span><p>"Can we push the Saturday kids' checkup special?" — routed to Hamza per rule; no ETA promised automatically.</p></div><div class="acts"><button class="btn p" onclick="resolve(this,'Accepted → Ads task created; recommendation will go through the W3 approval queue')">Accept &amp; route</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Trowse — question only</b> <span class="chipp c-ai">reply drafted</span><p>"Do we own our domain name?" → draft explains registrar + renewal dates from hosting records.</p></div><div class="acts"><button class="btn g" onclick="approve(this,'Reply sent · filed to timeline · no task needed')">Send reply</button></div></div>
+        <div class="flag okf"><div class="fb"><b>vendor newsletter</b> <span class="chipp c-mut">not actionable</span><p>Filed automatically. Nothing to do.</p></div></div>
+      </div>
+      <div class="panel"><h3>Drafted acknowledgement</h3>
+        <div class="msg draft"><div class="meta">to reception@heartsdental.com.au · re: Dr Wong + Saturday hours</div>"Hi Sarah — got both! ① We'll have Dr Wong's page live by Thursday — could you send a short bio (2–3 sentences)? Photo's perfect. ② Saturday hours are scheduled to change on 1 Aug everywhere at once: website, footer and Google. You don't need to do anything else. — Team 20-80"</div>
+        <div class="msg"><div class="meta"><span class="chipp c-ai">WHY THIS DRAFT</span></div>Confirms both extracted requests · gives ETAs from the SLA matrix · asks for the one missing asset · plain English, no jargon.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: RECEPTIONIST FLEET ============ -->
+  <section class="screen" id="a-calls">
+    <div class="scr-head"><div><h2>Receptionist fleet</h2><p>AI receptionists on client practices' phone lines · practices see their own queue in their portal — this is the fleet view</p></div><button class="btn p" onclick="toast('Deployment wizard: pick practice → greeting + FAQ pack + emergency script → number forwarding')">+ Deploy to a practice</button></div>
+    <div class="tiles">
+      <div class="tile acc"><b>6</b><span>practices live</span></div>
+      <div class="tile ok"><b>47</b><span>calls rescued · 7d</span></div>
+      <div class="tile ok"><b>19</b><span>became bookings</span></div>
+      <div class="tile"><b>9</b><span>中文 calls · 7d</span></div>
+      <div class="tile ok"><b>100%</b><span>fleet uptime · 30d</span></div>
+    </div>
+    <div class="twrap"><table>
+      <tr><th>Practice</th><th>Status</th><th>Calls 7d</th><th>Bookings won</th><th>中文</th><th>Emergency triages</th><th>Follow-up clearance</th></tr>
+      <tr><td><span class="health h-ok"></span>Smile To Go</td><td><span class="chipp c-ok">live</span></td><td class="num">14</td><td class="num">7</td><td class="num">6</td><td class="num">0</td><td class="num">100% by 10am</td></tr>
+      <tr><td><span class="health h-ok"></span>Hearts Dental</td><td><span class="chipp c-ok">live</span></td><td class="num">11</td><td class="num">5</td><td class="num">1</td><td class="num">1 ✓</td><td class="num">100%</td></tr>
+      <tr><td><span class="health h-ok"></span>Trowse Chiro</td><td><span class="chipp c-ok">live</span></td><td class="num">8</td><td class="num">2</td><td class="num">0</td><td class="num">0</td><td class="num">83%</td></tr>
+      <tr><td><span class="health h-warn"></span>Smile Council</td><td><span class="chipp c-warn">FAQ pack outdated</span></td><td class="num">9</td><td class="num">4</td><td class="num">2</td><td class="num">0</td><td class="num">100%</td></tr>
+      <tr><td><span class="health h-blue"></span>Aspire One</td><td><span class="chipp c-blue">go-live with website</span></td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td></tr>
+    </table></div>
+    <div class="panel"><h3>Latest rescue — Smile To Go · Sat 08:47 · 普通话</h3>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">BILINGUAL SUMMARY</span> emergency screen: clear · confidence 0.93</div>Existing patient family · Sat-AM appointment for 2 children · asked about Bupa (answered from profile: accepted) · caller SMS-confirmed in 中文 · front desk booked Monday 08:32 → <b>2 appointments won</b></div>
+      <div class="acts"><button class="btn" onclick="toast('Transcript viewer opened (中文 + EN side by side)')">Transcript</button><button class="btn" onclick="toast('This rescue appears in Smile To Go\'s July report automatically')">Report impact</button></div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: ADS ============ -->
+  <section class="screen" id="a-ads">
+    <div class="scr-head"><div><h2>Google Ads</h2><p>Daily 06:00 review complete · tracking-health and seasonality gates passed on all accounts</p></div></div>
+    <div class="tiles">
+      <div class="tile ok"><b>11.4:1</b><span>portfolio ROI (line: 10:1)</span></div>
+      <div class="tile crit"><b>1</b><span>account flagged</span></div>
+      <div class="tile warn"><b id="adsQ">2</b><span>changes awaiting approval</span></div>
+      <div class="tile"><b>$41.2k</b><span>managed spend / mo</span></div>
+      <div class="tile acc"><b>17</b><span>AI-implemented changes · 30d · all audited</span></div>
+    </div>
+    <div class="twrap"><table>
+      <tr><th>Account</th><th>ROI</th><th>CPL / target</th><th>Conv 30d</th><th>Status</th><th>Change-watch</th></tr>
+      <tr><td><span class="health h-crit"></span>Yarra Hills Chiro</td><td class="num dn">6.8:1</td><td class="num dn">$38 / $25</td><td class="num">22</td><td><span class="chipp c-crit">flagged · day 9</span></td><td class="num">—</td></tr>
+      <tr><td><span class="health h-ok"></span>Hearts Dental</td><td class="num">10.9:1</td><td class="num">$21 / $25</td><td class="num">64</td><td><span class="chipp c-ok">on track</span></td><td class="num">—</td></tr>
+      <tr><td><span class="health h-ok"></span>Smile Council</td><td class="num up">14.2:1</td><td class="num">$31 / $40</td><td class="num">38</td><td><span class="chipp c-ok">on track</span></td><td><span class="chipp c-ai">中文 campaign +6d, tracking to prediction ✓</span></td></tr>
+    </table></div>
+    <div class="cols2">
+      <div class="panel"><h3>Approval queue</h3>
+        <div class="flag ai"><div class="fb"><b>Yarra Hills — 2 changes</b> <span class="chipp c-mut">confidence 0.87</span><p>+14 negatives ($214/30d wasted, 0 conv) · budget: Back Pain $25→$40, General $30→$15. Predicted CPL −$9.30. Rollback snapshot attached.</p></div><div class="acts"><button class="btn g" onclick="approve(this,'Implemented · mut_88/89 logged · change-watch runs 7 days, reports vs prediction');decTile('adsQ')">Approve</button><button class="btn" onclick="toast('Diff opened — edit amounts before approving')">Edit</button><button class="btn" onclick="resolve(this,'Rejected with reason — stored, model won\'t re-suggest');decTile('adsQ')">Reject</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Hearts Dental — sitelink</b> <span class="chipp c-mut">low risk</span><p>Add sitelink to new Dr Wong page once live (waits on task #4389).</p></div><div class="acts"><button class="btn g" onclick="approve(this,'Queued — will implement automatically when the page publishes');decTile('adsQ')">Approve (queued)</button></div></div>
+      </div>
+      <div class="panel"><h3>Why Yarra Hills is flagged <span class="chipp c-ai">Claude's summary</span></h3>
+        <div class="msg draft">"CPL has been above target since 27 June. Root cause: broad-match terms pulling job-seekers and course-hunters ($214 wasted), while the best ad group (sciatica/back pain, CPL $19) is losing 31% of impressions to budget. The two queued changes address both. Seasonality checked — this is not the winter dip."</div>
+        <div class="msg"><div class="meta"><span class="chipp c-mut">GATES PASSED BEFORE FLAGGING</span></div>Tracking health ✓ (GA4 events firing normally) · Seasonality ✓ (no known dip window) · Data completeness ✓ (30/30 days)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: SEO ============ -->
+  <section class="screen" id="a-seo">
+    <div class="scr-head"><div><h2>SEO Watchtower</h2><p>Nightly sync 05:31 ✓ · 14/15 clients fresh · Smile To Go report delayed → marked stale, alerts suppressed for it only</p></div></div>
+    <div class="tiles">
+      <div class="tile crit"><b>1</b><span>drop flagged</span></div>
+      <div class="tile warn"><b>1</b><span>watching (2-day rule)</span></div>
+      <div class="tile acc"><b>5</b><span>opportunity cards</span></div>
+      <div class="tile ok"><b>212</b><span>page-1 keywords, all clients</span></div>
+    </div>
+    <div class="twrap"><table>
+      <tr><th>Client · keyword</th><th>Suburb</th><th>Was → now</th><th>3-pack</th><th>State</th></tr>
+      <tr><td><b>Hearts Dental</b> · dentist blackburn</td><td>Blackburn</td><td class="num dn">4 → 9 (▼5)</td><td><span class="chipp c-crit">exited</span></td><td><span class="chipp c-crit">flagged → task #4388</span></td></tr>
+      <tr><td><b>Trowse</b> · chiropractor preston</td><td>Preston</td><td class="num dn">6 → 8 (▼2)</td><td><span class="chipp c-ok">in</span></td><td><span class="chipp c-warn">watching — alerts only if confirmed tomorrow</span></td></tr>
+      <tr><td><b>Smile Council</b> · 箍牙 box hill</td><td>Box Hill</td><td class="num up">12 → 7 (▲5)</td><td>—</td><td><span class="chipp c-ok">中文 keywords rising</span></td></tr>
+    </table></div>
+    <div class="cols2">
+      <div class="panel"><h3>Flag #f-2231 — diagnosis &amp; recovery</h3>
+        <div class="msg"><div class="meta"><span class="chipp c-ai">HYPOTHESES</span> checked: our deploys (none 14d) · GBP changes (none ours) · algo feed (quiet)</div>55% competitor GBP refresh (40+ photos, 3× review velocity) · 30% lost FAQ rich result (schema validation error found — real) · 15% local shuffle</div>
+        <div class="chart" style="margin:8px 0 4px"><h3 style="font-size:12.5px">Recovery tracking — position by day</h3>
+          <svg viewBox="0 0 320 80" role="img" aria-label="Line chart: ranking position over seven days, drop to 9 then recovering to 6"><line class="axis" x1="8" y1="66" x2="312" y2="66"/><polyline class="lline" points="16,18 60,18 104,22 148,58 192,50 236,50 280,36"/><circle class="ldot" cx="280" cy="36" r="3"/><text class="lbl em" x="292" y="39">6</text><text class="lbl" x="16" y="78">30 Jun</text><text class="lbl" x="262" y="78">today</text></svg>
+        </div>
+        <div class="acts"><button class="btn g" onclick="toast('GBP posts approved · publishing to Hearts Dental profile')">Approve GBP drafts</button><button class="btn" onclick="toast('Schema fix already deployed by Hamza — verified ✓')">Schema fix ✓</button></div>
+      </div>
+      <div class="panel"><h3>Opportunity cards</h3>
+        <div class="flag ai"><div class="fb"><b>Trowse — "sports chiro reservoir" · position 11</b><p>Page 1 reachable: internal link + 200-word section. Draft attached.</p></div><div class="acts"><button class="btn p" onclick="resolve(this,'Accepted → content task created with the draft attached')">Accept</button><button class="btn" onclick="resolve(this,'Skipped — card archived, won\'t resurface for 60 days')">Skip</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Smile To Go — GBP posting gap</b><p>6 weeks silent; top competitor posts weekly. 4 drafts ready (EN + 中文).</p></div><div class="acts"><button class="btn p" onclick="resolve(this,'Drafts opened for review in the Studio')">Review drafts</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Hearts Dental — 中文 expansion</b><p>Mandarin-speaking hygienist is a differentiator; zero 中文 presence. Est. 15–20 searches/day untapped in Blackburn/Box Hill corridor.</p></div><div class="acts"><button class="btn p" onclick="resolve(this,'Proposal drafted for the 14 Jul quarterly meeting agenda')">Add to agenda</button></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: MEETINGS ============ -->
+  <section class="screen" id="a-meet">
+    <div class="scr-head"><div><h2>Meetings</h2><p>Fathom-connected · agendas auto-built the day before from open flags + reports</p></div></div>
+    <div class="twrap"><table>
+      <tr><th>Meeting</th><th>When</th><th>Actions</th><th>Tasks</th><th>Client summary</th></tr>
+      <tr><td><b>Hearts Dental — monthly</b></td><td>30 Jun</td><td class="num">3 (2 linked, 1 chase)</td><td><span class="chipp c-ok">✓</span></td><td><span class="chipp c-ok">sent · opened</span></td></tr>
+      <tr><td><b>Internal — support triage</b></td><td>1 Jul</td><td class="num">5</td><td><span class="chipp c-ok">✓</span></td><td class="num">— internal</td></tr>
+      <tr><td><b>Aspire One — kickoff</b></td><td>Fri 11:30</td><td colspan="2"><span class="chipp c-ai">agenda ready: PRD differentiators + logo chase</span></td><td class="num">—</td></tr>
+      <tr><td><b>Hearts Dental — quarterly</b></td><td>Tue 14 Jul</td><td colspan="2"><span class="chipp c-ai">agenda building: flag #f-2231 recovery + June report + 中文 proposal</span></td><td class="num">—</td></tr>
+    </table></div>
+    <div class="panel"><h3>Extraction review — Hearts Dental monthly (30 Jun)</h3>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">ACTION · ours</span> Hamza · due 11 Jul · <span class="chipp c-ok">linked to existing #4388 — duplicate prevented</span></div>Investigate Blackburn ranking drop and report back</div>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">ACTION · ours</span> Ish · due 15 Jul · <span class="chipp c-ok">linked to #4389</span></div>Add Dr Amelia Wong profile page</div>
+      <div class="msg"><div class="meta"><span class="chipp c-warn">ACTION · theirs</span> practice manager · chase +5d/+10d</div>Send updated fee schedule for the payment calculator</div>
+      <div class="msg"><div class="meta"><span class="chipp c-mut">PROMISE REGISTER</span></div>"Confirm ranking recovery in next month's report" → auto-inserted into July report checklist</div>
+      <div class="acts"><button class="btn g" onclick="toast('All actions accepted · client summary sent · Slack digest posted')">Accept all &amp; send summary</button><button class="btn" onclick="toast('Transcript opened at the action-item timestamps')">Jump to transcript</button></div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: FACTORY ============ -->
+  <section class="screen" id="a-factory">
+    <div class="scr-head"><div><h2>Website Factory</h2><p>Cards advance on real events — form completed, approval clicked, deploy finished · amber = waiting on client (auto-reminded)</p></div></div>
+    <div class="kb">
+      <div class="kcol"><h4>Onboarding</h4><div class="kcard"><b>Aspire One Dental</b><small>wizard 9/10 · vector logo chase #2 · kickoff Fri</small><span class="chipp c-blue">chasing asset</span></div></div>
+      <div class="kcol"><h4>PRD review</h4><div class="kcard"><b>Preston Physio</b><small>PRD generated (philosophy 3.2 · seo 2.1 · ahpra 4.0) · differentiator tension flagged for Wally: "premium" vs "price-led"</small><span class="chipp c-ai">strategist gate</span></div></div>
+      <div class="kcol"><h4>Build (staging)</h4><div class="kcard"><b>Northcote Vet</b><small>design+content pass complete · peer-review checklist 18/22 · staging link</small></div></div>
+      <div class="kcol"><h4>Client approval</h4><div class="kcard"><b>Glen Iris Osteo</b><small>approval #2 pending 4 days · reminder sent this morning</small><span class="chipp c-warn">waiting on client</span></div></div>
+      <div class="kcol"><h4>SEO setup</h4><div class="kcard"><b>Aspire One (v1)</b><small>metadata: 12 pages generated · 1 AHPRA rewrite · in approval queue</small><span class="chipp c-ai">W7 batch</span></div></div>
+      <div class="kcol"><h4>Live + handover</h4><div class="kcard"><b>Camberwell Dental</b><small>live 24 Jun · Watchtower + Ads auto-enrolled ✓ · survey 9/10</small><span class="chipp c-ok">done</span></div></div>
+    </div>
+    <div class="panel" style="margin-top:12px"><h3>PRD — Preston Physio <span class="chipp c-mut">excerpt · every section shows its source</span></h3>
+      <div class="msg"><b>Differentiators</b> <span class="chipp c-mut">client wizard + strategist</span><br>Only Preston clinic with dry-needling + Mandarin-speaking physio · same-day appointments<br><br><b>Compliance constraints</b> <span class="chipp c-mut">ahpra v4.0 — hard rules</span><br>No testimonials · no outcome guarantees · before/after per policy 4.3 — enforced automatically in every downstream content skill<br><br><b>⚠ Strategist question</b> <span class="chipp c-warn">unresolved tension</span><br>Client selected "premium positioning" AND "compete on price" — generator surfaced this rather than choosing silently.</div>
+      <div class="acts"><button class="btn p" onclick="toast('PRD approved v1.1 → handed to builder · staging build starts')">Approve PRD → build</button><button class="btn" onclick="toast('Question added to Friday kickoff agenda')">Ask at kickoff</button></div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: CMS ============ -->
+  <section class="screen" id="a-cms">
+    <div class="scr-head"><div><h2>CMS &amp; Sites</h2><p>Every publish is versioned · one edit updates every surface the fact lives on (site, footer, schema, Google)</p></div></div>
+    <div class="twrap"><table>
+      <tr><th>Site</th><th>Platform</th><th>Pending</th><th>EN⇄中文</th><th>Last publish</th></tr>
+      <tr><td>heartsdental.com.au</td><td>20-80 CMS</td><td class="num">1 scheduled</td><td class="num">—</td><td>v217 · 27 Jun · hours</td></tr>
+      <tr><td>smilecouncil.com.au</td><td>20-80 CMS</td><td class="num">1 review</td><td><span class="chipp c-warn">1 page behind (SLA 1d)</span></td><td>v98 · 2 Jul</td></tr>
+      <tr><td>trowsechiro.com.au</td><td>WordPress → migrating Q3</td><td class="num">1</td><td class="num">—</td><td>12 Jun</td></tr>
+    </table></div>
+    <div class="panel"><h3>Edit queue</h3>
+      <div class="flag okf"><div class="fb"><b>Hearts — Saturday hours 9–1</b> <span class="chipp c-ok">client-safe · scheduled 1 Aug 00:01</span><p>Surfaces resolved: contact page, footer ×14, OpeningHours schema, GBP special hours. Visual diff attached.</p></div><div class="acts"><button class="btn" onclick="toast('Visual diff: footer before/after')">Diff</button><button class="btn g" onclick="resolve(this,'Schedule confirmed · client will be auto-notified when live')">Confirm</button></div></div>
+      <div class="flag warn"><div class="fb"><b>Smile Council — "early orthodontics" paragraph</b> <span class="chipp c-warn">AHPRA gate</span><p>Blocked: "guaranteed straighter teeth." Compliant rewrite suggested: "designed to guide teeth as they grow." 中文 regenerates on approval.</p></div><div class="acts"><button class="btn g" onclick="approve(this,'Rewrite approved · EN published · 中文 sync job queued')">Approve rewrite</button><button class="btn" onclick="toast('Editor opened at the flagged sentence')">Edit myself</button></div></div>
+      <div class="flag"><div class="fb"><b>Trowse — WordPress plugin updates due</b> <span class="chipp c-crit">legacy</span><p>3 security updates pending. One more reason for the Q3 migration.</p></div><div class="acts"><button class="btn p" onclick="resolve(this,'Maintenance task created · migration case note updated')">Create task</button></div></div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: STUDIO ============ -->
+  <section class="screen" id="a-studio">
+    <div class="scr-head"><div><h2>Content Studio — EN ⇄ 中文</h2><p>Highlighted spans = the translation's judgement calls · reviewer edits feed the glossary, so review burden shrinks monthly</p></div></div>
+    <div class="zh">
+      <div class="pane"><h5>ENGLISH · SOURCE (Smile Council /services/early-orthodontics)</h5>
+        <b>Gentle orthodontics for growing smiles</b><br>
+        At Smile Council, we believe early assessment (from age 7) helps us guide your child's smile with <span class="hl">less intervention later</span>. Our Box Hill team offers…</div>
+      <div class="pane"><h5>中文 · CLAUDE DRAFT — ADAPTED, NOT LITERAL</h5>
+        <b>呵护成长中的微笑 — 温和正畸</b><br>
+        Smile Council 相信，从7岁开始的早期评估能够帮助我们引导孩子牙齿的健康发育，<span class="hl">减少日后更复杂的矫正需求</span>。我们位于博士山（Box Hill）的团队…<br>
+        <small style="color:var(--muted)">⚑ 3 judgement calls highlighted · 正畸 locked by glossary · tone: warm-professional per practice profile · AHPRA: pass</small></div>
+    </div>
+    <div class="acts" style="margin-top:10px">
+      <button class="btn g" onclick="toast('Pair approved · both versions published with hreflang · glossary unchanged')">Approve pair → publish</button>
+      <button class="btn" onclick="toast('中文 editor opened — your edit will be offered as a glossary rule')">Edit 中文</button>
+      <button class="btn" onclick="toast('Term added: \'early assessment\' → 早期评估 (locked)')">Add glossary term</button>
+    </div>
+    <div class="panel" style="margin-top:12px"><h3>Studio queue</h3>
+      <div class="twrap" style="margin:0"><table>
+        <tr><th>Item</th><th>Type</th><th>Status</th></tr>
+        <tr><td>Smile To Go — 4 GBP posts (EN+中文)</td><td>GBP</td><td><span class="chipp c-ai">drafts ready</span></td></tr>
+        <tr><td>Smile Council — July newsletter</td><td>Newsletter</td><td><span class="chipp c-mut">generates 25 Jul from month's events</span></td></tr>
+        <tr><td>Glossary maturity</td><td>—</td><td><span class="chipp c-blue">91% hit rate · 中文 auto-publish unlocks at 95%</span></td></tr>
+      </table></div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: REPORTS ============ -->
+  <section class="screen" id="a-reports">
+    <div class="scr-head"><div><h2>Reports</h2><p>Generated from data the system already holds · bad news always paired with the action already taken</p></div></div>
+    <div class="twrap"><table>
+      <tr><th>Report</th><th>Client</th><th>Period</th><th>Status</th><th></th></tr>
+      <tr><td>ROI &amp; SEO</td><td>Hearts Dental</td><td>June</td><td><span class="chipp c-ok">sent · opened ✓</span></td><td><button class="btn" onclick="toast('Report viewer opened')">View</button></td></tr>
+      <tr><td>New patients</td><td>Hearts Dental</td><td>June</td><td><span class="chipp c-ok">sent ✓</span></td><td><button class="btn" onclick="toast('Report viewer opened')">View</button></td></tr>
+      <tr><td>ROI &amp; SEO</td><td>Yarra Hills</td><td>June</td><td><span class="chipp c-warn">held — below-benchmark story needs owner review</span></td><td><button class="btn p" onclick="approve(this,'Reviewed &amp; sent — includes the recovery plan and the 2 approved optimisations')">Review &amp; send</button></td></tr>
+      <tr><td>Receptionist impact</td><td>Smile To Go</td><td>June</td><td><span class="chipp c-ai">generated — "9 calls rescued, 5 bookings, incl. 2 on a closed Saturday"</span></td><td><button class="btn p" onclick="approve(this,'Sent — this page is the renewal argument')">Send</button></td></tr>
+    </table></div>
+    <div class="panel"><h3>Preview — Yarra Hills June (the held one)</h3>
+      <div class="msg draft">"June was under target: enquiries cost $38 against our $25 goal. We found the cause — wasted clicks from job-seekers and an under-funded back-pain campaign — and made two changes on 6 July. Early tracking shows cost per enquiry heading back toward $29. We'll confirm the full recovery in July's report."</div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: SKILLS ============ -->
+  <section class="screen" id="a-skills">
+    <div class="scr-head"><div><h2>Knowledge &amp; Skills</h2><p>Every AI output logs which versions it used · update a doc and the system offers re-runs</p></div></div>
+    <div class="cols2">
+      <div class="panel"><h3>Knowledge base</h3>
+        <div class="steps">
+          <div class="step"><div><b>Website philosophy</b><small>used by 5 skills</small></div><span class="done">v3.2</span></div>
+          <div class="step"><div><b>SEO rules</b><small>used by 4 skills</small></div><span class="done">v2.1</span></div>
+          <div class="step"><div><b>AHPRA compliance</b><small>hard gate on all content</small></div><span class="done">v4.0</span></div>
+          <div class="step"><div><b>Design principles</b></div><span class="done">v1.8</span></div>
+          <div class="step"><div><b>中文 glossary &amp; tone</b><small>grows from reviewer edits</small></div><span class="done">91% hit</span></div>
+          <div class="step"><div><b>SOP library</b><small>intranet + 26-video playlist, imported</small></div><span class="done">✓</span></div>
+        </div>
+        <div class="acts" style="margin-top:10px"><button class="btn p" onclick="toast('AHPRA v4.1 draft: on publish, 214 pages + 38 metadata sets flagged for re-check — one click to queue')">Simulate doc update</button></div>
+      </div>
+      <div class="panel"><h3>Skills <span class="chipp c-mut">human gate shown on every card</span></h3>
+        <div class="twrap" style="margin:0"><table>
+          <tr><th>Skill</th><th>Runs 7d</th><th>Unedited-approve</th><th>Gate</th></tr>
+          <tr><td>email-triage v2.1</td><td class="num">64</td><td class="num">92%</td><td>auto ≥0.8 conf</td></tr>
+          <tr><td>clinic-call-agent v1.3</td><td class="num">47</td><td class="num">—</td><td>script-bound, no clinical advice</td></tr>
+          <tr><td>meeting-actions v2.0</td><td class="num">9</td><td class="num">88%</td><td>human accepts &amp; sends</td></tr>
+          <tr><td>ads-optimiser v1.6</td><td class="num">15</td><td class="num">71%</td><td>approval queue, always</td></tr>
+          <tr><td>seo-metadata v1.5</td><td class="num">2 batches</td><td class="num">83%</td><td>batch table</td></tr>
+          <tr><td>prd-generator v1.2</td><td class="num">2</td><td class="num">—</td><td>strategist, always</td></tr>
+          <tr><td>translate-zh v1.4</td><td class="num">11</td><td class="num">91%</td><td>reviewer until glossary ≥95%</td></tr>
+          <tr><td>ahpra-check v4.0</td><td class="num">120</td><td class="num">—</td><td>can hard-block any skill</td></tr>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ AGENCY: SETTINGS ============ -->
+  <section class="screen" id="a-set">
+    <div class="scr-head"><div><h2>Settings</h2><p>Integrations, benchmarks, and the automation trust dial</p></div></div>
+    <div class="cols2">
+      <div class="panel"><h3>Integrations</h3>
+        <div class="tog"><div>ActiveCollab<small>two-way tasks · complete-webhooks</small></div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>Slack<small>#alerts-seo · #alerts-ads · #automation-errors</small></div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>Fathom<small>meeting.ended webhook</small></div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>Google Ads · GA4 · GSC · GBP</div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>BrightLocal<small>CSV bridge active · API needs plan upgrade</small></div><span class="chipp c-warn">bridge</span></div>
+        <div class="tog"><div>Voice AI (receptionist fleet)<small>EN + 普通话 · 6 deployments</small></div><span class="chipp c-ok">live</span></div>
+        <div class="tog"><div>Automation health<small>dead-letter queue: 0 items 🎉</small></div><span class="chipp c-ok">0 errors</span></div>
+      </div>
+      <div class="panel"><h3>Automation trust levels</h3>
+        <div class="tog"><div>Task-completed client emails<small>auto-send low-risk after 90-day trust period</small></div><button class="sw on" role="switch" aria-checked="true" aria-label="Task completed client emails auto-send"></button></div>
+        <div class="tog"><div>Ads auto-implement without approval<small>permanently off by policy</small></div><button class="sw" role="switch" aria-checked="false" aria-label="Ads auto implement"></button></div>
+        <div class="tog"><div>Client-safe CMS publishes<small>facts &amp; media only</small></div><button class="sw on" role="switch" aria-checked="true" aria-label="Client safe publishes"></button></div>
+        <div class="tog"><div>中文 auto-publish<small>unlocks at glossary ≥ 95% (now 91%)</small></div><button class="sw" role="switch" aria-checked="false" aria-label="Chinese auto publish"></button></div>
+        <h3 style="margin-top:14px">Benchmarks</h3>
+        <div class="twrap" style="margin:0"><table>
+          <tr><th>Practice type</th><th>CPL</th><th>Leads/mo</th><th>ROI</th></tr>
+          <tr><td>General dental</td><td class="num">$25</td><td class="num">30+</td><td class="num">10:1</td></tr>
+          <tr><td>Chiro / physio</td><td class="num">$25</td><td class="num">25+</td><td class="num">10:1</td></tr>
+          <tr><td>Ortho / specialist</td><td class="num">$40</td><td class="num">15+</td><td class="num">10:1</td></tr>
+        </table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CLIENT: OVERVIEW ============ -->
+  <section class="screen" id="c-home">
+    <div class="scr-head"><div><h2>Good morning, Hearts Dental 👋</h2><p>Your marketing at a glance — updated automatically, in plain English</p></div></div>
+    <div class="tiles">
+      <div class="tile acc"><b>41</b><span>new patient enquiries · June <span class="delta up">▲21%</span></span></div>
+      <div class="tile ok"><b>$10.90</b><span>back for every $1 on Google Ads</span></div>
+      <div class="tile"><b>14</b><span>Google page-1 searches</span></div>
+      <div class="tile ok"><b>4.9 ★</b><span>132 reviews <span class="delta up">+6</span></span></div>
+      <div class="tile acc"><b>11</b><span>calls our phone AI answered for you · 7d</span></div>
+    </div>
+    <div class="chart"><h3>New patient enquiries</h3><p class="sub">last six months</p>
+      <svg viewBox="0 0 560 150" role="img" aria-label="Bar chart: enquiries rising from 28 in January to 41 in June">
+        <line class="axis" x1="36" y1="122" x2="548" y2="122"/>
+        <g><title>Jan — 28</title><rect class="bar dim" x="52" y="66" width="56" height="56" rx="4"/><text class="lbl" x="80" y="138" text-anchor="middle">Jan</text></g>
+        <g><title>Feb — 26</title><rect class="bar dim" x="136" y="70" width="56" height="52" rx="4"/><text class="lbl" x="164" y="138" text-anchor="middle">Feb</text></g>
+        <g><title>Mar — 29</title><rect class="bar dim" x="220" y="64" width="56" height="58" rx="4"/><text class="lbl" x="248" y="138" text-anchor="middle">Mar</text></g>
+        <g><title>Apr — 31</title><rect class="bar dim" x="304" y="60" width="56" height="62" rx="4"/><text class="lbl" x="332" y="138" text-anchor="middle">Apr</text></g>
+        <g><title>May — 34</title><rect class="bar dim" x="388" y="54" width="56" height="68" rx="4"/><text class="lbl" x="416" y="138" text-anchor="middle">May</text></g>
+        <g><title>Jun — 41</title><rect class="bar" x="472" y="40" width="56" height="82" rx="4"/><text class="lbl em" x="500" y="32" text-anchor="middle">41</text><text class="lbl" x="500" y="138" text-anchor="middle">Jun</text></g>
+      </svg>
+    </div>
+    <div class="cols2">
+      <div class="panel"><h3>What 20-80 did for you recently</h3>
+        <div class="steps">
+          <div class="step"><div><b>Answered a patient emergency call Friday night</b><small>toothache triaged, seen 11:15 Saturday</small></div><span class="done">✓</span></div>
+          <div class="step"><div><b>Caught a Google ranking dip the morning it happened</b><small>cause found same day · recovering (9 → 6)</small></div><span class="done">recovering</span></div>
+          <div class="step"><div><b>Scheduled your new Saturday hours</b><small>website + Google update together on 1 Aug</small></div><span class="done">scheduled</span></div>
+          <div class="step"><div><b>Optimised your ads</b><small>removed wasted clicks ≈ $140/mo saved</small></div><span class="done">✓</span></div>
+        </div>
+      </div>
+      <div class="panel"><h3>Coming up</h3>
+        <div class="msg"><div class="meta"><span class="chipp c-blue">MEETING</span></div><b>Quarterly review — Tue 14 Jul, 2:00pm</b> with Hamza. Agenda arrives the day before.</div>
+        <div class="msg"><div class="meta"><span class="chipp c-warn">WE NEED ONE THING FROM YOU</span></div>Dr Amelia Wong's short bio (2–3 sentences) for her new page. <button class="btn p" onclick="toast('Thanks! Bio saved — Dr Wong\'s page will be live by Thursday')">Paste it here</button></div>
+        <div class="msg"><div class="meta"><span class="chipp c-ai">IDEA FROM YOUR TEAM</span></div>Your Mandarin-speaking hygienist is a real differentiator — we've drafted a proposal for Chinese-language pages. It's on the quarterly agenda.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CLIENT: MY WEBSITE ============ -->
+  <section class="screen" id="c-site">
+    <div class="scr-head"><div><h2>My Website</h2><p>Green blocks are yours — click the text and type. The design can't break.</p></div><div class="acts"><button class="btn" onclick="toast('Preview opened in a new tab (demo)')">Preview</button><button class="btn g" onclick="publishSite()">Publish changes</button></div></div>
+    <div class="cms">
+      <div class="pane">
+        <b style="font-size:12px">Pages</b>
+        <div class="pg on">Home</div><div class="pg" onclick="toast('Demo: Home page editor is wired')">About / Team</div><div class="pg" onclick="toast('Demo: Home page editor is wired')">Services</div><div class="pg" onclick="toast('Demo: Home page editor is wired')">Fees</div><div class="pg" onclick="toast('Demo: Home page editor is wired')">Contact &amp; Hours</div>
+      </div>
+      <div class="pane">
+        <div class="blk lk"><span class="tag">DESIGN — LOCKED</span>Hero banner · navigation · layout<br><small>managed by 20-80 so your site always looks right</small></div>
+        <div class="blk ed"><span class="tag">EDITABLE — CLICK THE TEXT</span><b>Welcome text</b><br><span contenteditable="true" id="editWelcome">Gentle, modern dentistry for the whole family in Blackburn. New patients welcome — most treatments available same-week.</span>
+          <div class="acts" style="margin-top:8px"><button class="btn" onclick="toast('AI suggestion: shorter, warmer opening — shown side-by-side with yours')">✦ Improve wording</button><button class="btn" onclick="toast('AHPRA check: pass ✓ — no prohibited claims')">✦ Compliance check</button></div></div>
+        <div class="blk ed"><span class="tag">EDITABLE</span><b>Opening hours</b><br>Mon–Fri 8:30–6:00 · Sat 9:00–1:00 <small>(from 1 Aug — scheduled ✓ updates Google too)</small></div>
+        <div class="blk ed"><span class="tag">EDITABLE</span><b>Team</b><br><small>5 members · + Dr Amelia Wong pending her bio — photo already received ✓</small></div>
+      </div>
+    </div>
+    <div class="msg" style="margin-top:10px"><div class="meta"><span class="chipp c-ai">WHAT HAPPENS WHEN YOU PUBLISH</span></div>We tidy the wording (only if you want), check health-advertising rules automatically, and safe changes go live in minutes. Bigger changes get a same-day human look. Every version is saved — we can always undo.</div>
+  </section>
+
+  <!-- ============ CLIENT: REQUESTS ============ -->
+  <section class="screen" id="c-req">
+    <div class="scr-head"><div><h2>Requests</h2><p>Ask here, by email, or by phone — it all lands in this one tracked list</p></div></div>
+    <div class="panel"><h3>New request</h3>
+      <input class="search" style="max-width:100%;background:var(--surface-2);border-color:var(--line);color:var(--ink)" id="reqInput" placeholder="e.g. Please update our whitening price to $299…">
+      <div class="acts" style="margin-top:8px"><button class="btn p" onclick="submitReq()">Submit</button></div>
+    </div>
+    <div class="twrap"><table id="reqTable">
+      <tr><th>Request</th><th>Received</th><th>Status</th><th>Expected</th></tr>
+      <tr><td>Add Dr Amelia Wong to team page</td><td>Today · email</td><td><span class="chipp c-blue">in progress</span></td><td>by Thu</td></tr>
+      <tr><td>Saturday hours change</td><td>Today · email</td><td><span class="chipp c-ok">scheduled ✓</span></td><td>1 Aug, automatic</td></tr>
+      <tr><td>Update whitening price</td><td>27 Jun · portal</td><td><span class="chipp c-ok">done · <u>view change</u></span></td><td>—</td></tr>
+    </table></div>
+  </section>
+
+  <!-- ============ CLIENT: PHONE AI ============ -->
+  <section class="screen" id="c-calls">
+    <div class="scr-head"><div><h2>Phone AI</h2><p>When your front desk can't answer, we do — in English or 中文. Here's your follow-up list.</p></div></div>
+    <div class="tiles">
+      <div class="tile acc"><b>11</b><span>calls answered for you · 7d</span></div>
+      <div class="tile ok"><b>5</b><span>became appointments</span></div>
+      <div class="tile"><b>1</b><span>emergency triaged (Fri night) ✓</span></div>
+      <div class="tile ok"><b>0</b><span>calls missed entirely</span></div>
+    </div>
+    <div class="panel"><h3>Follow-up list</h3>
+      <div class="flag warn"><div class="fb"><b>Fri 19:20 — toothache, wanted next-day</b> <span class="chipp c-mut">EN</span><p>Emergency screen: clear. Given your after-hours guidance. Requested Saturday callback.</p></div><div class="acts"><span class="chipp c-ok">seen Sat 11:15 ✓</span></div></div>
+      <div class="flag ai"><div class="fb"><b>Sat 10:05 — new patient, checkup + clean for two</b> <span class="chipp c-mut">EN</span><p>Prefers weekday evenings. Number captured, SMS confirmation sent.</p></div><div class="acts"><button class="btn g" onclick="resolve(this,'Marked booked — appears in your monthly report as a rescued call')">Booked ✓</button><button class="btn" onclick="resolve(this,'Marked: called, no answer — we\'ll SMS them a booking link')">No answer</button></div></div>
+      <div class="flag ai"><div class="fb"><b>Sun 16:40 — asked if you take Medibank</b> <span class="chipp c-mut">中文</span><p>Answered from your profile (yes) · offered booking link · took details anyway.</p></div><div class="acts"><button class="btn g" onclick="resolve(this,'Marked booked ✓')">Booked ✓</button></div></div>
+    </div>
+    <div class="msg"><div class="meta"><span class="chipp c-mut">YOUR SETTINGS</span></div>Answers after 5 rings and outside opening hours · languages: English + 普通话 · emergency script: your approved wording (last reviewed 12 May) · <u>change these in Settings</u></div>
+  </section>
+
+  <!-- ============ CLIENT: REPORTS ============ -->
+  <section class="screen" id="c-reports">
+    <div class="scr-head"><div><h2>Reports</h2><p>Three sentences first, charts after — readable between patients</p></div></div>
+    <div class="panel"><h3>June 2026 — your results</h3>
+      <div class="msg draft">"Your website brought <b>41 new patient enquiries</b> in June (May: 34). Google Ads returned <b>$10.90 for every $1</b>. You now rank page 1 for <b>14 searches</b> around Blackburn and Nunawading. One ranking dipped in late June — we found the cause the same morning and it's already recovering; details inside."</div>
+      <div class="acts"><button class="btn p" onclick="toast('Full report opened — narrative first, charts below')">Read full report</button><button class="btn" onclick="toast('New patients report opened')">New patients report</button><button class="btn" onclick="toast('Archive: 36 monthly reports')">Past reports</button></div>
+    </div>
+    <div class="twrap"><table>
+      <tr><th>Report</th><th>Month</th><th></th></tr>
+      <tr><td>ROI &amp; SEO report</td><td>June</td><td><span class="chipp c-ok">new</span></td></tr>
+      <tr><td>New patients report</td><td>June</td><td><span class="chipp c-ok">new</span></td></tr>
+      <tr><td>ROI &amp; SEO report</td><td>May</td><td></td></tr>
+    </table></div>
+  </section>
+
+  <!-- ============ CLIENT: MEETINGS ============ -->
+  <section class="screen" id="c-meet">
+    <div class="scr-head"><div><h2>Meetings</h2><p>Who's doing what — visible to both sides</p></div></div>
+    <div class="msg"><div class="meta"><span class="chipp c-blue">NEXT</span></div><b>Quarterly review — Tue 14 Jul, 2:00pm</b> with Hamza · agenda arrives Monday, built from your June reports, the ranking recovery, and the Chinese-pages proposal.</div>
+    <div class="panel"><h3>From your last meeting (30 Jun)</h3>
+      <div class="steps">
+        <div class="step"><div><b>20-80: investigate the Blackburn ranking dip</b><small>started the same day · recovering</small></div><span class="done">in progress</span></div>
+        <div class="step"><div><b>20-80: add Dr Wong's profile page</b></div><span class="done">by Thu</span></div>
+        <div class="step"><div><b>You: send the updated fee schedule</b><small>for your payment calculator</small></div><span class="done" style="color:var(--warn)">waiting ⚠</span></div>
+      </div>
+      <div class="acts" style="margin-top:8px"><button class="btn p" onclick="toast('Upload received — thank you! Payment calculator update task created automatically')">Upload fee schedule now</button></div>
+    </div>
+  </section>
+
+  <!-- ============ CLIENT: REVIEWS ============ -->
+  <section class="screen" id="c-rep">
+    <div class="scr-head"><div><h2>Reviews &amp; Reputation</h2><p>Your Google reputation and the tools that grow it</p></div></div>
+    <div class="tiles">
+      <div class="tile ok"><b>4.9 ★</b><span>Google rating</span></div>
+      <div class="tile"><b>132</b><span>reviews <span class="delta up">+6 this month</span></span></div>
+      <div class="tile acc"><b>68%</b><span>of asked patients leave one</span></div>
+    </div>
+    <div class="panel"><h3>Latest review · ★★★★★ · 2 days ago</h3>
+      <div class="msg">"Dr Guo was wonderful with my daughter — gentle and patient. The Mandarin-speaking hygienist made my mother feel so comfortable too."</div>
+      <div class="msg draft"><div class="meta"><span class="chipp c-ai">SUGGESTED REPLY (AHPRA-safe)</span></div>"Thank you so much for the kind words — we'll pass them on to the whole team. We look forward to seeing your family again."</div>
+      <div class="acts"><button class="btn g" onclick="approve(this,'Reply posted to Google ✓')">Post reply</button><button class="btn" onclick="toast('Reply editor opened')">Edit first</button><button class="btn" onclick="toast('QR poster regenerated with your branding — print-ready PDF')">Review QR poster</button></div>
+    </div>
+  </section>
+
+  <!-- ============ CLIENT: BILLING ============ -->
+  <section class="screen" id="c-bill">
+    <div class="scr-head"><div><h2>Billing</h2><p>No lock-in contract · 6-month guarantee</p></div></div>
+    <div class="twrap"><table>
+      <tr><th>Invoice</th><th>Period</th><th>Amount</th><th>Status</th></tr>
+      <tr><td>#2080-1187 · Support &amp; Growth</td><td>July</td><td class="num">$1,650</td><td><span class="chipp c-warn">due 14 Jul</span> <button class="btn p" onclick="approve(this,'Payment received — receipt emailed ✓')">Pay now</button></td></tr>
+      <tr><td>#2080-1142</td><td>June</td><td class="num">$1,650</td><td><span class="chipp c-ok">paid</span></td></tr>
+      <tr><td>#2080-1101</td><td>May</td><td class="num">$1,650</td><td><span class="chipp c-ok">paid</span></td></tr>
+    </table></div>
+    <div class="msg"><div class="meta"><span class="chipp c-mut">YOUR PLAN — SUPPORT &amp; GROWTH</span></div>Hosting · unlimited small content changes · SEO monitoring · Google Ads management · phone AI · monthly reports &amp; meeting.</div>
+  </section>
+
+  <!-- ============ CLIENT: SETTINGS ============ -->
+  <section class="screen" id="c-set">
+    <div class="scr-head"><div><h2>Settings</h2><p>Enter facts once — they update your website, Google and directories together</p></div></div>
+    <div class="cols2">
+      <div class="panel"><h3>Practice facts</h3>
+        <div class="tog"><div>Opening hours<small>Sat 9–1 scheduled from 1 Aug ✓</small></div><button class="btn" onclick="toast('Hours editor: change once → site + footer + Google + schema update together')">Edit</button></div>
+        <div class="tog"><div>Team members<small>5 listed · Dr Wong pending bio</small></div><button class="btn" onclick="toast('Team editor opened')">Edit</button></div>
+        <div class="tog"><div>Booking link<small>HealthEngine</small></div><button class="btn" onclick="toast('Booking settings opened')">Edit</button></div>
+        <div class="tog"><div>Health funds shown<small>Bupa · Medibank · HCF · NIB</small></div><button class="btn" onclick="toast('Funds list — also updates what the phone AI says')">Edit</button></div>
+      </div>
+      <div class="panel"><h3>Preferences</h3>
+        <div class="tog"><div>Portal language / 界面语言</div><button class="btn" onclick="toast('切换到中文 — the whole portal, reports and emails re-render in Chinese')">EN → 中文</button></div>
+        <div class="tog"><div>After-hours phone AI<small>English + 普通话</small></div><button class="sw on" role="switch" aria-checked="true" aria-label="Phone AI"></button></div>
+        <div class="tog"><div>Chinese website pages<small>proposal on your quarterly agenda</small></div><button class="sw" role="switch" aria-checked="false" aria-label="Chinese pages"></button></div>
+        <div class="tog"><div>Monthly report by email</div><button class="sw on" role="switch" aria-checked="true" aria-label="Monthly report"></button></div>
+        <div class="tog"><div>SMS review requests to patients</div><button class="sw" role="switch" aria-checked="false" aria-label="SMS review requests"></button></div>
+        <div class="tog"><div>Who can approve website changes<small>Dr Guo + Sarah (practice manager)</small></div><button class="btn" onclick="toast('Approver list opened')">Manage</button></div>
+      </div>
+    </div>
+  </section>
+
+  </main>
+  </div>
+</div></div>
+<div id="toast" role="status"></div>
+
+<script>
+  function $(id){return document.getElementById(id)}
+  function toast(m){var t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show')},2600)}
+  function go(id){
+    var nav=document.querySelector('nav.rail:not([style*="none"])');
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on')});
+    $(id).classList.add('on');
+    nav.querySelectorAll('.nav-btn').forEach(function(b){b.classList.toggle('active',b.dataset.s===id)});
+  }
+  document.querySelectorAll('nav.rail').forEach(function(nav){
+    nav.addEventListener('click',function(e){
+      var btn=e.target.closest('.nav-btn'); if(!btn||!btn.dataset.s) return;
+      go(btn.dataset.s);
+    });
+  });
+  function dec(id){var el=$(id);if(!el)return;var v=parseInt(el.textContent)-1;if(v<=0){el.remove()}else{el.textContent=v}}
+  function decTile(id){var el=$(id);if(!el)return;el.textContent=Math.max(0,parseInt(el.textContent)-1)}
+  function resolve(btn,msg){
+    var card=btn.closest('.flag'); if(card){card.style.opacity='.35';btn.closest('.acts').innerHTML='<span class="chipp c-ok">done ✓</span>'}
+    decTile('tFlags');dec('bToday');toast(msg);
+  }
+  function approve(btn,msg){
+    var card=btn.closest('.flag'); if(card){card.style.opacity='.35';btn.closest('.acts').innerHTML='<span class="chipp c-ok">approved ✓</span>'}
+    decTile('tAppr');dec('bToday');
+    var a=$('apprN');if(a){var n=Math.max(0,parseInt(a.textContent)-1);a.textContent=n+' approvals'}
+    toast(msg);
+  }
+  function subtab(btn){
+    var group=btn.parentElement;
+    group.querySelectorAll('.subtab').forEach(function(b){b.classList.remove('on')});
+    btn.classList.add('on');
+    var wrap=group.parentElement;
+    wrap.querySelectorAll('.sub').forEach(function(s){s.style.display='none';s.classList.remove('on')});
+    var t=$(btn.dataset.t); t.style.display=''; t.classList.add('on');
+  }
+  function ws(mode){
+    var A=mode==='A';
+    $('navA').style.display=A?'':'none';
+    $('navC').style.display=A?'none':'';
+    $('wsA').classList.toggle('active',A);
+    $('wsC').classList.toggle('active',!A);
+    $('tbmode').textContent=A?'· Team Dashboard':'· Client Portal';
+    $('tbwho').innerHTML=A?'Hamza C. · Mon 6 Jul · <u id="apprN">4 approvals</u>':'Hearts Dental · Sarah (practice manager)';
+    document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on')});
+    $(A?'a-today':'c-home').classList.add('on');
+    var nav=$(A?'navA':'navC');
+    nav.querySelectorAll('.nav-btn').forEach(function(b,i){b.classList.toggle('active',i===0)});
+  }
+  document.querySelectorAll('.sw').forEach(function(s){s.addEventListener('click',function(){s.classList.toggle('on');s.setAttribute('aria-checked',s.classList.contains('on'));toast(s.classList.contains('on')?'Enabled':'Disabled')})});
+  function publishSite(){
+    toast('Checking wording & compliance… ✓ AHPRA pass · published — live in a moment. Version saved (v218), undo available.');
+  }
+  function submitReq(){
+    var inp=$('reqInput'); var v=inp.value.trim();
+    if(!v){toast('Type your request first');inp.focus();return}
+    var tb=$('reqTable');
+    var row=tb.insertRow(1);
+    row.innerHTML='<td>'+v.replace(/</g,'&lt;')+'</td><td>Just now · portal</td><td><span class="chipp c-ai">triaging…</span></td><td>—</td>';
+    inp.value='';
+    var b=$('bReq'); if(b){b.textContent=parseInt(b.textContent)+1}
+    toast('Request received — we\'ll confirm the ETA in a moment');
+    setTimeout(function(){row.cells[2].innerHTML='<span class="chipp c-blue">task created</span>';row.cells[3].textContent='2 business days';toast('Understood as a content change — expected within 2 business days')},1800);
+  }
+</script>
+
+</html>

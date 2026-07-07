@@ -1,0 +1,656 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<title>2080 Solutions — AI Automation Dashboard Blueprint</title>
+<style>
+  :root{
+    --bg:#F4F6F5; --surface:#FFFFFF; --surface-2:#EDF1EF;
+    --ink:#1C2A33; --muted:#5B6C75; --line:#D8E0DD;
+    --accent:#0E7C7B; --accent-soft:#E0F0EE;
+    --blue:#2C5FA8; --blue-soft:#E6EDF7;
+    --warn:#A96F14; --warn-soft:#F6ECD9;
+    --crit:#B23A32; --crit-soft:#F6E3E0;
+    --ok:#2E7D4F; --ok-soft:#E2F0E7;
+    --mono:"Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+    --sans:"Segoe UI Variable Text","Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",-apple-system,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#0F171C; --surface:#17222A; --surface-2:#1D2B34;
+      --ink:#E4ECEA; --muted:#8FA3AB; --line:#2B3B44;
+      --accent:#41B8AC; --accent-soft:#153733;
+      --blue:#7FA9DE; --blue-soft:#1C2C42;
+      --warn:#D9A04C; --warn-soft:#3A2E15;
+      --crit:#E07A6E; --crit-soft:#3F221E;
+      --ok:#6FBF8F; --ok-soft:#1B3326;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0F171C; --surface:#17222A; --surface-2:#1D2B34;
+    --ink:#E4ECEA; --muted:#8FA3AB; --line:#2B3B44;
+    --accent:#41B8AC; --accent-soft:#153733;
+    --blue:#7FA9DE; --blue-soft:#1C2C42;
+    --warn:#D9A04C; --warn-soft:#3A2E15;
+    --crit:#E07A6E; --crit-soft:#3F221E;
+    --ok:#6FBF8F; --ok-soft:#1B3326;
+  }
+  :root[data-theme="light"]{
+    --bg:#F4F6F5; --surface:#FFFFFF; --surface-2:#EDF1EF;
+    --ink:#1C2A33; --muted:#5B6C75; --line:#D8E0DD;
+    --accent:#0E7C7B; --accent-soft:#E0F0EE;
+    --blue:#2C5FA8; --blue-soft:#E6EDF7;
+    --warn:#A96F14; --warn-soft:#F6ECD9;
+    --crit:#B23A32; --crit-soft:#F6E3E0;
+    --ok:#2E7D4F; --ok-soft:#E2F0E7;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;margin:0;font-size:16px}
+  .wrap{max-width:1020px;margin:0 auto;padding:48px 24px 96px}
+  a{color:var(--accent)}
+
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+  h1{font-family:var(--disp);font-size:clamp(30px,4.5vw,44px);line-height:1.12;margin:0 0 14px;text-wrap:balance;font-weight:650}
+  .lede{font-size:18px;color:var(--muted);max-width:64ch;margin:0}
+  .ratio{display:inline-flex;align-items:baseline;gap:2px;font-family:var(--mono);color:var(--accent);font-weight:600}
+  header{padding-bottom:36px;border-bottom:2px solid var(--ink);margin-bottom:44px}
+
+  section{margin:0 0 56px}
+  .sec-head{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--line);padding-bottom:10px;margin-bottom:22px}
+  .sec-num{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.08em}
+  h2{font-family:var(--disp);font-size:24px;margin:0;font-weight:650;text-wrap:balance}
+  h3{font-family:var(--disp);font-size:17px;margin:26px 0 10px;font-weight:650}
+  p{max-width:70ch}
+  .note{color:var(--muted);font-size:14px;max-width:70ch}
+
+  .grid{display:grid;gap:14px}
+  .g2{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px 20px}
+  .card h4{margin:0 0 8px;font-size:15px;font-family:var(--disp);font-weight:650}
+  .card p{font-size:14px;color:var(--muted);margin:0}
+  .card ul{font-size:14px;color:var(--muted);margin:6px 0 0;padding-left:18px}
+  .card li{margin:3px 0}
+  .kicker{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:6px}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0 6px}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .stat b{display:block;font-family:var(--mono);font-size:22px;color:var(--accent);font-variant-numeric:tabular-nums}
+  .stat span{font-size:12.5px;color:var(--muted)}
+
+  table{border-collapse:collapse;width:100%;font-size:14px;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .tbl-wrap{overflow-x:auto;border-radius:10px}
+  th{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;text-align:left;color:var(--muted);background:var(--surface-2);padding:10px 14px;border-bottom:1px solid var(--line)}
+  td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td:first-child{font-weight:600}
+
+  .pill{display:inline-block;font-family:var(--mono);font-size:11px;letter-spacing:.06em;padding:2px 9px;border-radius:99px;border:1px solid var(--line);background:var(--surface-2);white-space:nowrap}
+  .pill.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+  .pill.crit{background:var(--crit-soft);color:var(--crit);border-color:transparent}
+  .pill.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent}
+  .pill.ai{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+  .pill.blue{background:var(--blue-soft);color:var(--blue);border-color:transparent}
+
+  .pain{display:grid;grid-template-columns:minmax(180px,1fr) 2fr;gap:0;background:var(--surface);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin-bottom:12px}
+  .pain > div{padding:14px 18px}
+  .pain .now{background:var(--crit-soft)}
+  .pain .now b{color:var(--crit);font-size:13px;font-family:var(--mono);letter-spacing:.06em;display:block;margin-bottom:4px}
+  .pain .fix b{color:var(--ok);font-size:13px;font-family:var(--mono);letter-spacing:.06em;display:block;margin-bottom:4px}
+  .pain p{font-size:14px;margin:0;color:var(--ink)}
+  @media (max-width:640px){.pain{grid-template-columns:1fr}}
+
+  .arch{display:flex;flex-direction:column;gap:0;margin-top:8px}
+  .layer{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .layer-label{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .layer-label::after{content:"";flex:1;height:1px;background:var(--line)}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:7px 12px;font-size:13px;line-height:1.35}
+  .chip small{display:block;font-size:11px;color:var(--muted)}
+  .chip.src{border-left:3px solid var(--blue)}
+  .chip.ai{border-left:3px solid var(--accent);background:var(--accent-soft)}
+  .chip.out{border-left:3px solid var(--warn)}
+  .chip.core{border-left:3px solid var(--ink)}
+  .arch-arrow{align-self:center;color:var(--muted);font-size:15px;line-height:1;padding:6px 0;font-family:var(--mono)}
+
+  .wf{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px 22px 26px;margin:18px 0 30px;overflow-x:auto}
+  .wf-title{display:flex;align-items:baseline;gap:10px;margin-bottom:4px;flex-wrap:wrap}
+  .wf-title .id{font-family:var(--mono);color:var(--accent);font-size:13px;font-weight:600}
+  .wf-title h3{margin:0;font-size:17px}
+  .wf-sub{font-size:13.5px;color:var(--muted);margin:0 0 18px;max-width:75ch}
+  .flow{display:flex;flex-direction:column;align-items:center;min-width:300px}
+  .node{border-radius:9px;padding:10px 16px;font-size:13.5px;line-height:1.45;text-align:center;max-width:440px;background:var(--surface-2);border:1px solid var(--line)}
+  .node b{font-weight:650}
+  .node small{display:block;font-size:11.5px;color:var(--muted);margin-top:2px}
+  .node.src{border-left:4px solid var(--blue);background:var(--blue-soft)}
+  .node.ai{border-left:4px solid var(--accent);background:var(--accent-soft)}
+  .node.alert{border-left:4px solid var(--warn);background:var(--warn-soft)}
+  .node.crit{border-left:4px solid var(--crit);background:var(--crit-soft)}
+  .node.human{border:1.5px dashed var(--muted);background:var(--surface)}
+  .node.decision{border:1.5px solid var(--ink);border-radius:20px;background:var(--surface);font-weight:600}
+  .down{width:1.5px;height:22px;background:var(--muted);position:relative;margin:2px 0}
+  .down::after{content:"";position:absolute;bottom:-1px;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top:7px solid var(--muted);border-bottom:0}
+  .down.lab{height:auto;min-height:34px;background:none;display:flex;flex-direction:column;align-items:center}
+  .down.lab::after{display:none}
+  .down.lab .stem{width:1.5px;flex:1;background:var(--muted)}
+  .down.lab .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;padding:1px 8px;border-radius:99px;margin:3px 0}
+  .down.lab .head{width:0;border:5px solid transparent;border-top:7px solid var(--muted);border-bottom:0}
+  .tag.yes{background:var(--ok-soft);color:var(--ok)}
+  .tag.no{background:var(--surface-2);color:var(--muted)}
+  .tag.warnt{background:var(--warn-soft);color:var(--warn)}
+  .tag.critt{background:var(--crit-soft);color:var(--crit)}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:24px;width:100%;max-width:780px}
+  .split3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;width:100%;max-width:920px}
+  .branch{display:flex;flex-direction:column;align-items:center}
+  .lane-note{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin:14px 0 6px}
+  @media (max-width:680px){.split,.split3{grid-template-columns:1fr}}
+
+  .phase{display:grid;grid-template-columns:120px 1fr;gap:18px;padding:18px 0;border-bottom:1px solid var(--line)}
+  .phase:last-child{border-bottom:none}
+  .phase .tag-col b{font-family:var(--mono);color:var(--accent);font-size:14px;display:block}
+  .phase .tag-col span{font-size:12px;color:var(--muted)}
+  .phase h4{margin:0 0 6px;font-size:15.5px;font-family:var(--disp)}
+  .phase p{font-size:14px;color:var(--muted);margin:0 0 6px}
+  .phase ul{font-size:14px;margin:4px 0 0;padding-left:18px;color:var(--ink)}
+  .phase li{margin:3px 0}
+  @media (max-width:560px){.phase{grid-template-columns:1fr;gap:6px}}
+
+  .qbox{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:10px;padding:16px 20px;margin-bottom:12px}
+  .qbox b{font-size:14.5px}
+  .qbox p{font-size:14px;color:var(--muted);margin:4px 0 0}
+
+  footer{border-top:1px solid var(--line);padding-top:20px;font-size:13px;color:var(--muted)}
+  footer a{color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Architecture &amp; Planning Brief · Workflows Only, No Code · July 2026</p>
+  <h1>2080 Solutions <span class="ratio">20<span style="opacity:.4">/</span>80</span><br>AI Automation Dashboard</h1>
+  <p class="lede">One operations platform that answers the phones, triages the support inbox, watches every client's Ads and SEO, turns meetings into ActiveCollab tasks, onboards new practices into a build-ready brief, and publishes through a client-safe custom CMS — so the team's time goes to the strategic 20% that produces 80% of the value.</p>
+</header>
+
+<!-- ==================== 01 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>The agency — what the website tells us</h2></div>
+
+  <p><b>20-80 Solutions</b> (<a href="https://2080solutions.com.au">2080solutions.com.au</a>, Preston VIC) is a digital marketing agency built exclusively for <b>independent Australian health &amp; medical practices</b> — dentists, chiropractors, physios, osteopaths, specialists, podiatrists, optometrists, Chinese-medicine practitioners, psychologists and vets. Founder <b>Wally Chiang</b> (Melbourne Uni / Monash / UC Berkeley, 15 years corporate web) started it with his wife <b>Qing Guo, a dentist</b>, after seeing her practice's marketing struggles first-hand. Core team includes Hamza Choudhary and Ish Naeem.</p>
+
+  <div class="stats">
+    <div class="stat"><b>14:1</b><span>claimed ROI on Google Ads</span></div>
+    <div class="stat"><b>18:1</b><span>claimed ROI on organic traffic</span></div>
+    <div class="stat"><b>$25M+</b><span>revenue generated for clients</span></div>
+    <div class="stat"><b>100+</b><span>health/medical websites built</span></div>
+  </div>
+
+  <h3>Philosophy — the Pareto Principle as brand</h3>
+  <p>The name is the philosophy: <i>"20% of your effort can generate 80% of your success."</i> The agency helps the small "20" (independent practices) compete with the corporate "80" through smart focus, not big budgets. Stated values: <b>Be Empowered · Be Extraordinary · Be Thriving · Be Smarter</b>. They sell <b>differentiation</b> — uncovering what makes each practice unique — backed by a 6-month money-back guarantee, no lock-in contracts, and face-to-face relationships.</p>
+
+  <h3>Services &amp; current stack</h3>
+  <div class="grid g3">
+    <div class="card"><span class="kicker">Build</span><h4>Website Development</h4><p>Custom practice sites; design + content produced in one pass from templated content infused with the practice's philosophy and differentiators. SEO follows completion. Currently built via Emergent.</p></div>
+    <div class="card"><span class="kicker">Grow</span><h4>SEO &amp; SEM</h4><p>Local SEO via Google Business Profile, BrightLocal rank tracking, conversion tracking, Google Ads targeting 10:1+ ROI. Highly standardised process.</p></div>
+    <div class="card"><span class="kicker">Advise</span><h4>Strategic consulting</h4><p>The defensible layer: AHPRA compliance, patient psychology, conversion strategy, practice growth. This stays human.</p></div>
+    <div class="card"><span class="kicker">Create</span><h4>Content &amp; design</h4><p>Photography, videography, copy, logos, print, signage, social media management.</p></div>
+    <div class="card"><span class="kicker">Operate</span><h4>Hosting &amp; ops tools</h4><p>Domains, hosting, eForms, enquiry tracking, review link generator, marketing calendar. Ops run on ActiveCollab, Fathom, Slack, support@ inbox.</p></div>
+    <div class="card"><span class="kicker">Partners</span><h4>Practice ecosystem</h4><p>HealthEngine, Praktika, Henry Schein One, Core Practice, Evident, ADA — the integration surface for future client-facing products.</p></div>
+  </div>
+
+  <h3>Strategic thesis from the meeting</h3>
+  <p>AI is making web development itself cheap and fast — that part of the business will commoditise. What clients actually pay 20-80 for is <b>strategic, industry-specific judgement</b>: healthcare marketing, AHPRA compliance, patient psychology, conversion, Ads/SEO strategy, growth advice. So the plan is to automate the repetitive delivery layer, keep the strategic layer human, serve more clients with the same team — and eventually productise the whole system as a SaaS + training offer for other agencies (a high-ticket program, ~$30k with platform access and workshops was floated).</p>
+</section>
+
+<!-- ==================== 02 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>Their documented processes — decoded from the site</h2></div>
+  <p>The <a href="https://2080solutions.com.au/web-development-process/">web-development-process</a> and <a href="https://2080solutions.com.au/support-process/">support-process</a> pages embed interactive draw.io flowcharts. Decoding them reveals something important: <b>every step links to an internal Google Sites intranet SOP and a step-by-step YouTube training video</b> (a 26-video playlist for web dev, ~15 for support). The processes are already standardised, documented and trainable — which means (a) they're ideal automation targets, and (b) the knowledge base for the future SaaS + training product already exists. It needs codifying into the dashboard, not creating from scratch.</p>
+
+  <!-- PA -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">P-A</span><h3>Current website development process (~9+ weeks)</h3></div>
+    <p class="wf-sub">As published: swimlanes for Client / 20-80 / internal steps across a week-by-week timeline. Dashed = client responsibility. The W6/W7 automations compress the agency-side steps.</p>
+    <div class="flow">
+      <div class="lane-note">Week 1–2 · Kickoff</div>
+      <div class="node human"><b>Client: project questionnaire · kickoff meeting · initial deposit · credentials, assets &amp; logo</b><small>the questionnaire is the seed of the W6 onboarding dashboard</small></div>
+      <div class="down"></div>
+      <div class="node"><b>20-80: create project workspace · internal kickoff · information architecture</b><small>W6 auto-creates the workspace and drafts the IA from the PRD</small></div>
+      <div class="down"></div>
+      <div class="lane-note">Week 3–4 · Design &amp; content</div>
+      <div class="node"><b>Select theme/design · copywriting</b><small>optional: photo/video shoot, brand creation, Google Suites email setup</small></div>
+      <div class="down"></div>
+      <div class="node human"><b>Client approval #1</b></div>
+      <div class="down"></div>
+      <div class="lane-note">Week 5–6 · Build</div>
+      <div class="node"><b>Development on staging · populate content &amp; changes · internal peer review of unique pages</b><small>the AI-builder step in W6 collapses most of this</small></div>
+      <div class="down"></div>
+      <div class="lane-note">Week 7–8 · Launch</div>
+      <div class="node human"><b>Client approval #2</b></div>
+      <div class="down"></div>
+      <div class="node"><b>Production testing → launch (go live)</b><small>optional: Google My Business setup, Google Ads setup</small></div>
+      <div class="down"></div>
+      <div class="lane-note">Week 9+ · SEO &amp; handover</div>
+      <div class="node"><b>Initiate internal SEO · initiate external SEO</b><small>this is exactly the W7 metadata factory + W4 watchtower enrolment</small></div>
+      <div class="down"></div>
+      <div class="node human"><b>Training/handover · final invoice · debrief · survey → signup to support</b><small>hands over into P-B below</small></div>
+    </div>
+  </div>
+
+  <!-- PB -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">P-B</span><h3>Current support process (one-off setup, then a monthly/quarterly loop)</h3></div>
+    <p class="wf-sub">The ongoing loop is where most of the meeting's bottlenecks live — reports, meeting notes, action items and client updates are all produced by hand today. Teal tags show which automation takes each step over.</p>
+    <div class="flow">
+      <div class="lane-note">One-off setup</div>
+      <div class="node human"><b>Signup → join Facebook support group</b></div>
+      <div class="down"></div>
+      <div class="node"><b>Implement support process · reputation management pack · start building online reputation · schedule regular meetings</b></div>
+      <div class="down"></div>
+      <div class="lane-note">Ongoing loop · monthly / quarterly · repeat</div>
+      <div class="node"><b>Create monthly invoice</b></div>
+      <div class="down"></div>
+      <div class="node human"><b>Conduct monthly/quarterly meeting</b><small>recorded in Fathom → processed by W5</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>Produce new-patients report · ROI &amp; SEO report</b><small>auto-generated from W3 Ads monitor + W4 watchtower data</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>Document meeting notes &amp; actions</b><small>W5: transcript → summary → action items</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Implement action items</b><small>auto-created ActiveCollab tasks; completion tracked by W2's loop</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>Research &amp; suggest improvements</b><small>W3/W4 opportunity cards feed the next meeting's agenda</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Inform &amp; review → repeat ↻</b><small>client updates drafted by AI, approved and sent via W2</small></div>
+    </div>
+  </div>
+
+  <p class="note">Implication for the build: the dashboard isn't imposing a new process — it's automating the exact loop 20-80 already publishes to clients. The intranet SOPs + training videos become the seed content of the Layer-2 knowledge base, and later the curriculum for the training/SaaS offer.</p>
+</section>
+
+<!-- ==================== 03 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>Bottlenecks → automations</h2></div>
+
+  <div class="pain">
+    <div class="now"><b>SLIPPING</b><p>Client emails to support@ fall through the cracks; tasks are created manually; clients wait too long to hear their job is done.</p></div>
+    <div class="fix"><b>W2 · INBOX AI</b><p>AI monitors the inbox, creates and assigns ActiveCollab tasks, tracks completion, and drafts the "it's done" reply automatically.</p></div>
+  </div>
+  <div class="pain">
+    <div class="now"><b>MISSED</b><p>Client practices miss patient calls — after hours, weekends, front desk busy — and those calls are lost bookings.</p></div>
+    <div class="fix"><b>W1 · CLINIC AI RECEPTIONIST</b><p>Client-facing product deployed on each practice's phone line: answers as the practice in EN/中文, captures booking requests, feeds the front-desk follow-up list. Rated the #1 quick win — and the first sellable product.</p></div>
+  </div>
+  <div class="pain">
+    <div class="now"><b>MANUAL</b><p>Google Ads and SEO performance reviewed by hand; BrightLocal checked client-by-client; drops surface late at support meetings.</p></div>
+    <div class="fix"><b>W3 + W4 · MONITORS</b><p>The existing Ads benchmark dashboard gains AI flagging and suggested optimisations; BrightLocal feeds rank-drop alerts proactively.</p></div>
+  </div>
+  <div class="pain">
+    <div class="now"><b>LOST</b><p>Fathom records meetings but action items are moved to ActiveCollab by hand — or not at all.</p></div>
+    <div class="fix"><b>W5 · MEETING AI</b><p>Transcript → Claude → tasks in ActiveCollab + client summary email + Slack notification.</p></div>
+  </div>
+  <div class="pain">
+    <div class="now"><b>SEMI-MANUAL</b><p>Onboarding info still processed by hand; SEO metadata set up via spreadsheets and a one-off Claude prompt.</p></div>
+    <div class="fix"><b>W6 + W7 · FACTORY</b><p>Onboarding form generates a build-ready PRD; the SEO-metadata prompt becomes a reusable dashboard function.</p></div>
+  </div>
+  <div class="pain">
+    <div class="now"><b>DEPENDENT</b><p>Sites live on Emergent/WordPress; clients can break layouts; edits bottleneck through the team.</p></div>
+    <div class="fix"><b>W8 · CUSTOM CMS</b><p>A simplified AI-powered CMS: client-safe content-only editing, AI-assisted updates, one-click publishing.</p></div>
+  </div>
+</section>
+
+<!-- ==================== 03 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>Dashboard — module plan</h2></div>
+  <p>One internal dashboard, eight modules, one shared client record. Everything that needs attention becomes a flag on the home screen and a task in ActiveCollab — the team opens the dashboard already knowing what matters today.</p>
+
+  <div class="tbl-wrap"><table>
+    <tr><th>#</th><th>Module</th><th>What it does</th><th>Status</th></tr>
+    <tr><td>W1</td><td>Clinic AI Receptionist</td><td>Client-facing: answers each practice's own line in EN/中文, handles patient FAQs and booking capture, emergency triage script, front-desk follow-up list. Agency dashboard gets the fleet view (uptime, calls rescued, bookings won).</td><td><span class="pill crit">quick win — build first</span></td></tr>
+    <tr><td>W2</td><td>Support Inbox Triage</td><td>Reads support@, classifies actionable requests, creates + assigns ActiveCollab tasks, drafts client completion updates.</td><td><span class="pill crit">high priority</span></td></tr>
+    <tr><td>W3</td><td>Google Ads Monitor</td><td>Daily AI review on top of the existing benchmark dashboard: flags accounts, suggests top optimisations, human approves, AI implements, client update generated.</td><td><span class="pill ok">dashboard exists — extend</span></td></tr>
+    <tr><td>W4</td><td>SEO Watchtower</td><td>BrightLocal + rank data in-dashboard; detects drops, suburb keyword changes, opportunities, below-benchmark clients; proactive alerts.</td><td><span class="pill warn">replace manual checks</span></td></tr>
+    <tr><td>W5</td><td>Meeting Intelligence</td><td>Fathom → Claude summary + action items → ActiveCollab tasks → client email draft → Slack notify.</td><td><span class="pill warn">manual step to remove</span></td></tr>
+    <tr><td>W6</td><td>Onboarding Factory</td><td>Client form → profile/PRD combining client info + 20-80 philosophy + SEO rules + AHPRA compliance + design principles → feeds any AI builder.</td><td><span class="pill ok">prototype exists</span></td></tr>
+    <tr><td>W7</td><td>SEO Setup Automation</td><td>Crawls a finished site, generates AHPRA-safe titles/descriptions within character limits — as a reusable dashboard function, not a spreadsheet.</td><td><span class="pill ok">prompt exists — productise</span></td></tr>
+    <tr><td>W8</td><td>Custom CMS</td><td>Centralised site management, client-safe content-only editing, AI-assisted updates, one-click publish; reduces Emergent/WordPress dependency.</td><td><span class="pill blue">longer-term build</span></td></tr>
+  </table></div>
+
+  <p class="note" style="margin-top:12px">Division of labour: Claude handles judgement work (classifying emails, summarising calls and meetings, drafting copy and client updates, generating metadata, translating EN⇄ZH). Plain scheduled code handles deterministic work (API pulls, benchmark maths, task creation, alert routing). Humans keep approval on anything client-facing or spend-changing. Tooling candidates flagged in the meeting: Claude MCP for Google Ads, Google Ads scripts, Markifact (impressive but credit-expensive), local browser automation as fallback.</p>
+</section>
+
+<!-- ==================== 04 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">05</span><h2>System architecture</h2></div>
+  <div class="arch">
+    <div class="layer">
+      <div class="layer-label">Layer 1 · Inputs</div>
+      <div class="chips">
+        <div class="chip src">Practice phone lines<small>per-client receptionist deployments (EN/中文)</small></div>
+        <div class="chip src">support@ inbox<small>client requests</small></div>
+        <div class="chip src">Fathom<small>meeting transcripts (webhook)</small></div>
+        <div class="chip src">Google Ads API<small>spend, conversions, CPL</small></div>
+        <div class="chip src">BrightLocal<small>rankings, citations, reviews</small></div>
+        <div class="chip src">GA4 / Search Console / GBP<small>traffic &amp; local visibility</small></div>
+        <div class="chip src">Onboarding form<small>new client intake</small></div>
+      </div>
+    </div>
+    <div class="arch-arrow">▼ &nbsp;webhooks · scheduled pulls</div>
+    <div class="layer">
+      <div class="layer-label">Layer 2 · Client record &amp; knowledge</div>
+      <div class="chips">
+        <div class="chip core">Client data warehouse<small>one record per practice: metrics, comms, tasks, sites</small></div>
+        <div class="chip core">Practice profile / PRD<small>differentiators, services, suburbs, brand — source of truth</small></div>
+        <div class="chip ai">20-80 knowledge base<small>website philosophy · SEO rules · AHPRA compliance · design principles — versioned, reused by every AI step</small></div>
+      </div>
+    </div>
+    <div class="arch-arrow">▼ &nbsp;context for every AI action</div>
+    <div class="layer">
+      <div class="layer-label">Layer 3 · Intelligence core</div>
+      <div class="chips">
+        <div class="chip ai">Claude services<small>email triage · call &amp; meeting summarisation · action-item extraction · metadata generation · EN⇄ZH translation · client-update drafting · "why" analysis</small></div>
+        <div class="chip core">Benchmark engine<small>KPI targets per practice type; flags below-benchmark clients</small></div>
+        <div class="chip core">Change detection<small>rank drops, spend anomalies, lead dips</small></div>
+        <div class="chip core">Approval gates<small>human sign-off before anything reaches a client or changes spend</small></div>
+      </div>
+    </div>
+    <div class="arch-arrow">▼ &nbsp;flags · tasks · drafts · content</div>
+    <div class="layer">
+      <div class="layer-label">Layer 4 · Surfaces</div>
+      <div class="chips">
+        <div class="chip out">Dashboard<small>flags, scorecards, pipelines, approvals</small></div>
+        <div class="chip out">ActiveCollab<small>auto-created, assigned tasks</small></div>
+        <div class="chip out">Slack<small>real-time alerts &amp; digests</small></div>
+        <div class="chip out">Client email<small>AI-drafted updates &amp; summaries</small></div>
+        <div class="chip out">Custom CMS → client sites<small>one-click publishing, bilingual</small></div>
+      </div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:14px">The knowledge base in Layer 2 is the productisable asset. It's what makes every workflow "20-80-flavoured" rather than generic AI — and it's exactly what gets licensed to other agencies later (swap the knowledge base, keep the machine).</p>
+</section>
+
+<!-- ==================== 05 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">06</span><h2>The eight workflows, drawn</h2></div>
+  <p class="note">Legend: <span class="pill blue">blue = input source</span> <span class="pill">grey = automated step</span> <span class="pill ai">teal = AI (Claude)</span> <span class="pill warn">amber = notification</span> — dashed border = human-in-the-loop, rounded outline = decision.</p>
+
+  <!-- W1 -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">W1</span><h3>Clinic AI receptionist — the client practices' phones</h3></div>
+    <p class="wf-sub">The #1 quick win, and the first client-facing product. Deployed per practice: patients who ring while the front desk is busy or the clinic is closed get answered in English or 中文 — and become bookings instead of lost calls. 20-80 monitors the whole fleet from the dashboard.</p>
+    <div class="flow">
+      <div class="node src"><b>Patient calls the practice → unanswered / after hours</b><small>each deployment has the practice's own greeting, voice and rules</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>AI answers as the practice</b><small>language auto-detected — switches to 普通话 mid-sentence; emergency keywords trigger the practice-approved triage script at any point</small></div>
+      <div class="down"></div>
+      <div class="node decision">Can AI resolve it on the call?<small>FAQs from the practice profile: hours, parking, health funds, new-patient process</small></div>
+      <div class="split">
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag yes">YES — FAQ</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node ai"><b>Answers from the practice profile only</b><small>never clinical advice; anything not in the profile → "reception will confirm"</small></div>
+        </div>
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag no">BOOKING / MESSAGE</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node ai"><b>Captures the booking request</b><small>who, preferred times, contact, language preference — or texts the booking link (phase 2: books directly into Praktika / Core Practice / HealthEngine)</small></div>
+          <div class="down"></div>
+          <div class="node alert"><b>Front-desk follow-up list + SMS</b><small>item in the practice's portal; caller gets a confirmation SMS; urgent items SMS the nominated staff member</small></div>
+          <div class="down"></div>
+          <div class="node human"><b>Front desk books next morning</b><small>one tap per item: booked / called / no answer</small></div>
+          <div class="down"></div>
+          <div class="node"><b>Outcome → practice's monthly report + 20-80 fleet view</b><small>"11 after-hours calls answered, 6 became appointments" — the number that sells the product</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- W2 -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">W2</span><h3>Support inbox → task → client update loop</h3></div>
+    <p class="wf-sub">Closes the two gaps at once: emails never slip through, and clients hear back the moment work is done. Typical requests: add a team member, update opening hours, change content, upload a staff photo, tweak Ads/SEO.</p>
+    <div class="flow">
+      <div class="node src"><b>Email arrives at support@2080solutions.com.au</b></div>
+      <div class="down"></div>
+      <div class="node ai"><b>Claude triage</b><small>actionable request? which client? what type? urgency? one email may contain several requests</small></div>
+      <div class="down"></div>
+      <div class="node decision">Actionable?</div>
+      <div class="split">
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag no">NO — FYI / SPAM / REPLY-ONLY</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node"><b>Filed to client timeline</b><small>AI drafts a reply if one is warranted; human sends</small></div>
+        </div>
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag yes">YES</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node"><b>Task created in ActiveCollab</b><small>right project, right assignee, original email attached, acknowledgement drafted to client</small></div>
+          <div class="down"></div>
+          <div class="node human"><b>Team completes the work</b><small>dashboard tracks open request age; overdue = flag</small></div>
+          <div class="down"></div>
+          <div class="node"><b>Task marked complete</b><small>webhook from ActiveCollab</small></div>
+          <div class="down"></div>
+          <div class="node ai"><b>Claude drafts the "it's done" email</b><small>what changed, where to see it, in the client's language</small></div>
+          <div class="down"></div>
+          <div class="node human"><b>One-click approve &amp; send</b><small>(auto-send later, once trust is earned)</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- W3 -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">W3</span><h3>Google Ads monitor → recommend → approve → implement</h3></div>
+    <p class="wf-sub">Builds on the existing benchmark dashboard. The crucial design choice: AI recommends, a human approves, then AI implements — spend never changes without sign-off.</p>
+    <div class="flow">
+      <div class="node src"><b>Google Ads API — daily pull, every account</b><small>spend, conversions, CPL, quality, search terms</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Benchmark comparison</b><small>vs internal targets (10:1 ROI line) per practice type</small></div>
+      <div class="down"></div>
+      <div class="node decision">Account needs attention?</div>
+      <div class="split">
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag yes">ON&nbsp;TRACK</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node"><b>Green tile on dashboard</b><small>rolls into monthly client ROI report</small></div>
+        </div>
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag critt">FLAGGED</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node ai"><b>Claude ranks top optimisation opportunities</b><small>negative keywords, bids, budget shifts, ad copy — with predicted impact</small></div>
+          <div class="down"></div>
+          <div class="node human"><b>Specialist approves / edits / rejects</b><small>approval queue on the dashboard</small></div>
+          <div class="down lab"><span class="stem"></span><span class="tag yes">APPROVED</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node ai"><b>AI implements the change</b><small>via Ads API / MCP / scripts; every change logged to an audit trail</small></div>
+          <div class="down"></div>
+          <div class="node alert"><b>Client-facing update drafted</b><small>"here's what we optimised and why" — feeds W2's approve-and-send loop</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- W4 -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">W4</span><h3>SEO watchtower — rank drops &amp; opportunities</h3></div>
+    <p class="wf-sub">Nobody checks BrightLocal client-by-client again. Drops, suburb keyword shifts and opportunities surface as alerts, not discoveries at the support meeting.</p>
+    <div class="flow">
+      <div class="node src"><b>BrightLocal + Search Console + GBP — daily sync</b><small>every client, every tracked keyword and suburb</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Change detection vs yesterday &amp; 30-day trend</b><small>drops, local 3-pack exits, suburb keyword movement, competitor gains</small></div>
+      <div class="down"></div>
+      <div class="node decision">Drop / opportunity / below benchmark?</div>
+      <div class="split3">
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag no">STABLE</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node"><b>Log to trend history</b><small>dashboard charts stay current</small></div>
+        </div>
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag critt">DROP</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node crit"><b>Flag + Slack alert</b><small>client, keyword, size of drop</small></div>
+          <div class="down"></div>
+          <div class="node ai"><b>Claude drafts diagnosis</b><small>algo update? GBP edit? competitor? technical?</small></div>
+          <div class="down"></div>
+          <div class="node"><b>ActiveCollab task assigned</b><small>recovery tracked until rank restored</small></div>
+        </div>
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag warnt">OPPORTUNITY</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node alert"><b>Opportunity card on dashboard</b><small>e.g. position 11 → page 1 within reach for "dentist reservoir"</small></div>
+          <div class="down"></div>
+          <div class="node human"><b>Specialist prioritises</b><small>accepted cards become tasks</small></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- W5 -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">W5</span><h3>Meeting transcript → ActiveCollab → client summary</h3></div>
+    <p class="wf-sub">Fathom already records and transcribes; Claude summarises better and extracts action items. This removes the last manual hop.</p>
+    <div class="flow">
+      <div class="node src"><b>Fathom meeting ends</b><small>webhook delivers transcript + recording link</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>Claude processes the transcript</b><small>summary · decisions · action items with owner + due date · client matched</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Tasks created in ActiveCollab</b><small>linked back to the transcript moment; notes attach to client timeline</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>Client summary email drafted</b><small>what was discussed, what 20-80 will do, what the client owes</small></div>
+      <div class="down"></div>
+      <div class="node alert"><b>Slack digest to attendees</b><small>"4 actions from today's Hearts Dental call — 2 yours"</small></div>
+      <div class="down"></div>
+      <div class="node human"><b>Owner reviews: accepts tasks, sends summary</b><small>one click each — humans stay in control of commitments</small></div>
+    </div>
+  </div>
+
+  <!-- W6 -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">W6</span><h3>Client onboarding → build-ready PRD</h3></div>
+    <p class="wf-sub">The prototype onboarding form grows into a factory — it absorbs the existing Project Questionnaire from P-A: client input + 20-80's codified knowledge = a brief any AI builder (Claude, Emergent, Lovable) can execute. Differentiation survives automation because it's captured structurally.</p>
+    <div class="flow">
+      <div class="node src"><b>Client completes onboarding dashboard</b><small>practice details · what makes them unique · services · ideal patients · target suburbs · preferred providers · booking links · design preferences · reference sites · logo &amp; brand assets</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Assets validated &amp; filed</b><small>missing items chased automatically; client record created</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>Claude generates the practice profile / PRD</b><small>merges client input with the 20-80 knowledge base: website philosophy + SEO rules + AHPRA compliance + design principles</small></div>
+      <div class="down"></div>
+      <div class="node human"><b>Strategist reviews the PRD</b><small>sharpens differentiators — the human 20% that makes the site theirs</small></div>
+      <div class="down"></div>
+      <div class="node"><b>PRD handed to the builder</b><small>Claude / Emergent / Lovable — design + content in one pass, per the standard process</small></div>
+      <div class="down"></div>
+      <div class="node"><b>On completion → W7 SEO setup, then enrolled in W3 + W4</b><small>monitoring starts on day one</small></div>
+    </div>
+  </div>
+
+  <!-- W7 -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">W7</span><h3>SEO setup automation — metadata factory</h3></div>
+    <p class="wf-sub">The existing Claude prompt, productised: a dashboard button instead of a spreadsheet ritual. Runs on every new build and re-runs whenever services or suburbs change.</p>
+    <div class="flow">
+      <div class="node src"><b>Trigger: website build complete</b><small>from W6 — or manual re-run on any existing client site</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Crawler maps every page</b><small>URLs, headings, current metadata, services detected</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>Claude generates titles &amp; descriptions</b><small>using practice name, services, location, audience + AHPRA rules + 20-80 SEO philosophy + character limits</small></div>
+      <div class="down"></div>
+      <div class="node human"><b>Specialist reviews in a side-by-side table</b><small>current vs proposed, per page; edit inline, approve in bulk</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Approved metadata pushed to the site</b><small>via CMS (W8) or deployment; change log kept</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Keywords registered in W4 watchtower</b><small>so impact of the new metadata is measured</small></div>
+    </div>
+  </div>
+
+  <!-- W8 -->
+  <div class="wf">
+    <div class="wf-title"><span class="id">W8</span><h3>Custom CMS — client-safe, AI-assisted publishing</h3></div>
+    <p class="wf-sub">Replaces the Emergent/WordPress dependency with a simplified AI-powered CMS: clients can change words and photos, never layout. Bilingual EN⇄ZH publishing is native to this flow.</p>
+    <div class="flow">
+      <div class="node src"><b>Change request enters</b><small>client edits in the portal · a W2 support task · an internal update</small></div>
+      <div class="down"></div>
+      <div class="node"><b>Guardrails check</b><small>content-only fields editable; design/layout locked; media auto-resized</small></div>
+      <div class="down"></div>
+      <div class="node ai"><b>AI assists the update</b><small>rewrites to house tone, checks AHPRA-safe wording, translates EN⇄ZH so both language versions stay in sync</small></div>
+      <div class="down"></div>
+      <div class="node decision">Client-safe change?<small>within guardrails and compliance rules</small></div>
+      <div class="split">
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag yes">YES</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node"><b>One-click publish</b><small>staged → live; version history kept, instant rollback</small></div>
+        </div>
+        <div class="branch">
+          <div class="down lab"><span class="stem"></span><span class="tag warnt">NEEDS REVIEW</span><span class="stem"></span><span class="head"></span></div>
+          <div class="node human"><b>Routed to the team</b><small>appears as a flag + ActiveCollab task; approved edits publish from the same screen</small></div>
+        </div>
+      </div>
+      <div class="down"></div>
+      <div class="node"><b>Client notified of the change going live</b><small>via the W2 update loop — the circle closes</small></div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 06 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">07</span><h2>Client-facing product line (phase two of the vision)</h2></div>
+  <p>Once the internal machine works, the same components get re-skinned for the practices themselves — turning 20-80 from service provider into platform.</p>
+  <div class="grid g3">
+    <div class="card"><span class="kicker">Product 1</span><h4>Practice AI dashboard</h4><ul><li>New-patient source tracking</li><li>Online reviews &amp; recall campaigns</li><li>Patient communication + newsletters</li><li>Social media content</li><li>Appointment booking, bilingual comms</li></ul></div>
+    <div class="card"><span class="kicker">Product 2 · = W1</span><h4>Clinic AI receptionist</h4><ul><li><b>Inbound:</b> answers in English or Chinese, FAQs, books appointments, integrates with practice-management software (Praktika, Core Practice…)</li><li><b>Outbound:</b> recalls, missed-appointment follow-ups, review requests, SMS/voice reminders, reactivation</li></ul></div>
+    <div class="card"><span class="kicker">Product 3</span><h4>AI practice manager</h4><ul><li>Patient comms, recalls, reviews</li><li>Social + newsletter content</li><li>Rostering, timesheets, team reminders</li><li>Meeting notes &amp; clinical transcription</li><li>Growth suggestions — "an AI manager for each practice"</li></ul></div>
+  </div>
+  <p class="note" style="margin-top:12px">The bilingual Chinese/English capability is the stand-out competitive moat here — the same Claude translation layer that powers the CMS (W8) and receptionist (W1) serves patient communication for the many Chinese-speaking practices and patient bases 20-80 already serves.</p>
+
+  <h3>The SaaS / training play</h3>
+  <p>Build for 20-80 first → prove with real case studies → refine → wrap as SaaS → sell with training, coaching and support. The software is not the product; <b>the knowledge base and proven workflows are</b>. Pricing floated: a high-ticket program around $30k including platform access and workshops. Architecturally this costs nothing extra now — it just requires the discipline of keeping 20-80's rules (philosophy, SEO, AHPRA, design) in the versioned knowledge base rather than hard-coded into workflows, so another agency's rules can be swapped in later.</p>
+</section>
+
+<!-- ==================== 07 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">08</span><h2>Build order — as prioritised in the meeting</h2></div>
+
+  <div class="phase">
+    <div class="tag-col"><b>Phase 1</b><span>Quick wins</span></div>
+    <div>
+      <h4>W1 Clinic Receptionist (pilot practice) + W2 Support Inbox</h4>
+      <p>W1 launches on one willing practice's line (e.g. Smile To Go — bilingual patient base) to prove "bookings won" with real numbers; W2 relieves the team's biggest daily pain. Together they force the foundations everything else reuses:</p>
+      <ul><li>The client/practice record and profile (every AI action reads it)</li><li>The ActiveCollab + Slack integration plumbing</li><li>The per-practice config pattern the whole client-product line will use</li></ul>
+    </div>
+  </div>
+  <div class="phase">
+    <div class="tag-col"><b>Phase 2</b><span>Monitors</span></div>
+    <div>
+      <h4>W3 Ads Monitor (extend existing dashboard) + W4 SEO Watchtower</h4>
+      <p>The Ads benchmark dashboard already pulls data — add AI flagging and the recommend→approve→implement queue. In parallel, pipe BrightLocal into the same screen with drop alerts.</p>
+      <ul><li>Decision needed on tooling: Ads API + scripts vs Claude MCP vs Markifact (watch credit costs)</li></ul>
+    </div>
+  </div>
+  <div class="phase">
+    <div class="tag-col"><b>Phase 3</b><span>Meetings</span></div>
+    <div>
+      <h4>W5 Fathom → ActiveCollab + client summaries</h4>
+      <p>Small build (webhook + extraction + task creation) with a big habit payoff; reuses Phase 1 plumbing entirely.</p>
+    </div>
+  </div>
+  <div class="phase">
+    <div class="tag-col"><b>Phase 4</b><span>Factory</span></div>
+    <div>
+      <h4>W6 Onboarding PRD + W7 SEO Setup</h4>
+      <p>Harden the onboarding prototype, codify the knowledge base (philosophy, SEO rules, AHPRA, design principles) as versioned documents, and turn the metadata prompt into a dashboard function.</p>
+      <ul><li>The knowledge base built here is the future SaaS asset — invest in it properly</li></ul>
+    </div>
+  </div>
+  <div class="phase">
+    <div class="tag-col"><b>Phase 5</b><span>Platform</span></div>
+    <div>
+      <h4>W8 Custom CMS, then client-facing products</h4>
+      <p>The deepest build: client-safe editing, AI-assisted bilingual updates, one-click publish, Emergent exit path. Once live, the practice dashboard / clinic receptionist / AI practice manager are re-skins of components that already exist.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== 08 ==================== -->
+<section>
+  <div class="sec-head"><span class="sec-num">09</span><h2>Decisions needed before build</h2></div>
+  <div class="qbox"><b>Telephony platform for the AI receptionist.</b><p>Voice AI provider and number routing (e.g. forward-on-no-answer vs full virtual reception), and whether Chinese-language voice quality meets the bar — worth a bake-off before committing.</p></div>
+  <div class="qbox"><b>Google Ads execution path.</b><p>Claude MCP for Google Ads vs native Ads API + scripts vs Markifact (impressive, but credit costs flagged in the meeting) vs local browser automation. Recommendation: start read-only via the Ads API for flagging, choose the write path once the approval queue exists.</p></div>
+  <div class="qbox"><b>BrightLocal access level.</b><p>The API requires a suitable plan tier. If unavailable, Claude can parse scheduled CSV/email reports as a bridge — the architecture supports both, but the API is far more reliable.</p></div>
+  <div class="qbox"><b>Auto-send thresholds for client comms.</b><p>Which AI-drafted messages may send without human approval, and when? Suggested: everything human-approved for the first 90 days, then auto-send low-risk categories (task-completed confirmations) with spot-checking.</p></div>
+  <div class="qbox"><b>Benchmark definitions.</b><p>What "below benchmark" means per practice type (CPL? leads/month? the 10:1 ROI line?) — one workshop to set initial thresholds, tuned once data flows.</p></div>
+  <div class="qbox"><b>Chinese variant &amp; reviewer.</b><p>Simplified, Traditional, or both — and who approves ZH content in the loop before the glossary matures.</p></div>
+  <div class="qbox"><b>CMS scope &amp; Emergent exit.</b><p>Greenfield CMS vs headless layer over existing sites, and the migration path for the 100+ live sites. This decision sizes Phase 5 more than any other.</p></div>
+</section>
+
+<footer>
+  Sources: <a href="https://2080solutions.com.au/">2080solutions.com.au</a> · <a href="https://2080solutions.com.au/about-us/">About Us</a> · <a href="https://2080solutions.com.au/services/">Services</a> · <a href="https://2080solutions.com.au/about-us/our-partners/">Partners</a> · <a href="https://2080solutions.com.au/web-development-process/">Web Dev Process</a> · <a href="https://2080solutions.com.au/support-process/">Support Process</a> (draw.io flowcharts decoded) · internal meeting notes &amp; AI automation strategy summary, July 2026. Planning document only — no code committed.
+</footer>
+</div>
+
+</html>

@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<title>2080 Solutions — Automation Deep-Dive: Every Workflow, Running</title>
+<style>
+  :root{
+    --bg:#F4F6F5; --surface:#FFFFFF; --surface-2:#EDF1EF;
+    --ink:#1C2A33; --muted:#5B6C75; --line:#D8E0DD;
+    --accent:#0E7C7B; --accent-soft:#E0F0EE;
+    --blue:#2C5FA8; --blue-soft:#E6EDF7;
+    --warn:#A96F14; --warn-soft:#F6ECD9;
+    --crit:#B23A32; --crit-soft:#F6E3E0;
+    --ok:#2E7D4F; --ok-soft:#E2F0E7;
+    --term:#101B21; --term-ink:#C9D8D5;
+    --mono:"Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+    --sans:"Segoe UI Variable Text","Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0F171C;--surface:#17222A;--surface-2:#1D2B34;--ink:#E4ECEA;--muted:#8FA3AB;--line:#2B3B44;
+    --accent:#41B8AC;--accent-soft:#153733;--blue:#7FA9DE;--blue-soft:#1C2C42;--warn:#D9A04C;--warn-soft:#3A2E15;
+    --crit:#E07A6E;--crit-soft:#3F221E;--ok:#6FBF8F;--ok-soft:#1B3326;--term:#0A1318;--term-ink:#C9D8D5}
+  }
+  :root[data-theme="dark"]{--bg:#0F171C;--surface:#17222A;--surface-2:#1D2B34;--ink:#E4ECEA;--muted:#8FA3AB;--line:#2B3B44;
+    --accent:#41B8AC;--accent-soft:#153733;--blue:#7FA9DE;--blue-soft:#1C2C42;--warn:#D9A04C;--warn-soft:#3A2E15;
+    --crit:#E07A6E;--crit-soft:#3F221E;--ok:#6FBF8F;--ok-soft:#1B3326;--term:#0A1318;--term-ink:#C9D8D5}
+  :root[data-theme="light"]{--bg:#F4F6F5;--surface:#FFFFFF;--surface-2:#EDF1EF;--ink:#1C2A33;--muted:#5B6C75;--line:#D8E0DD;
+    --accent:#0E7C7B;--accent-soft:#E0F0EE;--blue:#2C5FA8;--blue-soft:#E6EDF7;--warn:#A96F14;--warn-soft:#F6ECD9;
+    --crit:#B23A32;--crit-soft:#F6E3E0;--ok:#2E7D4F;--ok-soft:#E2F0E7;--term:#101B21;--term-ink:#C9D8D5}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6}
+  .wrap{max-width:1080px;margin:0 auto;padding:44px 22px 90px}
+  a{color:var(--accent)}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+  h1{font-family:var(--disp);font-size:clamp(28px,4vw,40px);line-height:1.13;margin:0 0 12px;font-weight:650;text-wrap:balance}
+  .lede{font-size:17px;color:var(--muted);max-width:72ch;margin:0 0 18px}
+
+  .toc{position:sticky;top:0;z-index:20;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);margin-bottom:34px;display:flex;gap:6px;flex-wrap:wrap}
+  .toc a{font-family:var(--mono);font-size:11.5px;text-decoration:none;color:var(--ink);border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:4px 11px;white-space:nowrap}
+  .toc a:hover{border-color:var(--accent);color:var(--accent)}
+
+  section.wf{margin:0 0 64px;scroll-margin-top:70px}
+  .wf-head{border-bottom:2px solid var(--ink);padding-bottom:12px;margin-bottom:18px}
+  .wf-head .id{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:.1em}
+  .wf-head h2{font-family:var(--disp);font-size:24px;margin:2px 0 8px;font-weight:650}
+  .wf-head p{margin:0 0 10px;color:var(--muted);max-width:80ch;font-size:14px}
+  .facts{display:flex;flex-wrap:wrap;gap:6px}
+  .facts span{font-family:var(--mono);font-size:11px;border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 10px}
+  .facts .tg{background:var(--blue-soft);color:var(--blue);border-color:transparent}
+  .facts .sk{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+  .facts .io{background:var(--warn-soft);color:var(--warn);border-color:transparent}
+
+  h3{font-family:var(--disp);font-size:16px;margin:26px 0 12px;font-weight:650;display:flex;align-items:center;gap:8px}
+  h3 .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--muted);font-weight:400}
+
+  /* ---- swimlane sequence ---- */
+  .seqwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface);padding:14px}
+  .seq{display:grid;grid-template-columns:repeat(4,minmax(170px,1fr));gap:8px 10px;min-width:720px}
+  .lh{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:6px 4px;border-radius:7px;background:var(--surface-2);color:var(--muted)}
+  .lh.c1{box-shadow:inset 0 -2px 0 var(--blue)} .lh.c2{box-shadow:inset 0 -2px 0 var(--muted)}
+  .lh.c3{box-shadow:inset 0 -2px 0 var(--accent)} .lh.c4{box-shadow:inset 0 -2px 0 var(--warn)}
+  .sq{border:1px solid var(--line);border-radius:8px;padding:8px 11px;font-size:12.5px;line-height:1.45;background:var(--surface);position:relative}
+  .sq small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+  .sq .n{position:absolute;top:-8px;left:-6px;font-family:var(--mono);font-size:10px;background:var(--ink);color:var(--bg);border-radius:99px;padding:1px 6px}
+  .sq.src{border-left:3px solid var(--blue);background:var(--blue-soft)}
+  .sq.sys{border-left:3px solid var(--muted)}
+  .sq.ai{border-left:3px solid var(--accent);background:var(--accent-soft)}
+  .sq.hum{border:1.5px dashed var(--muted)}
+  .sq.out{border-left:3px solid var(--warn);background:var(--warn-soft)}
+  .l1{grid-column:1}.l2{grid-column:2}.l3{grid-column:3}.l4{grid-column:4}
+
+  /* ---- terminal trace ---- */
+  .term{background:var(--term);border-radius:12px;padding:16px 18px;overflow-x:auto;font-family:var(--mono);font-size:12px;line-height:1.75;color:var(--term-ink)}
+  .term .cap{color:#7FA9DE;font-size:11px;letter-spacing:.1em;text-transform:uppercase;display:block;margin-bottom:8px}
+  .tl{white-space:pre-wrap;word-break:break-word}
+  .ts{color:#5E7680}
+  .tag{display:inline-block;min-width:52px;text-align:center;border-radius:4px;font-size:10px;padding:0 5px;margin:0 6px 0 4px;letter-spacing:.06em}
+  .tEVT{background:#1C2C42;color:#7FA9DE}.tAI{background:#14332F;color:#41B8AC}
+  .tDEC{background:#2A3840;color:#E4ECEA}.tWR{background:#222E35;color:#9FB3AC}
+  .tNOT{background:#382C15;color:#D9A04C}.tHUM{background:transparent;color:#E4ECEA;border:1px dashed #5E7680}
+  .tERR{background:#3F221E;color:#E07A6E}.tOK{background:#1B3326;color:#6FBF8F}
+  details{margin:6px 0 6px 66px}
+  details summary{cursor:pointer;color:#7FA9DE;font-size:11px}
+  details pre{margin:6px 0 0;padding:10px 12px;background:#0D171D;border:1px solid #22323B;border-radius:8px;font-size:11px;line-height:1.6;overflow-x:auto;color:#B8CCC8}
+
+  /* ---- tables ---- */
+  table{border-collapse:collapse;width:100%;font-size:13px;background:var(--surface)}
+  .twrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;margin-bottom:8px}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;text-align:left;color:var(--muted);background:var(--surface-2);padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td:first-child{font-weight:600;white-space:nowrap}
+  td code{font-family:var(--mono);font-size:11.5px;background:var(--surface-2);border-radius:4px;padding:1px 5px}
+
+  .edge{border:1px solid var(--line);border-left:3px solid var(--crit);border-radius:9px;background:var(--surface);padding:10px 14px;margin-bottom:8px;font-size:13px}
+  .edge b{font-size:13px}
+  .edge span{color:var(--muted)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+  @media (max-width:820px){.grid2{grid-template-columns:1fr}}
+
+  .datamap{display:flex;flex-wrap:wrap;gap:6px;font-family:var(--mono);font-size:11px}
+  .datamap span{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:4px 9px}
+  .datamap b{color:var(--accent);font-weight:600}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:8px}
+  .kpi{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:12.5px}
+  .kpi b{font-family:var(--mono);color:var(--accent)}
+  .note{color:var(--muted);font-size:13px;max-width:80ch}
+  footer{border-top:1px solid var(--line);padding-top:18px;font-size:13px;color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header>
+  <p class="eyebrow">Automation Specification · Execution-Level Detail · July 2026</p>
+  <h1>Every workflow, running: execution traces, decision rules &amp; failure handling</h1>
+  <p class="lede">Companion to the <a href="https://claude.ai/code/artifact/52e5db76-c9f1-4f25-a584-baf6692669a3">blueprint</a> and the <a href="https://claude.ai/code/artifact/4f1ae519-4330-4104-8114-7c93ea30c623">UI mockup</a>. Each workflow below is specified the way it will actually run: the trigger, the swimlane sequence, a <b>real timestamped execution trace</b> with the data payloads at every hop, the exact decision thresholds, the edge cases and what happens when things fail. Expand any ▸ payload to see the data.</p>
+</header>
+
+<nav class="toc">
+  <a href="#w1">W1 Receptionist</a><a href="#w2">W2 Inbox</a><a href="#w3">W3 Ads</a><a href="#w4">W4 SEO</a><a href="#w5">W5 Meetings</a><a href="#w6">W6 Onboarding</a><a href="#w7">W7 SEO Setup</a><a href="#w8">W8 CMS</a><a href="#core">Core: events · audit · errors</a>
+</nav>
+
+<!-- ============================ W1 ============================ -->
+<section class="wf" id="w1">
+  <div class="wf-head">
+    <span class="id">W1 · CLIENT-FACING PRODUCT — DEPLOYED PER PRACTICE</span>
+    <h2>AI Receptionist for clinics — the practices' phones, not ours</h2>
+    <p>Deployed on each client practice's phone line: answers calls the front desk misses (busy, lunch, after hours, weekends), speaks English or 普通话 based on the caller, handles patient FAQs from the practice profile, captures appointment requests, and hands the front desk a clean follow-up list. 20-80's dashboard gets a fleet view across every deployed practice — uptime, calls saved, bookings captured — which is also the proof for selling it as Product 2.</p>
+    <div class="facts">
+      <span class="tg">TRIGGER: practice line unanswered in N rings · after-hours / weekend schedule · lunch overflow</span>
+      <span class="sk">SKILLS: clinic-call-agent (per-practice config) · call-summary</span>
+      <span class="io">WRITES: practice portal follow-up list · SMS to caller &amp; front desk · practice PMS/booking (phase 2: Praktika, Core Practice, HealthEngine)</span>
+      <span>HARD RULE: never gives clinical advice — ever</span>
+      <span>FLEET: agency dashboard monitors every deployment</span>
+    </div>
+  </div>
+
+  <h3>Sequence <span class="k">LANES: PATIENT / PLATFORM / CLAUDE / FRONT DESK</span></h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Patient calling clinic</div><div class="lh c2">Platform</div><div class="lh c3">Claude AI</div><div class="lh c4">Practice front desk</div>
+    <div class="sq src l1"><span class="n">1</span>Patient rings the practice · front desk busy / closed → forward to the practice's AI receptionist (its own greeting, its own voice config)</div>
+    <div class="sq ai l3"><span class="n">2</span>Answers as the practice: "Thanks for calling Smile To Go…" · language auto-detected, switches to 普通话 mid-sentence if needed</div>
+    <div class="sq ai l3"><span class="n">3</span>Intent classified live: <small>booking_request · faq · existing_appointment · emergency_triage · message · spam</small></div>
+    <div class="sq ai l3"><span class="n">4</span>FAQs answered from the practice profile: hours, location/parking, health funds accepted, new-patient process, fees ranges the practice has approved. Booking requests: capture preferred times + patient details, or SMS the booking link (phase 2: book directly into the PMS)</div>
+    <div class="sq sys l2"><span class="n">5</span>Emergency phrases at any point → triage script: advise urgent care / 000 wording approved by the practice, capture details, mark P1</div>
+    <div class="sq ai l3"><span class="n">6</span>Call ends → call-summary: bilingual summary, intent, urgency, requested times, patient contact</div>
+    <div class="sq sys l2"><span class="n">7</span>Practice portal follow-up list updated + SMS to front desk for urgent items + confirmation SMS to the caller ("we'll confirm your appointment when we open at 8:30")</div>
+    <div class="sq hum l4"><span class="n">8</span>Front desk works the follow-up list next morning: one tap per item — booked / called / no answer</div>
+    <div class="sq out l2"><span class="n">9</span>Outcomes logged → practice's monthly report ("11 after-hours calls answered, 6 became appointments") and 20-80's fleet view</div>
+  </div></div>
+
+  <h3>Execution trace <span class="k">REAL SCENARIO: SATURDAY 08:47, SMILE TO GO IS CLOSED, MRS LIN CALLS</span></h3>
+  <div class="term"><span class="cap">run #c-2081 · sat 4 jul 2026 · deployment: smile-to-go · all times AEST</span>
+<div class="tl"><span class="ts">08:47:02</span><span class="tag tEVT">EVT</span>inbound 0432•••118 → Smile To Go line · clinic closed (Sat) → AI receptionist answers as the practice</div>
+<div class="tl"><span class="ts">08:47:05</span><span class="tag tAI">AI</span>greeting EN → caller responds in Mandarin → switches 普通话 (detect conf 0.97): "您好，这里是 Smile To Go…"</div>
+<div class="tl"><span class="ts">08:47:22</span><span class="tag tDEC">DEC</span>emergency screen: no trauma/pain keywords → proceed · intent=booking_request (existing patient family)</div>
+<div class="tl"><span class="ts">08:48:10</span><span class="tag tAI">AI</span>captures: 2 children, Saturday-morning preference, patient family name · answers FAQ from practice profile: "yes, we accept Bupa" · offers to text the HealthEngine booking link OR have reception confirm Monday morning — caller chooses reception callback</div>
+<div class="tl"><span class="ts">08:49:31</span><span class="tag tEVT">EVT</span>call ends · 2m29s · confirmation SMS to caller (中文): "收到您的预约请求，诊所周一8:30开门后会与您确认"</div>
+<div class="tl"><span class="ts">08:49:33</span><span class="tag tAI">AI</span>call-summary v1.3 (config: smile-to-go profile v12, faq pack v4)</div>
+<details><summary>▸ skill output payload</summary><pre>{
+  "deployment": "smile-to-go", "intent": "booking_request",
+  "language": "zh-CN", "urgency": "normal", "emergency_screen": "clear",
+  "caller": {"name": "Mrs Lin", "phone": "0432•••118", "prefers": "Mandarin",
+             "patient_link": "existing family (self-reported)"},
+  "request": {"who": "2 children", "when_pref": "Saturday mornings",
+              "fund_asked": "Bupa — answered from profile: accepted"},
+  "summary_en": "Existing patient family requests Sat-AM appointment for two children; Mandarin preferred; expects Monday confirmation call.",
+  "summary_zh": "现有病人家庭希望为两个孩子预约周六上午…",
+  "followup": {"list": "monday_open", "sms_confirm_sent": true},
+  "confidence": 0.93
+}</pre></details>
+<div class="tl"><span class="ts">08:49:35</span><span class="tag tWR">WRITE</span>Smile To Go portal → follow-up list item #1 for Monday · flagged "Mandarin preferred" so the right staff member calls</div>
+<div class="tl"><span class="ts">MON 08:32</span><span class="tag tHUM">HUMAN</span>front desk opens follow-up list (3 weekend items) · calls Mrs Lin · books 2 × Sat 9:15 · taps [Booked ✓]</div>
+<div class="tl"><span class="ts">MON 08:33</span><span class="tag tOK">OK</span>outcome logged: after-hours call → 2 appointments · rolls into Smile To Go's monthly report AND 20-80's fleet view ("proof: receptionist paid for itself this weekend")</div></div>
+
+  <h3>Decision rules <span class="k">PER-PRACTICE CONFIG — EVERY RULE IS SET WITH THE PRACTICE AT ONBOARDING</span></h3>
+  <div class="twrap"><table>
+    <tr><th>Rule</th><th>Condition</th><th>Action</th></tr>
+    <tr><td>R1 Emergency triage</td><td>trauma / severe pain / swelling+breathing keywords, any language, any point in call</td><td>Practice-approved script: urgent-care instructions or 000 wording · details captured · P1 SMS to practice's nominated emergency contact · <b>never clinical advice beyond the approved script</b></td></tr>
+    <tr><td>R2 FAQ answer</td><td>hours, location, parking, funds, new-patient process, published fee ranges</td><td>Answered from the practice profile only — if it's not in the profile, it says "reception will confirm that for you"</td></tr>
+    <tr><td>R3 Booking request</td><td>caller wants an appointment</td><td>v1: capture preferences + SMS booking link or follow-up-list entry · phase 2: live availability + booking via PMS integration (Praktika / Core Practice / HealthEngine)</td></tr>
+    <tr><td>R4 Existing appointment change</td><td>reschedule / cancel</td><td>v1: captured to follow-up list (no PMS write) · caller told when reception will confirm · phase 2: direct reschedule</td></tr>
+    <tr><td>R5 Clinical question</td><td>"should I…", symptoms, medication, treatment suitability</td><td>Hard refusal path: "that's one for the dentist — I'll make sure they get your question" → message captured for clinician · logged for the practice</td></tr>
+    <tr><td>R6 Language</td><td>first-utterance detection</td><td>EN ⇄ 普通话 seamless switch · preference stored on the follow-up item so the right staff member calls back</td></tr>
+    <tr><td>R7 Low confidence</td><td>any classification &lt; 0.7</td><td>Item tagged "listen to recording" on the follow-up list — degrade to assisted, never to wrong</td></tr>
+  </table></div>
+
+  <h3>Edge cases &amp; failure handling</h3>
+  <div class="grid2">
+    <div class="edge"><b>Genuine medical emergency</b><br><span>Triage script only, immediately — approved wording per practice, P1 SMS to the nominated contact, full recording retained. The agent never assesses severity itself beyond keyword triggers; it errs toward the urgent path.</span></div>
+    <div class="edge"><b>Health information privacy</b><br><span>Minimum-necessary capture (name, contact, preference — not clinical detail); recordings on a practice-set retention clock; transcripts auto-redact beyond what the follow-up needs; data stays per-practice, never pooled.</span></div>
+    <div class="edge"><b>Caller hangs up mid-capture</b><br><span>Partial summary still filed with caller-ID; optional "sorry we missed you — book here" SMS if the practice enables it.</span></div>
+    <div class="edge"><b>Cantonese caller</b><br><span>v1 voices: EN + Mandarin. Cantonese detected → bilingual capture prompt + follow-up item tagged for the practice's Cantonese speaker.</span></div>
+    <div class="edge"><b>Voice platform outage</b><br><span>Fleet health-check every 5 min; on failure the line falls back to the practice's ordinary voicemail; voicemails transcribed on recovery into the same follow-up list. 20-80 gets the outage alert, not the practice's patients.</span></div>
+    <div class="edge"><b>Prank / marketing robocalls</b><br><span>Classified spam → polite close, logged, excluded from stats so the practice's "calls answered" number stays honest.</span></div>
+  </div>
+
+  <h3>Data written &amp; automation KPIs <span class="k">PER PRACTICE + FLEET ROLL-UP FOR 20-80</span></h3>
+  <div class="datamap"><span><b>calls</b> per deployment · recording·transcript·lang·intent</span><span><b>followup_items</b> state: open→booked/called/no-answer</span><span><b>sms_log</b> confirmations both directions</span><span><b>practice_report_feed</b> calls saved · bookings won</span><span><b>fleet_health</b> uptime per deployment (agency view)</span></div>
+  <div class="kpis">
+    <div class="kpi"><b>calls rescued</b> — after-hours/overflow calls answered vs rung out</div>
+    <div class="kpi"><b>booking conversion</b> — % rescued calls that became appointments</div>
+    <div class="kpi"><b>中文 share</b> — the bilingual moat, measured per practice</div>
+    <div class="kpi"><b>follow-up clearance</b> — % of Monday lists cleared by 10 am</div>
+  </div>
+</section>
+
+<!-- ============================ W2 ============================ -->
+<section class="wf" id="w2">
+  <div class="wf-head">
+    <span class="id">W2 · HIGH PRIORITY</span>
+    <h2>Support inbox → task → completion → client update</h2>
+    <p>Closes both halves of the biggest complaint: requests slipping through, and clients not hearing back when work is done. The portal request form feeds this same pipeline, so both channels converge into one tracked list.</p>
+    <div class="facts">
+      <span class="tg">TRIGGER: Gmail API push on support@ · portal request form</span>
+      <span class="sk">SKILLS: email-triage · reply-drafter · completion-writer</span>
+      <span class="io">WRITES: ActiveCollab · CRM · Gmail drafts · CMS jobs</span>
+      <span>SLA MATRIX: per request type, see rules</span>
+    </div>
+  </div>
+
+  <h3>Sequence</h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Client</div><div class="lh c2">Platform</div><div class="lh c3">Claude AI</div><div class="lh c4">Team</div>
+    <div class="sq src l1"><span class="n">1</span>Email lands at support@ (or a request via the client portal form)</div>
+    <div class="sq sys l2"><span class="n">2</span>Thread dedupe (Gmail thread-id) · attachments virus-scanned &amp; filed to client folder</div>
+    <div class="sq ai l3"><span class="n">3</span>email-triage: classify · <b>split multi-request emails</b> · match client · urgency · missing-info check · confidence per request</div>
+    <div class="sq sys l2"><span class="n">4</span>Per request ≥ 0.8 conf: ActiveCollab task in the client's project, assignee from routing table, type-specific checklist attached</div>
+    <div class="sq ai l3"><span class="n">5</span>Acknowledgement drafted: what we understood, ETA from SLA matrix, anything we still need</div>
+    <div class="sq hum l4"><span class="n">6</span>Coordinator approves ack (auto-send after trust period) · team does the work</div>
+    <div class="sq sys l2"><span class="n">7</span>ActiveCollab webhook: task complete → pulls CMS change log / screenshots as evidence</div>
+    <div class="sq ai l3"><span class="n">8</span>completion-writer drafts "it's done": what changed, link to see it, client's language</div>
+    <div class="sq hum l4"><span class="n">9</span>One-click send — replies <b>into the original email thread</b>, so the client's own mailbox shows request → done</div>
+  </div></div>
+
+  <h3>Execution trace <span class="k">REAL SCENARIO: THE HEARTS DENTAL DOUBLE-REQUEST EMAIL</span></h3>
+  <div class="term"><span class="cap">run #e-9917 · thread 187c…f2 · mon 6 jul</span>
+<div class="tl"><span class="ts">08:41:02</span><span class="tag tEVT">EVT</span>Gmail push: new message reception@heartsdental.com.au → support@ · 1 attachment (dr-wong.jpg, 3.2 MB)</div>
+<div class="tl"><span class="ts">08:41:04</span><span class="tag tWR">WRITE</span>attachment scanned ✓ → filed clients/hearts-dental/assets/inbox/</div>
+<div class="tl"><span class="ts">08:41:05</span><span class="tag tAI">AI</span>email-triage v2.1 · client matched by domain (conf 0.99)</div>
+<details><summary>▸ triage output — note the split into 2 requests</summary><pre>{
+  "client_id": "hearts-dental",
+  "requests": [
+    {"type": "team_member_add", "confidence": 0.94, "urgency": "normal",
+     "summary": "Add Dr Amelia Wong to team page, starts Monday",
+     "assets": {"photo": "received", "bio": "MISSING"},
+     "sla_days": 3, "route": "web:ish"},
+    {"type": "hours_change", "confidence": 0.97, "urgency": "scheduled",
+     "summary": "Saturday hours 9:00–13:00 effective 2026-08-01",
+     "effective_date": "2026-08-01",
+     "sla_days": 2, "route": "web:ish",
+     "downstream": ["cms.hours.schedule", "gbp.special_hours.sync"]}
+  ],
+  "tone": "friendly", "reply_language": "en"
+}</pre></details>
+<div class="tl"><span class="ts">08:41:07</span><span class="tag tWR">WRITE</span>AC #4389 "Add Dr Wong — team page" → Ish (due Thu) · AC #4390 "Sat hours 9–1 from 1 Aug" → Ish (due Wed)</div>
+<div class="tl"><span class="ts">08:41:07</span><span class="tag tWR">WRITE</span>#4390 spawns CMS job: scheduled publish 01 Aug 00:01 + GBP special-hours sync <span class="tag tOK">cross-trigger → W8</span></div>
+<div class="tl"><span class="ts">08:41:09</span><span class="tag tAI">AI</span>ack drafted: confirms both items, gives ETAs, asks for Dr Wong's short bio (the one missing asset)</div>
+<div class="tl"><span class="ts">09:08:44</span><span class="tag tHUM">HUMAN</span>coordinator approves ack → sent in-thread · client's "we need your bio" chase now auto-follows at +3d, +6d if silent</div>
+<div class="tl"><span class="ts">THU 15:22</span><span class="tag tEVT">EVT</span>AC webhook: #4389 complete · CMS change log shows new page /team/dr-amelia-wong published</div>
+<div class="tl"><span class="ts">THU 15:22</span><span class="tag tAI">AI</span>completion-writer: "Dr Wong's profile is live — see it here… Her Saturday hours change is scheduled for 1 Aug and will update Google automatically."</div>
+<div class="tl"><span class="ts">THU 15:40</span><span class="tag tHUM">HUMAN</span>[Send] · thread updated · CRM timeline: 2 requests, avg completion 3.2 days, 0 chases needed</div></div>
+
+  <h3>Decision rules &amp; SLA matrix</h3>
+  <div class="twrap"><table>
+    <tr><th>Request type</th><th>SLA</th><th>Route</th><th>Ack policy</th><th>Completion email</th></tr>
+    <tr><td>content_change</td><td>2 business days</td><td>web team</td><td>auto after trust period</td><td>auto-draft, human send</td></tr>
+    <tr><td>team_member_add / photo</td><td>3 days</td><td>web team</td><td>auto</td><td>auto-draft + page link</td></tr>
+    <tr><td>hours_change</td><td>2 days (or scheduled date)</td><td>web team + CMS job</td><td>auto</td><td>auto-draft, notes GBP sync</td></tr>
+    <tr><td>ads_request / seo_request</td><td>specialist review first — no ETA promised in ack</td><td>Hamza</td><td>human-approved always</td><td>via W3 change loop</td></tr>
+    <tr><td>question</td><td>same day</td><td>reply-only, no task</td><td>draft reply for human</td><td>—</td></tr>
+    <tr><td>complaint / cancel keywords</td><td>immediate</td><td><b>Wally, directly</b></td><td><b>NO AI ack — ever</b></td><td>—</td></tr>
+    <tr><td>confidence &lt; 0.8</td><td>—</td><td>triage queue (human classifies, choice retrains examples)</td><td>held</td><td>—</td></tr>
+  </table></div>
+
+  <h3>Edge cases &amp; failure handling</h3>
+  <div class="grid2">
+    <div class="edge"><b>Client emails a team member directly</b><br><span>House rule: forward/BCC to support@. Nightly sweep also checks connected personal inboxes for client-domain mail with no matching task and nudges the owner in Slack.</span></div>
+    <div class="edge"><b>Reply-chain noise ("thanks!")</b><br><span>Thread-aware: replies on a tracked thread with no new request are filed to the timeline, never re-triaged into duplicate tasks.</span></div>
+    <div class="edge"><b>Ambiguous client (referrer, new prospect?)</b><br><span>No domain match → prospect flow: lead record + Wally notified, not a support task.</span></div>
+    <div class="edge"><b>Request partially completable</b><br><span>Each split request has its own task and its own completion email — one blocked item never silently delays the others (see the Dr Wong bio chase).</span></div>
+    <div class="edge"><b>Out-of-office autoreply loops</b><br><span>Auto-reply headers detected → suppressed from pipeline.</span></div>
+    <div class="edge"><b>Gmail push outage</b><br><span>Fallback poll every 5 min; watch-channel renewal monitored; gap detection compares message counts and backfills.</span></div>
+  </div>
+
+  <h3>Data written &amp; automation KPIs</h3>
+  <div class="datamap"><span><b>email_threads</b> thread_id·client·status</span><span><b>requests</b> type·sla·confidence·source(email|portal|phone)</span><span><b>tasks</b> AC ids</span><span><b>cms_jobs</b> scheduled changes</span><span><b>skill_runs</b> triage/completion versions</span></div>
+  <div class="kpis">
+    <div class="kpi"><b>zero-loss</b> — every inbound maps to a request/timeline entry (audited weekly)</div>
+    <div class="kpi"><b>time-to-acknowledge</b> — target &lt; 1 business hour</div>
+    <div class="kpi"><b>time-to-done-email</b> — minutes after task completion, was days</div>
+    <div class="kpi"><b>triage precision</b> — % of AI classifications humans didn't correct</div>
+  </div>
+</section>
+
+<!-- ============================ W3 ============================ -->
+<section class="wf" id="w3">
+  <div class="wf-head">
+    <span class="id">W3 · EXTENDS EXISTING DASHBOARD</span>
+    <h2>Google Ads — monitor → recommend → approve → implement → verify</h2>
+    <p>The benchmark dashboard already pulls Ads data. This adds the daily AI review and a closed loop where every implemented change is measured for 7 days and can propose its own rollback. Spend never changes without a named human approving a concrete diff.</p>
+    <div class="facts">
+      <span class="tg">TRIGGER: cron 06:00 daily · all accounts</span>
+      <span class="sk">SKILLS: ads-optimiser · report-writer</span>
+      <span class="io">READS: Ads API (GAQL) · GA4 · WRITES: Ads API mutations · audit log</span>
+      <span>HARD RULE: write access only via approval queue</span>
+    </div>
+  </div>
+
+  <h3>Sequence</h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Google Ads</div><div class="lh c2">Platform</div><div class="lh c3">Claude AI</div><div class="lh c4">Specialist</div>
+    <div class="sq src l1"><span class="n">1</span>06:00 — GAQL pulls per account: 1/7/30-day campaign stats, search terms, quality scores, budget pacing, conversion lag check</div>
+    <div class="sq sys l2"><span class="n">2</span>Benchmark engine scores each account vs practice-type targets → green / watch / flagged</div>
+    <div class="sq sys l2"><span class="n">3</span>Sanity gates BEFORE flagging: tracking-health check, seasonality calendar, spend-data completeness</div>
+    <div class="sq ai l3"><span class="n">4</span>Flagged only → ads-optimiser: ranked recommendations, each with rationale, predicted impact, risk class, rollback plan. Context includes past changes + previously rejected recs</div>
+    <div class="sq hum l4"><span class="n">5</span>Approval queue: full diff view → approve / edit / reject-with-reason</div>
+    <div class="sq sys l2"><span class="n">6</span>Approved → mutations executed via API, batched, audit-logged with mutation IDs</div>
+    <div class="sq sys l2"><span class="n">7</span>Change-watch: 7-day post-change monitor compares actuals vs prediction</div>
+    <div class="sq ai l3"><span class="n">8</span>Outcome summary → client update draft (feeds W2 send loop) · if worse than baseline → rollback proposal card</div>
+  </div></div>
+
+  <h3>Execution trace <span class="k">REAL SCENARIO: YARRA HILLS CHIRO, FLAGGED 9 DAYS</span></h3>
+  <div class="term"><span class="cap">run #ads-0706 · account 493-…-201 · yarra hills chiropractic</span>
+<div class="tl"><span class="ts">06:00:11</span><span class="tag tEVT">EVT</span>GAQL pull ok · 30d: spend $1,842 · conv 22 · CPL $38.40 (target $25) · 7d CPL $41.10</div>
+<div class="tl"><span class="ts">06:00:12</span><span class="tag tDEC">DEC</span>gate T1 tracking-health: GA4 events firing ✓ clicks/conv ratio within norm → real performance issue, not broken tracking</div>
+<div class="tl"><span class="ts">06:00:12</span><span class="tag tDEC">DEC</span>gate S1 seasonality: no school-holiday/known-dip window active → flag stands (day 9 above CPL × 1.3)</div>
+<div class="tl"><span class="ts">06:00:15</span><span class="tag tAI">AI</span>ads-optimiser v1.6 · context: 30d search terms (412 rows), QS table, last 5 changes, 2 previously-rejected recs (excluded)</div>
+<details><summary>▸ recommendation payload (top 2 of 4)</summary><pre>{
+  "account": "yarra-hills",
+  "recommendations": [
+    {"rank": 1, "action": "add_negative_keywords",
+     "detail": ["free chiro", "chiro course", "chiro jobs", "+11 more"],
+     "evidence": "$214/30d spend, 0 conversions on these terms",
+     "predicted": {"wasted_spend": "-12%", "cpl": "-$4.10"},
+     "risk": "low", "rollback": "remove negatives (list saved)"},
+    {"rank": 2, "action": "budget_shift",
+     "detail": "Back Pain $25→$40/day; General $30→$15/day",
+     "evidence": "Back Pain CPL $19 & impression-share lost 31%; General CPL $47",
+     "predicted": {"cpl": "-$5.20", "conv": "+3/mo"},
+     "risk": "medium", "rollback": "restore budgets (snapshot attached)"}
+  ],
+  "not_recommended": "pausing brand campaign — low CPL, defensive value",
+  "confidence": 0.87
+}</pre></details>
+<div class="tl"><span class="ts">06:00:16</span><span class="tag tNOT">NOTIFY</span>dashboard approval card + Slack #alerts-ads (severity: amber, day 9)</div>
+<div class="tl"><span class="ts">08:47:30</span><span class="tag tHUM">HUMAN</span>Hamza: approve rec 1 · edit rec 2 (Back Pain → $35 not $40) · reject rec 4 reason: "client asked to keep that ad copy"</div>
+<div class="tl"><span class="ts">08:47:33</span><span class="tag tWR">WRITE</span>mutations batch 2 ops · ids mut_88 mut_89 · audit log: who/what/why/rollback snapshot</div>
+<div class="tl"><span class="ts">08:47:34</span><span class="tag tWR">WRITE</span>rejected-rec + reason stored → excluded &amp; used as context in future runs</div>
+<div class="tl"><span class="ts">+7 DAYS</span><span class="tag tAI">AI</span>change-watch: CPL $38.40 → $29.70 (predicted $29.10 ✓) · client update drafted: "we removed wasted clicks and moved budget to your best-performing service…" → W2 approval queue</div></div>
+
+  <h3>Decision rules</h3>
+  <div class="twrap"><table>
+    <tr><th>Rule</th><th>Condition</th><th>Action</th></tr>
+    <tr><td>Flag: CPL</td><td>7-day CPL &gt; target × 1.3 for ≥ 5 consecutive days</td><td>flag amber; × 1.6 → red</td></tr>
+    <tr><td>Flag: conversion drop</td><td>week-on-week conversions −40% with stable clicks</td><td>check tracking gate first, then flag</td></tr>
+    <tr><td>Flag: underspend</td><td>budget pacing &lt; 70% for 7 days</td><td>opportunity card (not alert)</td></tr>
+    <tr><td>Gate: tracking health</td><td>clicks normal but conversions ≈ 0</td><td>DIFFERENT alert: "likely tracking broken" → web team task, no Ads recs generated</td></tr>
+    <tr><td>Gate: seasonality</td><td>date in practice-type seasonal calendar (e.g. dental dip in Jan)</td><td>suppress flag, annotate chart instead</td></tr>
+    <tr><td>Risk classes</td><td>low = negatives, ad copy · medium = budgets, bids · high = campaign structure</td><td>low/medium: specialist approves · high: specialist + Wally</td></tr>
+    <tr><td>Change budget cap</td><td>any single change moving &gt; 25% of account budget</td><td>auto-classified high risk</td></tr>
+  </table></div>
+
+  <h3>Edge cases &amp; failure handling</h3>
+  <div class="grid2">
+    <div class="edge"><b>OAuth token expiry / account unlinked</b><br><span>Nightly connection audit; failure → red banner on account tile + task, and the account is marked "data stale" so no recommendations are generated from old data.</span></div>
+    <div class="edge"><b>API quota exhaustion</b><br><span>Pulls are batched and staggered; on quota error, exponential backoff and the run resumes — a partial morning run shows "7/15 accounts refreshed" honestly, never silently.</span></div>
+    <div class="edge"><b>Conversion lag</b><br><span>Dental bookings convert days later; 7-day windows use lag-adjusted conversions (Ads API conversion_lag_bucket) to avoid flagging fresh campaigns as failing.</span></div>
+    <div class="edge"><b>Client requests a change directly (via W2)</b><br><span>ads_request tasks route to the specialist, and any resulting change goes through the same diff + audit path, so the audit log is complete regardless of who initiated.</span></div>
+    <div class="edge"><b>Two changes overlap</b><br><span>Change-watch attributes outcomes to change *sets*, not single edits; overlapping windows are merged into one evaluation to avoid false rollback proposals.</span></div>
+    <div class="edge"><b>Markifact / MCP evaluation</b><br><span>The recommend→approve→implement contract is vendor-neutral: the implement step can be Ads API, Google Ads scripts, or an MCP server — swappable without touching the loop.</span></div>
+  </div>
+
+  <h3>Data written &amp; automation KPIs</h3>
+  <div class="datamap"><span><b>ads_snapshots</b> daily per account</span><span><b>flags</b> severity·age·gate results</span><span><b>recommendations</b> +predictions +rejections+reasons</span><span><b>mutations</b> audit: who/what/why/rollback</span><span><b>change_watch</b> predicted vs actual</span></div>
+  <div class="kpis">
+    <div class="kpi"><b>prediction accuracy</b> — predicted vs actual CPL delta per change</div>
+    <div class="kpi"><b>time-to-action</b> — flag raised → change live (was: next support meeting)</div>
+    <div class="kpi"><b>portfolio ROI</b> — % accounts ≥ 10:1 line</div>
+    <div class="kpi"><b>rec acceptance rate</b> — % approved unedited (quality signal)</div>
+  </div>
+</section>
+
+<!-- ============================ W4 ============================ -->
+<section class="wf" id="w4">
+  <div class="wf-head">
+    <span class="id">W4 · KILLS THE MANUAL BRIGHTLOCAL CHECK</span>
+    <h2>SEO Watchtower — drops, suburb movements, opportunities</h2>
+    <p>Every client's rankings diffed nightly against yesterday and the 30-day trend. Drops get a Claude diagnosis and a task; near-misses become opportunity cards; nothing waits for the support meeting.</p>
+    <div class="facts">
+      <span class="tg">TRIGGER: cron 05:30 BrightLocal sync · GSC daily · GBP daily field-diff</span>
+      <span class="sk">SKILLS: seo-diagnose · opportunity-writer</span>
+      <span class="io">READS: BrightLocal · GSC · GBP · CMS deploy log · WRITES: flags · tasks · report data</span>
+      <span>ALERT DISCIPLINE: 2-day confirmation on single-keyword wobbles</span>
+    </div>
+  </div>
+
+  <h3>Sequence</h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Data sources</div><div class="lh c2">Platform</div><div class="lh c3">Claude AI</div><div class="lh c4">Specialist</div>
+    <div class="sq src l1"><span class="n">1</span>05:30 — BrightLocal rankings (API, or CSV-bridge parse while on lower plan) + GSC + GBP field snapshot per client</div>
+    <div class="sq sys l2"><span class="n">2</span>Diff engine: Δ vs yesterday, vs 7d avg, vs 30d trend · per keyword × suburb × device · 3-pack membership · GBP field changes</div>
+    <div class="sq sys l2"><span class="n">3</span>Classification: STABLE → history · WOBBLE → 2-day watch state · DROP (rule hit) → alert path · OPPORTUNITY → card path</div>
+    <div class="sq ai l3"><span class="n">4</span>Drops: seo-diagnose gets rank history, GSC impressions, GBP changelog, <b>CMS deploy log</b> (did we change the page?), algo-update feed → ranked hypotheses + suggested fix</div>
+    <div class="sq sys l2"><span class="n">5</span>Slack #alerts-seo + ActiveCollab task with the diagnosis attached · recovery tracker starts</div>
+    <div class="sq ai l3"><span class="n">6</span>Opportunities: drafted fix included (internal link plan, content section, GBP post drafts)</div>
+    <div class="sq hum l4"><span class="n">7</span>Specialist actions the task / accepts or skips opportunity cards</div>
+    <div class="sq out l2"><span class="n">8</span>Recovery tracked to restoration · all movement feeds the monthly ROI &amp; SEO report automatically</div>
+  </div></div>
+
+  <h3>Execution trace <span class="k">REAL SCENARIO: HEARTS DENTAL, "DENTIST BLACKBURN" 4 → 9</span></h3>
+  <div class="term"><span class="cap">run #seo-0706 · hearts-dental · 84 tracked keyword×suburb pairs</span>
+<div class="tl"><span class="ts">05:31:40</span><span class="tag tEVT">EVT</span>BrightLocal sync ok (14/15 clients; smile-to-go report delayed — marked stale, no alerts for it today)</div>
+<div class="tl"><span class="ts">05:31:44</span><span class="tag tDEC">DEC</span>diff: "dentist blackburn" 4→9 (Δ−5, money keyword) AND 3-pack exit · rule D1+D2 hit → immediate alert path (no 2-day wait: money kw + pack exit)</div>
+<div class="tl"><span class="ts">05:31:45</span><span class="tag tDEC">DEC</span>correlation sweep: "emergency dentist blackburn" −2 · "dentist nunawading" 0 · site-wide? NO — localised to one suburb cluster</div>
+<div class="tl"><span class="ts">05:31:47</span><span class="tag tAI">AI</span>seo-diagnose v1.4 · inputs: 90d rank history, GSC (impressions stable, position worsened), GBP changelog (no changes ours), CMS deploy log (no deploys 14d), algo feed (no confirmed update)</div>
+<details><summary>▸ diagnosis payload</summary><pre>{
+  "keyword": "dentist blackburn", "delta": -5, "pack_exit": true,
+  "hypotheses": [
+    {"h": "Competitor GBP refresh: 'Blackburn Family Dental' added services,
+          40+ new photos, review velocity 3x in 30d", "likelihood": 0.55},
+    {"h": "Lost FAQ rich result (GSC: FAQ impressions -100% since 3 Jul)", "likelihood": 0.30},
+    {"h": "Local algo shuffle, self-correcting", "likelihood": 0.15}
+  ],
+  "suggested_fix": [
+    "GBP: publish 2 posts + 12 fresh photos (drafts attached)",
+    "Restore FAQ schema on /dentist-blackburn (validation error found: missing @type)",
+    "Add internal link from new Dr Wong page to Blackburn service page"
+  ],
+  "eta_recovery": "2-4 weeks typical for pack re-entry"
+}</pre></details>
+<div class="tl"><span class="ts">05:31:49</span><span class="tag tWR">WRITE</span>flag #f-2231 (red) · AC task #4388 → Hamza with diagnosis + draft fixes attached</div>
+<div class="tl"><span class="ts">05:31:50</span><span class="tag tNOT">NOTIFY</span>Slack #alerts-seo: client, keyword, Δ, top hypothesis, task link · also auto-added to Hearts Dental's 14 Jul meeting agenda</div>
+<div class="tl"><span class="ts">09:20:02</span><span class="tag tHUM">HUMAN</span>Hamza fixes FAQ schema (10 min — validation error was real) · approves GBP post drafts</div>
+<div class="tl"><span class="ts">DAILY</span><span class="tag tOK">OK</span>recovery tracker: 9 → 8 → 8 → 6 … chart on flag card · on pack re-entry, flag closes itself and the June report gets the "found same-day, fixed, recovered" story</div></div>
+
+  <h3>Decision rules</h3>
+  <div class="twrap"><table>
+    <tr><th>Rule</th><th>Condition</th><th>Action</th></tr>
+    <tr><td>D1 money-keyword drop</td><td>Δ ≥ 3 on a PRD money keyword</td><td>alert immediately (no confirmation wait)</td></tr>
+    <tr><td>D2 pack exit</td><td>3-pack membership lost on any tracked term</td><td>alert immediately</td></tr>
+    <tr><td>D3 ordinary wobble</td><td>Δ ≥ 3 on non-money keyword</td><td>WATCH state; alert only if confirmed next run (kills alert fatigue)</td></tr>
+    <tr><td>D4 GBP tamper</td><td>hours/category/name changed and change not ours</td><td>red alert — could be a malicious "suggested edit" accepted by Google</td></tr>
+    <tr><td>O1 near-page-1</td><td>position 8–15, volume above floor, trend flat/up</td><td>opportunity card with drafted fix</td></tr>
+    <tr><td>O2 GBP posting gap</td><td>no posts 30d while top competitor posts weekly</td><td>card with EN(+中文) post drafts</td></tr>
+    <tr><td>B1 new-site baseline</td><td>first 14 days after W7 enrolment</td><td>no alerts — "baseline building" state shown</td></tr>
+    <tr><td>B2 stale data</td><td>source sync failed/late</td><td>stale banner on affected client · alerts suppressed for stale data only</td></tr>
+  </table></div>
+
+  <h3>Edge cases &amp; failure handling</h3>
+  <div class="grid2">
+    <div class="edge"><b>GSC data lag (~2 days)</b><br><span>Diagnosis uses GSC as supporting evidence with its own dated axis — never blocks a same-day rank alert.</span></div>
+    <div class="edge"><b>Multi-location practices</b><br><span>Keywords tracked per location; alerts name the location; GBP monitoring runs per profile.</span></div>
+    <div class="edge"><b>CSV-bridge parsing (pre-API plan)</b><br><span>Claude-parsed CSVs are schema-validated; any parse anomaly → that client marked stale rather than risking a false diff.</span></div>
+    <div class="edge"><b>Algo update storms</b><br><span>If ≥ 30% of portfolio moves the same day, individual alerts collapse into one portfolio-level event ("likely algorithm update — 6 clients affected") so the team isn't flooded with 40 tasks.</span></div>
+  </div>
+
+  <h3>Data written &amp; automation KPIs</h3>
+  <div class="datamap"><span><b>rank_history</b> kw×suburb×device daily</span><span><b>flags</b> type·severity·recovery curve</span><span><b>opportunity_cards</b> +drafted fixes·accept/skip</span><span><b>gbp_snapshots</b> field diffs</span><span><b>report_feed</b> monthly narratives</span></div>
+  <div class="kpis">
+    <div class="kpi"><b>detection lag</b> — drop occurred → team knew (target: same morning)</div>
+    <div class="kpi"><b>false-alert rate</b> — alerts closed as "nothing real" (target &lt; 10%)</div>
+    <div class="kpi"><b>median recovery time</b> — flag open → rank restored</div>
+    <div class="kpi"><b>opportunity conversion</b> — accepted cards that reached page 1</div>
+  </div>
+</section>
+
+<!-- ============================ W5 ============================ -->
+<section class="wf" id="w5">
+  <div class="wf-head">
+    <span class="id">W5 · REMOVES THE LAST MANUAL HOP</span>
+    <h2>Meeting transcript → ActiveCollab tasks → client summary</h2>
+    <p>Fathom already records and transcribes. This workflow takes the webhook, extracts structured actions with Claude, deduplicates against work that already exists, files everything, and drafts the client summary — the team's only job is a one-click review.</p>
+    <div class="facts">
+      <span class="tg">TRIGGER: Fathom webhook meeting.ended</span>
+      <span class="sk">SKILLS: meeting-actions · summary-writer</span>
+      <span class="io">READS: transcript · calendar · existing flags/tasks · WRITES: AC tasks · CRM timeline · email draft · Slack</span>
+      <span>KEY TRICK: dedupe against open flags &amp; tasks</span>
+    </div>
+  </div>
+
+  <h3>Sequence</h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Fathom</div><div class="lh c2">Platform</div><div class="lh c3">Claude AI</div><div class="lh c4">Owner</div>
+    <div class="sq src l1"><span class="n">1</span>meeting.ended webhook → transcript + Fathom summary + attendee list fetched</div>
+    <div class="sq sys l2"><span class="n">2</span>Meeting typed via calendar match: client monthly/quarterly · kickoff · internal · sales — each type has its own extraction template</div>
+    <div class="sq ai l3"><span class="n">3</span>meeting-actions: decisions · action items {owner ours/theirs, assignee, due} · client match · sentiment · follow-ups promised</div>
+    <div class="sq sys l2"><span class="n">4</span><b>Dedupe pass:</b> each action fuzzy-matched against open tasks &amp; flags — existing work gets linked, not duplicated</div>
+    <div class="sq sys l2"><span class="n">5</span>Tasks created (ours) · chase schedules created (theirs) · CRM timeline entry with transcript deep-links</div>
+    <div class="sq ai l3"><span class="n">6</span>Client summary email drafted per house template: discussed / we'll do / you'll do / next meeting</div>
+    <div class="sq hum l4"><span class="n">7</span>Owner reviews extraction (inline-editable), accepts tasks, sends summary · Slack digest to attendees</div>
+  </div></div>
+
+  <h3>Execution trace <span class="k">REAL SCENARIO: HEARTS DENTAL MONTHLY REVIEW, 30 JUN</span></h3>
+  <div class="term"><span class="cap">run #m-0630 · fathom rec 58m · attendees: hamza, dr guo, practice manager</span>
+<div class="tl"><span class="ts">15:02:11</span><span class="tag tEVT">EVT</span>webhook meeting.ended · calendar match: "Hearts Dental — monthly review" → type=client_monthly</div>
+<div class="tl"><span class="ts">15:02:14</span><span class="tag tAI">AI</span>meeting-actions v2.0 · transcript 9,412 words · extraction template: client_monthly</div>
+<details><summary>▸ extraction payload</summary><pre>{
+  "client_id": "hearts-dental", "sentiment": "positive, concerned re rankings",
+  "decisions": ["Proceed with Dr Wong profile page", "Keep Ads budget unchanged this quarter"],
+  "actions": [
+    {"n":1,"owner":"ours","assignee":"hamza","due":"2026-07-11",
+     "text":"Investigate Blackburn ranking drop and report back"},
+    {"n":2,"owner":"ours","assignee":"ish","due":"2026-07-15",
+     "text":"Add Dr Amelia Wong profile page with photo"},
+    {"n":3,"owner":"theirs","who":"practice manager",
+     "text":"Send updated fee schedule for payment calculator","chase_after_days":5}
+  ],
+  "promises_made": ["confirm ranking recovery in next month's report"]
+}</pre></details>
+<div class="tl"><span class="ts">15:02:15</span><span class="tag tDEC">DEC</span>dedupe: action 1 ≈ flag #f-2231 / task #4388 (similarity 0.93) → LINKED, not duplicated · action 2 ≈ task #4389 → LINKED · action 3 → new chase schedule</div>
+<div class="tl"><span class="ts">15:02:16</span><span class="tag tWR">WRITE</span>CRM timeline: meeting entry with per-action transcript timestamps (click → jump to that moment)</div>
+<div class="tl"><span class="ts">15:02:18</span><span class="tag tAI">AI</span>summary-writer: client email draft + "promises register" updated (recovery confirmation promised → auto-inserted into next month's report checklist)</div>
+<div class="tl"><span class="ts">15:02:19</span><span class="tag tNOT">NOTIFY</span>Slack DM to Hamza: "3 actions (2 linked to existing work, 1 client chase) — review &amp; send"</div>
+<div class="tl"><span class="ts">15:41:03</span><span class="tag tHUM">HUMAN</span>Hamza edits due date on action 1, accepts all, sends summary · client opens it 17:20 ✓</div>
+<div class="tl"><span class="ts">+5 DAYS</span><span class="tag tEVT">EVT</span>fee schedule not received → polite chase email drafted → coordinator sends · +10d: escalates to task "call practice manager"</div></div>
+
+  <h3>Decision rules</h3>
+  <div class="twrap"><table>
+    <tr><th>Rule</th><th>Condition</th><th>Action</th></tr>
+    <tr><td>Dedupe threshold</td><td>action ↔ open task/flag similarity ≥ 0.85</td><td>link instead of create; owner sees "already underway ✓" — huge trust builder in client summaries</td></tr>
+    <tr><td>Theirs-item chasing</td><td>client-owned action not marked received</td><td>chase at +5d (email draft) · +10d (call task) · visible to client in portal</td></tr>
+    <tr><td>Promises register</td><td>anything phrased as a commitment in the meeting</td><td>tracked list; injected into next meeting agenda &amp; report checklist — nothing promised is forgotten</td></tr>
+    <tr><td>Internal meetings</td><td>type=internal, multiple clients discussed</td><td>transcript segmented per client before extraction; actions file to each client's project</td></tr>
+    <tr><td>No actions found</td><td>extraction returns empty</td><td>summary-only entry; flagged if meeting type usually produces actions (quality check)</td></tr>
+    <tr><td>Send gate</td><td>client summaries</td><td>always human-sent in v1; auto-send considered per-client after 90 days clean edits</td></tr>
+  </table></div>
+
+  <h3>Edge cases &amp; failure handling</h3>
+  <div class="grid2">
+    <div class="edge"><b>Poor audio / heavy crosstalk</b><br><span>Transcript confidence surfaced; low-confidence sections marked in the review UI so the owner checks those minutes, not the whole hour.</span></div>
+    <div class="edge"><b>Wrong calendar match</b><br><span>Owner can re-type the meeting in one click; extraction re-runs with the right template.</span></div>
+    <div class="edge"><b>Clinical/patient details in recordings</b><br><span>Retention policy: transcripts auto-redact patient names via entity pass; recordings expire per policy (e.g. 90 days); summaries keep business content only.</span></div>
+    <div class="edge"><b>Fathom webhook missed</b><br><span>Hourly reconciliation lists Fathom meetings with no matching run and backfills.</span></div>
+  </div>
+
+  <h3>Data written &amp; automation KPIs</h3>
+  <div class="datamap"><span><b>meetings</b> type·attendees·transcript refs</span><span><b>actions</b> ours/theirs·links·chase state</span><span><b>promises</b> register per client</span><span><b>email drafts</b> summary queue</span></div>
+  <div class="kpis">
+    <div class="kpi"><b>capture rate</b> — % meetings processed within 15 min of ending</div>
+    <div class="kpi"><b>extraction precision</b> — % actions accepted unedited</div>
+    <div class="kpi"><b>dedupe hit rate</b> — duplicates prevented per month</div>
+    <div class="kpi"><b>theirs-item lag</b> — how fast clients deliver their items (chasing works?)</div>
+  </div>
+</section>
+
+<!-- ============================ W6 ============================ -->
+<section class="wf" id="w6">
+  <div class="wf-head">
+    <span class="id">W6 · PROTOTYPE EXISTS — HARDEN IT</span>
+    <h2>Onboarding → practice profile → build-ready PRD</h2>
+    <p>The client answers ten wizard steps once. The system validates assets, chases gaps, and merges the answers with 20-80's codified knowledge into a PRD any AI builder can execute — with the strategist's differentiation pass kept firmly human.</p>
+    <div class="facts">
+      <span class="tg">TRIGGER: wizard step-saves · final submit · asset uploads</span>
+      <span class="sk">SKILLS: prd-generator · asset-validator</span>
+      <span class="io">READS: knowledge base (4 docs, versioned) · WRITES: practice profile · PRD.md · factory pipeline · chase schedules</span>
+      <span>HUMAN GATE: strategist review — always, this is the 20%</span>
+    </div>
+  </div>
+
+  <h3>Sequence</h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Client</div><div class="lh c2">Platform</div><div class="lh c3">Claude AI</div><div class="lh c4">Strategist</div>
+    <div class="sq src l1"><span class="n">1</span>Wizard: 10 steps, save-anywhere, mobile-friendly · inline compliance guards fire DURING entry (e.g. testimonial request → AHPRA explainer shown immediately)</div>
+    <div class="sq sys l2"><span class="n">2</span>Asset validation on upload: logo format/resolution, brand colours auto-extracted, photos checked · missing items → chase sequence (+2d email · +5d email · +7d human-call task)</div>
+    <div class="sq sys l2"><span class="n">3</span>Conflict checks: target suburbs vs existing clients (conflict-of-interest flag → Wally) · reference sites vs our portfolio</div>
+    <div class="sq ai l3"><span class="n">4</span>prd-generator merges answers + knowledge base (philosophy · SEO rules · AHPRA · design principles, versions pinned) → PRD.md with per-section provenance</div>
+    <div class="sq hum l4"><span class="n">5</span>Strategist review call: sharpen differentiators, approve money-keyword list · edits tracked</div>
+    <div class="sq sys l2"><span class="n">6</span>PRD → builder handoff (Claude / Emergent / Lovable) with acceptance checklist · staging build enters Factory pipeline</div>
+    <div class="sq out l2"><span class="n">7</span>Peer-review checklist auto-generated from SOP library · approvals tracked with auto-reminders · on completion → W7</div>
+  </div></div>
+
+  <h3>Execution trace <span class="k">REAL SCENARIO: ASPIRE ONE DENTAL, ONBOARDING WEEK</span></h3>
+  <div class="term"><span class="cap">run #ob-aspire · wizard started tue · kickoff booked fri</span>
+<div class="tl"><span class="ts">TUE 10:14</span><span class="tag tEVT">EVT</span>steps 1–8 completed in one sitting (23 min) · step 9 (reference sites) saved-for-later · step 10 uploads: logo.png 400×160 (LOW RES)</div>
+<div class="tl"><span class="ts">TUE 10:14</span><span class="tag tDEC">DEC</span>asset-validator: logo below 1200px print threshold → chase draft: "we'd love the original vector (AI/EPS/SVG) — your designer will have it"</div>
+<div class="tl"><span class="ts">TUE 10:15</span><span class="tag tDEC">DEC</span>conflict check: target suburbs [Doncaster, Templestowe] — no overlap with existing dental clients ✓</div>
+<div class="tl"><span class="ts">THU 09:00</span><span class="tag tEVT">EVT</span>step 9 completed · final submit → PRD generation triggered</div>
+<div class="tl"><span class="ts">THU 09:00</span><span class="tag tAI">AI</span>prd-generator v1.2 · knowledge pinned: philosophy v3.2 · seo v2.1 · ahpra v4.0 · design v1.8</div>
+<details><summary>▸ PRD.md skeleton — every section shows its source</summary><pre># PRD — Aspire One Dental                    [provenance]
+## 1. Practice identity &amp; differentiators     [client steps 1–2 + strategist]
+   - "Judgement-free dentistry for anxious patients"
+   - IV sedation on site (only Doncaster clinic offering it)  ← money differentiator
+## 2. Services &amp; page map                     [step 3 × philosophy v3.2 page priorities]
+   - 14 pages: home, 6 service, 3 suburb, team, fees, contact, new-patients
+## 3. Target patients &amp; tone                  [step 4 × philosophy tone matrix]
+## 4. Local SEO plan                          [step 5 × seo-rules v2.1]
+   - money keywords: "dentist doncaster", "sedation dentist melbourne", …
+## 5. Compliance constraints                  [ahpra v4.0 — HARD RULES]
+   - no testimonials · no outcome guarantees · before/after per policy 4.3
+## 6. Design direction                        [steps 8–9 × design v1.8]
+   - references analysed: palette warm, rounded, photo-led (client's 2 refs)
+## 7. Integrations                            [step 7]
+   - Praktika PMS · HealthEngine booking · eForms pack
+## 8. Acceptance checklist                    [SOP library]
+   - 22 items incl. mobile speed, schema, tracking, AHPRA scan</pre></details>
+<div class="tl"><span class="ts">THU 09:02</span><span class="tag tNOT">NOTIFY</span>Wally: "PRD ready for Aspire One — differentiator section needs your pass before Friday kickoff"</div>
+<div class="tl"><span class="ts">FRI 11:30</span><span class="tag tHUM">HUMAN</span>kickoff call: Wally sharpens differentiator #2 ("sedation" → "sleep-through-it dentistry" positioning) · PRD v1.1 saved · edits logged as training examples</div>
+<div class="tl"><span class="ts">FRI 11:45</span><span class="tag tWR">WRITE</span>PRD → builder handoff · Factory card moves to "Build (staging)" · vector logo chase continues (+5d mark hits Monday)</div></div>
+
+  <h3>Decision rules</h3>
+  <div class="twrap"><table>
+    <tr><th>Rule</th><th>Condition</th><th>Action</th></tr>
+    <tr><td>Inline compliance guard</td><td>client requests testimonials / guarantees in wizard</td><td>explain AHPRA constraint at entry time with the compliant alternative — not weeks later in review</td></tr>
+    <tr><td>Asset chase</td><td>required asset missing/low quality</td><td>+2d email · +5d email · +7d call task — wizard progress never blocks on assets</td></tr>
+    <tr><td>Conflict of interest</td><td>target suburb overlaps an existing same-specialty client</td><td>hard flag to Wally before kickoff; documented decision required</td></tr>
+    <tr><td>Reference site is our client</td><td>reference URL in portfolio</td><td>flag — informs how similar the design may be</td></tr>
+    <tr><td>Knowledge pinning</td><td>every PRD generation</td><td>doc versions pinned in PRD header — later doc updates offer regeneration diff, never silent change</td></tr>
+    <tr><td>Strategist gate</td><td>always</td><td>PRD cannot reach a builder unreviewed; strategist edits are stored as few-shot examples that improve the generator</td></tr>
+  </table></div>
+
+  <h3>Edge cases &amp; failure handling</h3>
+  <div class="grid2">
+    <div class="edge"><b>Client stalls mid-wizard</b><br><span>Save-anywhere + progress visible to the agency; gentle resume nudges at +3d/+7d; a human takes over entry by phone if needed (answers typed into the same form).</span></div>
+    <div class="edge"><b>Contradictory answers</b><br><span>e.g. "premium positioning" + "compete on price" → prd-generator surfaces the tension as a strategist-question block in the PRD rather than silently choosing.</span></div>
+    <div class="edge"><b>Builder output fails acceptance</b><br><span>Checklist failures create fix tasks; the PRD acceptance section is the contract — disputes resolve against it, whichever builder was used.</span></div>
+    <div class="edge"><b>Existing client, new site</b><br><span>Wizard pre-fills from the live practice profile; only deltas asked. Profile history keeps both site generations.</span></div>
+  </div>
+
+  <h3>Data written &amp; automation KPIs</h3>
+  <div class="datamap"><span><b>practice_profiles</b> the living source of truth</span><span><b>prd_versions</b> +provenance +pinned knowledge</span><span><b>asset_registry</b> chase states</span><span><b>conflict_flags</b></span><span><b>strategist_edits</b> few-shot training set</span></div>
+  <div class="kpis">
+    <div class="kpi"><b>wizard completion</b> — % finishing without human data entry</div>
+    <div class="kpi"><b>time-to-PRD</b> — final answer → reviewed PRD (target 2 business days)</div>
+    <div class="kpi"><b>strategist edit depth</b> — shrinking = generator learning</div>
+    <div class="kpi"><b>asset chase cycles</b> — average chases per onboarding</div>
+  </div>
+</section>
+
+<!-- ============================ W7 ============================ -->
+<section class="wf" id="w7">
+  <div class="wf-head">
+    <span class="id">W7 · PROMPT EXISTS — PRODUCTISE IT</span>
+    <h2>SEO setup automation — the metadata factory</h2>
+    <p>The Claude prompt the team already uses, turned into a dashboard function with crawling, validation, a batch review table and direct publish — no more spreadsheets. Runs on every new build; re-runs when services or suburbs change.</p>
+    <div class="facts">
+      <span class="tg">TRIGGER: Factory stage "SEO setup" · manual re-run · PRD suburb/service change</span>
+      <span class="sk">SKILLS: seo-metadata · ahpra-check (gate)</span>
+      <span class="io">READS: site crawl · PRD · knowledge base · WRITES: CMS head tags · BrightLocal keyword registration</span>
+      <span>VALIDATION: title ≤ 60 chars · description ≤ 155 · uniqueness across site</span>
+    </div>
+  </div>
+
+  <h3>Sequence</h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Site</div><div class="lh c2">Platform</div><div class="lh c3">Claude AI</div><div class="lh c4">Specialist</div>
+    <div class="sq src l1"><span class="n">1</span>Crawler maps the finished site: sitemap + render pass → URL, h1, content summary, current metadata, detected service per page</div>
+    <div class="sq sys l2"><span class="n">2</span>Thin-content gate: pages under threshold flagged for a content task instead of metadata (garbage in, garbage out)</div>
+    <div class="sq ai l3"><span class="n">3</span>seo-metadata per page: title + description using practice name, service, suburb, audience + SEO rules + character limits · 中文 pages get native metadata, not translations of the EN tags</div>
+    <div class="sq sys l2"><span class="n">4</span>Validation: char limits · cross-page duplication check · keyword cannibalisation check · ahpra-check hard gate</div>
+    <div class="sq hum l4"><span class="n">5</span>Batch review table: current vs proposed per page · inline edit · approve individually or in bulk</div>
+    <div class="sq sys l2"><span class="n">6</span>Approved rows → CMS head-tag write + hreflang pairs · change log kept · re-crawl verifies live tags match</div>
+    <div class="sq out l2"><span class="n">7</span>Money keywords registered in BrightLocal → W4 baseline period starts (14 days, no alerts)</div>
+  </div></div>
+
+  <h3>Execution trace <span class="k">REAL SCENARIO: ASPIRE ONE, 14-PAGE SITE, POST-BUILD</span></h3>
+  <div class="term"><span class="cap">run #meta-aspire · triggered by factory stage change</span>
+<div class="tl"><span class="ts">10:02:00</span><span class="tag tEVT">EVT</span>crawl: 14 URLs · 12 pass content threshold · 2 thin (suburb pages, 180 words) → content tasks created, excluded from batch</div>
+<div class="tl"><span class="ts">10:02:09</span><span class="tag tAI">AI</span>seo-metadata v1.5 · 12 pages · knowledge: seo-rules v2.1, ahpra v4.0, PRD money keywords</div>
+<details><summary>▸ sample rows from the batch</summary><pre>[
+ {"url": "/", "title": "Dentist Doncaster | Sedation &amp; Anxious-Patient Care — Aspire One",
+  "chars": 58, "desc": "Gentle, judgement-free dentistry in Doncaster.
+  IV sedation available. New patients welcome — book online.", "chars_d": 128,
+  "checks": {"limit": "ok", "dup": "unique", "ahpra": "pass"}},
+ {"url": "/services/sedation-dentistry",
+  "title": "Sleep-Through-It Dentistry | IV Sedation Doncaster — Aspire One",
+  "checks": {"limit": "ok", "dup": "unique",
+             "ahpra": "REWRITE — 'completely painless' → 'designed for comfort'"}}
+]</pre></details>
+<div class="tl"><span class="ts">10:02:10</span><span class="tag tDEC">DEC</span>ahpra-check: 1 rewrite applied automatically (logged), 0 hard blocks · cannibalisation: /services/checkups vs /new-patients overlap on "dental checkup doncaster" → differentiated</div>
+<div class="tl"><span class="ts">10:02:11</span><span class="tag tNOT">NOTIFY</span>batch card → approval queue: "12 pages ready · 1 compliance rewrite · 2 thin-content tasks spawned"</div>
+<div class="tl"><span class="ts">11:15:40</span><span class="tag tHUM">HUMAN</span>specialist edits 2 titles inline, bulk-approves · edits stored as preference examples</div>
+<div class="tl"><span class="ts">11:15:42</span><span class="tag tWR">WRITE</span>CMS head tags 12 pages · re-crawl verify ✓ · 9 money keywords registered in BrightLocal (doncaster ×5, templestowe ×4)</div>
+<div class="tl"><span class="ts">11:15:43</span><span class="tag tOK">OK</span>W4 baseline period starts · Factory card advances to "Live + handover"</div></div>
+
+  <h3>Decision rules &amp; edge cases</h3>
+  <div class="twrap"><table>
+    <tr><th>Rule</th><th>Condition</th><th>Action</th></tr>
+    <tr><td>Thin content</td><td>&lt; 250 words effective copy</td><td>content task first — metadata excluded until page is worth ranking</td></tr>
+    <tr><td>Cannibalisation</td><td>two pages targeting same kw × suburb</td><td>differentiate intent or consolidate — surfaced in review table, never silent</td></tr>
+    <tr><td>AHPRA gate</td><td>prohibited phrasing in generated tags</td><td>auto-rewrite when safe equivalent exists (logged); hard block otherwise</td></tr>
+    <tr><td>中文 pages</td><td>zh page in scope</td><td>native-language metadata from the practice profile + glossary; hreflang pair written with the EN page</td></tr>
+    <tr><td>Re-run scope</td><td>services/suburbs changed in PRD</td><td>only affected pages re-generated; approved-unchanged rows untouched</td></tr>
+    <tr><td>Existing-site audit mode</td><td>run against a live legacy site</td><td>report-only first pass — nothing writes until a human opens the batch</td></tr>
+  </table></div>
+
+  <h3>Data written &amp; automation KPIs</h3>
+  <div class="datamap"><span><b>crawl_snapshots</b></span><span><b>metadata_batches</b> current/proposed/approved diff</span><span><b>compliance_log</b> rewrites &amp; blocks</span><span><b>brightlocal_registrations</b></span></div>
+  <div class="kpis">
+    <div class="kpi"><b>setup time</b> — build-complete → metadata live (was: a spreadsheet week; target: same day)</div>
+    <div class="kpi"><b>edit rate</b> — % rows approved unedited</div>
+    <div class="kpi"><b>compliance catches</b> — issues stopped before publish</div>
+  </div>
+</section>
+
+<!-- ============================ W8 ============================ -->
+<section class="wf" id="w8">
+  <div class="wf-head">
+    <span class="id">W8 · THE PLATFORM PLAY</span>
+    <h2>Custom CMS — guardrailed, AI-assisted, bilingual publishing</h2>
+    <p>Every change — client edit, W2 task, internal update — flows through one pipeline: guardrails, AI content pass, compliance gate, staged render, publish, downstream sync, versioned rollback. This is what makes client self-service safe and the Emergent/WordPress exit possible.</p>
+    <div class="facts">
+      <span class="tg">TRIGGER: portal edit · W2 cms_job · internal edit · scheduled jobs</span>
+      <span class="sk">SKILLS: content-writer (tone) · ahpra-check · translate-zh</span>
+      <span class="io">WRITES: site render · GBP · schema.org · version store · notifications</span>
+      <span>GUARANTEE: every publish reversible in one click</span>
+    </div>
+  </div>
+
+  <h3>Sequence</h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Editor (client/team)</div><div class="lh c2">Platform</div><div class="lh c3">Claude AI</div><div class="lh c4">Team (if gated)</div>
+    <div class="sq src l1"><span class="n">1</span>Change enters: portal edit (guardrailed fields only) · W2 scheduled job · internal edit (full access)</div>
+    <div class="sq sys l2"><span class="n">2</span>Guardrail engine: field-level permission schema — hours/staff/photos = client-safe · body copy = AI-gated · structure/design/new pages = team-only</div>
+    <div class="sq ai l3"><span class="n">3</span>AI pass: sanitise pasted formatting · optional house-tone tidy · <b>ahpra-check (hard gate)</b> · 中文 sync job queued if site is bilingual</div>
+    <div class="sq sys l2"><span class="n">4</span>Staged render + visual diff screenshot (before/after)</div>
+    <div class="sq sys l2"><span class="n">5</span>Client-safe &amp; checks pass → publish now / at scheduled time · else → review queue with the diff attached</div>
+    <div class="sq hum l4"><span class="n">6</span>Gated changes: team approves from the diff view → same publish path</div>
+    <div class="sq sys l2"><span class="n">7</span>Downstream sync: GBP (hours/attributes) · schema.org · sitemap ping · cache purge · version snapshot</div>
+    <div class="sq out l2"><span class="n">8</span>Notify: client "your change is live" (via W2 loop) · change log feeds W4 diagnosis context</div>
+  </div></div>
+
+  <h3>Execution trace <span class="k">REAL SCENARIO: THE SATURDAY-HOURS CHANGE, END TO END</span></h3>
+  <div class="term"><span class="cap">run #cms-4390 · hearts dental · source: W2 task #4390 (scheduled job)</span>
+<div class="tl"><span class="ts">JUL 6 08:41</span><span class="tag tEVT">EVT</span>cms_job created by W2: hours.saturday "9:00–13:00" effective 2026-08-01 (see W2 trace — same run)</div>
+<div class="tl"><span class="ts">JUL 6 08:41</span><span class="tag tDEC">DEC</span>guardrails: field=hours → client-safe class · effective_date future → SCHEDULED state · surfaces resolved: /contact, footer (14 pages), schema OpeningHoursSpecification, GBP special hours</div>
+<div class="tl"><span class="ts">JUL 6 08:42</span><span class="tag tWR">WRITE</span>staged render + visual diff (footer before/after) attached to task #4390 for the ack email</div>
+<div class="tl"><span class="ts">AUG 1 00:01</span><span class="tag tEVT">EVT</span>scheduled publish fires: 14 page fragments + schema updated · cache purged · version v218 snapshot</div>
+<div class="tl"><span class="ts">AUG 1 00:01</span><span class="tag tWR">WRITE</span>GBP API: regularHours.saturday updated · confirmation read-back ✓ (GBP write verified, not assumed)</div>
+<div class="tl"><span class="ts">AUG 1 00:02</span><span class="tag tNOT">NOTIFY</span>client email (pre-approved template class → auto-send): "Your new Saturday hours are live on your website and Google."</div>
+<div class="tl"><span class="ts">AUG 1 00:02</span><span class="tag tOK">OK</span>change log entry — if Blackburn rankings move next week, W4's diagnosis sees this change in context</div></div>
+
+  <h3>Guardrail schema &amp; decision rules</h3>
+  <div class="twrap"><table>
+    <tr><th>Field class</th><th>Examples</th><th>Client can edit?</th><th>Path</th></tr>
+    <tr><td>facts</td><td>hours, phone, team list, fees display, booking link</td><td>yes</td><td>auto-publish + downstream sync (GBP, schema)</td></tr>
+    <tr><td>content</td><td>body copy, service descriptions, blog</td><td>yes, via AI gate</td><td>ahpra-check hard gate · tone pass optional · 中文 sync · auto if pass, review if flagged</td></tr>
+    <tr><td>media</td><td>photos, team headshots</td><td>yes</td><td>auto-resize/crop presets · face-crop assist · auto-publish</td></tr>
+    <tr><td>structure</td><td>new pages, nav, layout, design tokens</td><td>no — request only</td><td>becomes a W2 task for the team</td></tr>
+    <tr><td>compliance-sensitive</td><td>anything ahpra-check blocks</td><td>—</td><td>hard stop + suggested compliant rewrite shown to the editor</td></tr>
+  </table></div>
+
+  <h3>Edge cases &amp; failure handling</h3>
+  <div class="grid2">
+    <div class="edge"><b>Concurrent edits</b><br><span>Field-level locking with presence indicators; conflicting saves produce a merge view, never a silent overwrite.</span></div>
+    <div class="edge"><b>中文 out-of-sync</b><br><span>EN publish with zh pending → zh page shows "update in translation" state internally; sync SLA 1 business day; out-of-sync &gt; 3 days → flag.</span></div>
+    <div class="edge"><b>Pasted Word/Google-Docs junk</b><br><span>Sanitiser strips formatting on paste; editor shows clean preview immediately.</span></div>
+    <div class="edge"><b>Bad publish</b><br><span>One-click rollback to any version; rollback itself is a version (auditable); GBP rollbacks issued too.</span></div>
+    <div class="edge"><b>GBP write fails</b><br><span>Site publish is not blocked; GBP sync retries with backoff; persistent failure → task "manual GBP update" so site and Google never silently diverge.</span></div>
+    <div class="edge"><b>Migration from Emergent/WordPress</b><br><span>Importer crawls the live site into CMS blocks; visual diff against the original before DNS cutover; WordPress left read-only as fallback for 30 days.</span></div>
+  </div>
+
+  <h3>Data written &amp; automation KPIs</h3>
+  <div class="datamap"><span><b>content_versions</b> full history</span><span><b>publish_log</b> surfaces touched</span><span><b>guardrail_events</b> blocks &amp; rewrites</span><span><b>zh_sync_state</b> per page pair</span><span><b>gbp_sync_log</b> verified writes</span></div>
+  <div class="kpis">
+    <div class="kpi"><b>client self-serve rate</b> — % changes clients make without a ticket</div>
+    <div class="kpi"><b>publish-to-live</b> — seconds for safe changes</div>
+    <div class="kpi"><b>compliance blocks</b> — problems stopped pre-publish</div>
+    <div class="kpi"><b>rollback rate</b> — should stay near zero; spikes = guardrail gaps</div>
+  </div>
+</section>
+
+<!-- ============================ CORE ============================ -->
+<section class="wf" id="core">
+  <div class="wf-head">
+    <span class="id">CROSS-CUTTING · THE SPINE ALL EIGHT SHARE</span>
+    <h2>Event bus, audit trail &amp; failure handling</h2>
+    <p>The workflows above are consumers of one shared spine. This is what makes the system debuggable, auditable, and — later — sellable to other agencies.</p>
+  </div>
+
+  <h3>Event flow — how workflows trigger each other</h3>
+  <div class="seqwrap"><div class="seq">
+    <div class="lh c1">Producers</div><div class="lh c2">Event bus</div><div class="lh c3">Consumers</div><div class="lh c4">Surfaces</div>
+    <div class="sq src l1"><span class="n">1</span>Every workflow emits typed events: <small>call.captured · request.created · task.completed · rank.dropped · meeting.processed · prd.approved · page.published…</small></div>
+    <div class="sq sys l2"><span class="n">2</span>Bus fan-out with per-consumer retry queues — one slow consumer never blocks another</div>
+    <div class="sq sys l3"><span class="n">3</span>Cross-triggers you've already seen: W2 hours request → W8 cms_job · W8 publish → W4 diagnosis context · W6 go-live → W7 → W4 enrolment · W5 action ≈ W4 flag → linked</div>
+    <div class="sq out l4"><span class="n">4</span>Every event lands on the CRM timeline + relevant dashboard tab — the UI is a view over the event log, not a separate truth</div>
+  </div></div>
+
+  <h3>The skill-run audit record <span class="k">EVERY AI CALL, LOGGED THE SAME WAY</span></h3>
+  <div class="term"><span class="cap">skill_runs — the record that makes AI accountable (and the SaaS auditable)</span>
+<details open><summary>▸ one row, canonical shape</summary><pre>{
+  "run_id": "sr-88231", "skill": "email-triage", "skill_version": "2.1",
+  "knowledge_versions": {"ahpra": "4.0", "seo-rules": "2.1"},
+  "trigger": "gmail.push msg-187cf2", "client_id": "hearts-dental",
+  "input_hash": "sha256:…", "output_ref": "requests[2]",
+  "confidence": 0.94, "latency_ms": 2140, "tokens": {"in": 3800, "out": 410},
+  "human_decision": {"action": "approved_unedited", "by": "coordinator", "at": "…"},
+  "downstream": ["AC#4389", "AC#4390", "cms_job#4390"]
+}</pre></details>
+<div class="tl"><span class="tag tOK">WHY</span>answers "why did the AI do that?" for any action, ever · powers the edit-rate KPIs on every workflow · when AHPRA v4.1 ships, one query finds every output generated under v4.0 → offers a re-check run · per-client token costing for the future SaaS pricing model</div></div>
+
+  <h3>Failure handling — one policy, everywhere</h3>
+  <div class="twrap"><table>
+    <tr><th>Failure</th><th>Policy</th></tr>
+    <tr><td>Transient API error</td><td>retry ×3 exponential backoff → then dead-letter queue</td></tr>
+    <tr><td>Dead-letter queue</td><td>surfaced as the "Automation health" panel in Settings + Slack #automation-errors — failures are visible work items, never silent</td></tr>
+    <tr><td>Stale data</td><td>staleness is a first-class state: banners on affected clients, alerts suppressed for stale sources only (see W4 B2)</td></tr>
+    <tr><td>AI low confidence</td><td>universal rule: below threshold → human queue with the AI's best guess pre-filled — degrade to assisted, never to wrong</td></tr>
+    <tr><td>AI provider outage</td><td>deterministic paths (pulls, diffs, benchmarks, publishes) keep running; AI-dependent steps queue and drain on recovery; W1 falls back to voicemail-capture</td></tr>
+    <tr><td>Human bottleneck</td><td>approval queues have SLAs too — items aging &gt; 24 h escalate to Slack; the dashboard treats a stuck approval like an overdue task</td></tr>
+  </table></div>
+
+  <h3>Core entities <span class="k">THE DATA MODEL IN ONE LINE EACH</span></h3>
+  <div class="datamap" style="margin-bottom:10px">
+    <span><b>Client</b> practice, plan, owner, health</span>
+    <span><b>PracticeProfile</b> differentiators·suburbs·services·languages — feeds every skill</span>
+    <span><b>Site / Page / ContentVersion</b> the CMS spine</span>
+    <span><b>Request</b> any ask, any channel, one lifecycle</span>
+    <span><b>Task</b> ActiveCollab mirror + SLA class</span>
+    <span><b>Call / EmailThread / Meeting</b> communication records</span>
+    <span><b>Flag</b> anything needing attention, with recovery curve</span>
+    <span><b>Recommendation / Approval / Mutation</b> the Ads change chain</span>
+    <span><b>KnowledgeDoc</b> versioned rules — the SaaS asset</span>
+    <span><b>SkillRun</b> the audit record above</span>
+    <span><b>Event</b> the bus log everything else projects from</span>
+  </div>
+  <p class="note">Multi-tenancy note for the SaaS play: every entity above already carries <code>client_id</code>; adding <code>agency_id</code> one level up and swapping the KnowledgeDoc set per agency is the entire productisation path — which is why the knowledge base stays in documents, never hard-coded in workflow logic.</p>
+</section>
+
+<footer>
+  Companion documents: <a href="https://claude.ai/code/artifact/52e5db76-c9f1-4f25-a584-baf6692669a3">Architecture blueprint</a> · <a href="https://claude.ai/code/artifact/4f1ae519-4330-4104-8114-7c93ea30c623">Dashboard &amp; portal UI mockup</a>. Sample data illustrative; SLAs, thresholds and routing tables are starting proposals to be tuned in the benchmark workshop. Planning document — no code committed.
+</footer>
+</div>
+
+</html>

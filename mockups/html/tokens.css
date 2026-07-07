@@ -159,6 +159,33 @@ table.t { width: 100%; border-collapse: collapse; }
 .deal .dv { margin-left: auto; font-size: 11px; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* ── Misc ──────────────────────────────────────── */
+/* ── Workflow pipeline ─────────────────────────── */
+.wf-row { display: flex; align-items: center; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--grid); }
+.wf-row:last-child { border-bottom: none; }
+.wf-name { width: 176px; min-width: 176px; }
+.wf-name .n { font-weight: 650; font-size: 12.5px; display: flex; align-items: center; gap: 7px; }
+.wf-name .s { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.wf-chain { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; flex: 1; min-width: 0; }
+.wf-node { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; font-weight: 600; border-radius: 6px; padding: 3px 8px; border: 1px solid var(--line); background: var(--bg); color: var(--muted); white-space: nowrap; }
+.wf-node.done { background: var(--accent-tint); color: var(--accent); border-color: #BFE0DD; }
+.wf-node.active { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-tint); }
+.wf-node.active .pulse { width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+.wf-node.gate { background: var(--warn-tint); color: var(--warn); border-color: #E5D3AC; }
+.wf-node.block { background: var(--crit-tint); color: var(--crit); border-color: #E8C4C0; }
+.wf-node.queued { background: var(--surface); color: var(--faint); border-style: dashed; }
+.wf-arrow { color: var(--faint); font-size: 10px; flex: none; }
+.wf-now { width: 210px; min-width: 210px; font-size: 11px; color: var(--muted); line-height: 1.4; }
+.wf-act { flex: none; }
+.wf-step { display: flex; align-items: center; gap: 11px; border: 1px solid var(--line); border-radius: 9px; padding: 9px 11px; background: var(--surface); }
+.wf-step + .wf-step { margin-top: 8px; }
+.wf-step.edited { border-color: #C4D3E8; background: var(--blue-tint); }
+.wf-step .idx { width: 20px; height: 20px; min-width: 20px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+.wf-step .sbody { flex: 1; min-width: 0; }
+.wf-step .sname { font-weight: 650; font-size: 12px; display: flex; align-items: center; gap: 7px; }
+.wf-step .smeta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.wf-step .sctrl { display: flex; gap: 6px; align-items: center; flex: none; }
+
+/* ── Misc extras ───────────────────────────────── */
 .muted { color: var(--muted); } .faint { color: var(--faint); }
 .small { font-size: 11px; } .xs { font-size: 10.5px; }
 .mono { font-family: var(--mono); font-size: 11px; }

@@ -26,6 +26,8 @@ export const NAV = [
     { id: 'guarantee', icon: '✓', label: 'Guarantee Tracker' },
   ]},
   { group: 'System', items: [
+    { id: 'workflows', icon: '⛓', label: 'Workflows', badge: '5', badgeGray: true },
+    { id: 'integrations', icon: '⇄', label: 'Integrations', badge: '3', badgeGray: true },
     { id: 'audit-log', icon: '≡', label: 'Audit Log' },
     { id: 'knowledge-skills', icon: '✦', label: 'Knowledge & Skills' },
     { id: 'settings', icon: '⚙', label: 'Settings' },
@@ -39,7 +41,7 @@ export function page(activeId, title, content) {
         ${g.items.map(it => `
         <a class="nav-item${it.id === activeId ? ' active' : ''}" href="./${it.id}.html">
           <span class="ic">${it.icon}</span>${it.label}
-          ${it.badge ? `<span class="nav-badge">${it.badge}</span>` : ''}
+          ${it.badge ? `<span class="nav-badge${it.badgeGray ? ' nb-gray' : ''}">${it.badge}</span>` : ''}
         </a>`).join('')}
       </div>`).join('');
 

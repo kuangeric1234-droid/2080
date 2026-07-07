@@ -19,7 +19,7 @@ Visual design docs (reference, not source of truth — this file wins on conflic
 ## 0 · How to use this document
 
 1. **Build in the order of §13.** Each step has a checkbox, a definition of done (DoD), and a test plan. A step is done when its tests pass — not when the code exists.
-1a. **Depth-spec discipline (this file is deliberately breadth; depth lives in `specs/`).** No stage starts until its depth spec exists: the skill methodologies at practitioner grade, the connector realities (API versions, quotas, data lag, auth failure modes), field-level data contracts, failure modes, UI deltas, and eval design. **`specs/SPEC-ADS.md` is the exemplar.** **All nine specs now exist ✓** — SPEC-SPINE (schema/matcher/gates/audit/notifications) · SPEC-INBOX · SPEC-SECURITY (auth/roles/APPs/NDB) · SPEC-VOICE · SPEC-ADS · SPEC-SEO · SPEC-SALES · SPEC-REPORTS · SPEC-CMS · SPEC-FACTORY. Before building each stage, run its **validation session** with the craft owner (Hamza: ADS+SEO · Wally: SALES+REPORTS+VOICE scripts · Ish: INBOX taxonomy+CMS) — the session confirms the spec's assumptions AND collects the golden sets. Stage mapping: SPINE + INBOX + SECURITY (stages 0–1) · VOICE (2) · ADS + SEO (3) · SALES + REPORTS (4) · FACTORY (5 — **the overnight autonomous build: AI generates the site while everyone sleeps, deploys to a demo server, humans wake up to review; brand kits are client-facing dashboard deliverables**) · CMS (**5.0 core BEFORE the first AI-generated site** — the CMS content model is the factory's output format — then stage 6 editing surfaces).
+1a. **Depth-spec discipline (this file is deliberately breadth; depth lives in `specs/`).** No stage starts until its depth spec exists: the skill methodologies at practitioner grade, the connector realities (API versions, quotas, data lag, auth failure modes), field-level data contracts, failure modes, UI deltas, and eval design. **`specs/SPEC-ADS.md` is the exemplar.** **All specs now exist ✓** — SPEC-SPINE (schema/matcher/gates/audit/notifications) · SPEC-INBOX · SPEC-SECURITY (auth/roles/APPs/NDB) · SPEC-VOICE · SPEC-ADS · SPEC-SEO · SPEC-SALES · SPEC-REPORTS · SPEC-CMS · SPEC-FACTORY · **SPEC-INTAKE (onboarding questionnaire & intake wizard — the client-facing surface of Factory Stage 2, built from 20-80's three real Initial Engagement Questionnaires)**. Before building each stage, run its **validation session** with the craft owner (Hamza: ADS+SEO · Wally: SALES+REPORTS+VOICE scripts · Ish: INBOX taxonomy+CMS) — the session confirms the spec's assumptions AND collects the golden sets. Stage mapping: SPINE + INBOX + SECURITY (stages 0–1) · VOICE (2) · ADS + SEO (3) · SALES + REPORTS (4) · FACTORY (5 — **the overnight autonomous build: AI generates the site while everyone sleeps, deploys to a demo server, humans wake up to review; brand kits are client-facing dashboard deliverables**) · CMS (**5.0 core BEFORE the first AI-generated site** — the CMS content model is the factory's output format — then stage 6 editing surfaces).
 
 **Scale framing (so nobody under-builds this):** the platform is a multi-system SaaS — an ops dashboard, a client portal, a voice product, an autonomous website-generation service with overnight job orchestration, a CMS/publishing platform, a CRM/sales engine, and a billing system, sharing one client record and one gate architecture. It is NOT "a dashboard with features." Size decisions accordingly. Writing each spec = mining the team's actual expertise (Hamza for Ads/SEO, Wally for sales/strategy, Ish for web) — the spec session doubles as the golden-set collection session.
 2. **No random prompting.** Every build session starts by reading the relevant section here, builds exactly that step, tests it, checks it off, and commits.
@@ -95,6 +95,25 @@ A **skill** = versioned prompt + allowed client-record slice + knowledge-base ve
 - **Observability:** Sentry + structured logs; the audit log is the business-level trace; per-skill token/cost telemetry from day 1.
 - **Backups:** Postgres daily snapshot + point-in-time recovery; CMS block storage versioned by design.
 
+### 3.5 Integrations & connectors (the MCP model)
+
+Every external service the platform talks to is a **connector** (authored as an MCP server / mediated tool group — one authoring model, same as skills). A connector is the *only* thing that holds a vendor credential: OAuth tokens and API keys live in the platform secret store, encrypted at rest, and the connector exposes a **capped tool surface** to skills. Skills call `ads.mutate`, `xero.status`, `cms.publish`… — they never see a raw key, and the caps/gates are enforced **in the connector's code, not by the model** (a confused model cannot exceed a budget cap because the tool refuses and audit-logs the refusal). This is the concrete implementation of §3.2's security rule and the `login-customer-id`/operation-budgeter machinery in SPEC-ADS.
+
+Connector responsibilities: hold + refresh credentials · expose the minimal capped tool surface · enforce caps/gates/cooldowns in code · run reads on schedule (crons) and receive webhooks (enqueue-then-process) · report health, data lag, quota/rate usage, and OAuth expiry to the **Integrations tab** (§4) · fail honestly (stale data suppresses that client's alerts; over-budget calls are refused and logged, never silently dropped).
+
+**Connector inventory (21 live across 6 groups; 5 planned).** Grouped as rendered in the Integrations tab:
+
+| Group | Connectors | Auth |
+|-------|-----------|------|
+| Money & billing | Xero (accounting; invoice webhooks fire the factory) · Stripe (deposits + subscriptions) | OAuth2 · API key + webhook |
+| Ads, SEO & analytics | Google Ads MCC (`ads.query`/`ads.mutate`, capped; offline-conv upload) · GA4 · Search Console · Google Business Profile (posts G2) · Google Tag Manager · BrightLocal (rank/citations) | OAuth2 · API key |
+| Comms & social | Gmail support@ (Pub/Sub push) · Google Workspace Admin (mailbox provisioning) · Slack (routing/digests) · Meta Graph Pages (`social.post` G2 — *currently disconnected, token refresh*) · Twilio (voice + SMS) | OAuth2 · bot token · API key · SIP |
+| Meetings, scheduling & tasks | Fathom (transcripts→W5) · ActiveCollab (tasks) · Calendly (read-only, being absorbed by meeting-scheduler) | webhook · API token · OAuth2 |
+| Web & hosting | Cloudflare (client DNS/SSL + Pages CDN) · WordPress/Emergent (legacy import for W8 migration) | API token · app password |
+| AI & platform | Anthropic API/Claude (model tiers + Batches for evals; token telemetry) · Sentry (observability) · Postgres backups (snapshot + PITR) | API key · DSN · internal |
+
+**Planned / phase-2 connectors (decide at the mapped stage):** GoCardless (direct debit, Stage 4 · open q #14) · Meta Ads (FB/IG paid, Stage 4 · open q #9) · Praktika / Core Practice (PMS booking + patient reconcile, Voice phase 2 · open q #4) · HealthEngine (booking availability, Voice phase 2) · Microsoft/Bing Ads (secondary search, later). Adding a connector is packaging, not a rebuild — the tool-surface + secret-store pattern is uniform.
+
 ---
 
 ## 4 · Module map
@@ -120,6 +139,8 @@ A **skill** = versioned prompt + allowed client-record slice + knowledge-base ve
 | ◷ Calendar | Publishes, posts, reports, meetings, seasonal | **new** |
 | ✓ Guarantee Tracker | 6-month promise vs actuals | **new** |
 | ≡ Audit Log | Filterable who/what/why/rollback viewer | **new** |
+| ⛓ Workflows | Automation runtime — live per-workflow skill pipelines (running/gated/blocked) + in-place tuning of a workflow's steps/skills (prompt, gate, threshold, model, order) via the draft→shadow→eval→promote lifecycle; every edit versioned, audited, reversible | **new** |
+| ⇄ Integrations | Connector catalog & health — every external service as an MCP connector (auth status, exposed capped tool surface, quota/rate, data lag, OAuth expiry, reconnect); see §3.5 | **new** |
 | ✦ Knowledge & Skills | KB versions, evals, precision, cost telemetry | designed (thin) |
 | ⚙ Settings | Integrations health, autonomy dials, notification routing, roles | designed (thin) |
 
@@ -137,7 +158,8 @@ A **skill** = versioned prompt + allowed client-record slice + knowledge-base ve
 | ▥ Reports | Interactive monthly ROI | designed |
 | ◉ Meetings | Summaries, actions, agenda input | designed |
 | ★ Reviews | Feed + AHPRA-safe drafted responses | designed |
-| ▧ Billing / ⚙ Settings / ➜ Getting Started | Invoices · profile/users/notifications · onboarding checklist | designed |
+| ➜ Getting Started | **Intake wizard** (8-step onboarding questionnaire — appears right after first login; see `specs/SPEC-INTAKE.md`) + assets/logins checklist + onboarding progress | **new (spec'd)** |
+| ▧ Billing / ⚙ Settings | Invoices · profile/users/notifications | designed |
 
 ---
 
@@ -230,7 +252,7 @@ Full spec: artifact 6. Summary — **29 nodes → 24 skills → 5 human decision
 | Stage | Nodes | What happens | Skills |
 |-------|-------|--------------|--------|
 | 1 Deposit→workspace | W2, W6 | Payment webhook → portal login + checklist in 1 minute | `deposit-runner`, `portal-provisioner` |
-| 2 Questionnaire→first mock | W3, W7 | Research runs before they type; adaptive intake pushes back on thin answers; PRD v1 + IA draft; **48h style-tile/hero mock in portal** | `practice-researcher`, `intake-interviewer`, `prd-generator`, `ia-planner`, `concept-sketcher` |
+| 2 Questionnaire→first mock | W3, W7 | Research runs before they type; **portal intake wizard** (8 steps, save-anywhere, mobile — the client-facing surface, see `specs/SPEC-INTAKE.md`); adaptive intake pushes back on thin answers; PRD v1 + IA draft; **48h style-tile/hero mock in portal** | `practice-researcher`, `intake-interviewer`, `prd-generator`, `ia-planner`, `concept-sketcher` |
 | 3 Kickoff | W4, W9 | Auto-scheduled; agenda from PRD gaps; transcript mined → **PRD v2 diff, quotes preserved** → strategist approves (**H1**) | `meeting-scheduler`, `kickoff-agenda-builder`, `kickoff-miner` |
 | 4 Assets | W5, W14, W15 | Upload slots from PRD manifest; validation (vector check, resolution); +3d/+6d chases; shot list from IA | `asset-requester`, `asset-validator`, `chase-scheduler`, `shot-list-writer` |
 | 5 Three concepts | W8, W10–W13 | Designer approves 3 design briefs (**H2**); three full sites composed from block library; slop-critic loops; designer kill-authority review (**H3**); client **chooses** in concept gallery; feedback interpreted into revision sets | `design-director`, `site-composer`, `content-writer`, `slop-critic`, `build-qa-checker`, `feedback-interpreter` |
@@ -426,7 +448,7 @@ Composition over generation · specificity by construction (every claim traces t
 
 ### Stage 5 — Factory (§7)
 - [ ] 5.0 **CMS core first (SPEC-CMS §8, ~3–4 wks)** — block library schema + editability/guardrail manifests · facts registry with effective dating · renderer + static publisher + incremental builds + previews + redirects manager · change-set engine (atomic apply, guardrail pipeline, scheduling, versions/rollback, provenance) · forms-as-blocks → Leads + GCLID. The factory generates INTO this. **Test:** composer-emitted block tree → published staging site <2 min → fact edit propagates everywhere → instant rollback.
-- [ ] 5.1 Stages 1–4: deposit webhook → provisioning → intake-interviewer → PRD pipeline → kickoff-miner → asset slots. **Test:** deposit-to-first-mock ≤48h on a dry run.
+- [ ] 5.1 Stages 1–4: deposit webhook → provisioning → **portal intake wizard (SPEC-INTAKE: author `intake-schema v1` = base + 3 vertical overlays from the real questionnaires + the answer→PRD map; 8-step save-anywhere wizard; research pre-fill; adaptive pushback; compliance moments)** → intake-interviewer → PRD pipeline → kickoff-miner → asset slots. **Test:** deposit-to-first-mock ≤48h on a dry run; thin-answer pushback + contradiction surfacing + assets-non-blocking per SPEC-INTAKE §9.
 - [ ] 5.1b Brand kit (SPEC-FACTORY §1): brand-kit-generator + kit page rendered from the block library + client approval flow (email notify → portal review → comments → lock-as-design-contract → chasing). **Test:** kit renders with the practice's own content in the samples; approval locks v1.
 - [ ] 5.2 **Block library + directions library** (the human-taste sprint — designer-led, this is craft not code).
 - [ ] 5.3 design-director + site-composer + slop-critic + concept gallery. **Test:** 3 concepts for a fictional practice pass the critic and a blind "which is AI-made?" review vs a past hand-built site.

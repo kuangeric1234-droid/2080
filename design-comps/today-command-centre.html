@@ -1,0 +1,483 @@
+<style>
+  :root {
+    --bg:#EEF3F1; --surface:#FFFFFF; --surface-2:#F7FAF9;
+    --ink:#15242B; --muted:#5A6B74; --faint:#8A9CA3;
+    --line:#E1E8E6; --grid:#ECF1EF;
+    --accent:#0E7C7B; --accent-2:#0B6463; --accent-tint:#E4F0EF;
+    --ok:#2E7D4F; --ok-tint:#E8F2EC;
+    --warn:#A96F14; --warn-tint:#F7EFDC;
+    --crit:#B23A32; --crit-tint:#F8EAE8;
+    --blue:#2C5FA8; --blue-tint:#E9EFF7;
+    --shadow:0 1px 2px rgba(20,40,45,.04), 0 4px 16px rgba(20,40,45,.05);
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --display:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --mono:"Cascadia Code",ui-monospace,"SF Mono",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0D1416; --surface:#141E1F; --surface-2:#192425;
+      --ink:#E7EEEC; --muted:#94A6A6; --faint:#6C8080;
+      --line:#243231; --grid:#1E2C2B;
+      --accent:#41B8AC; --accent-2:#5BC9BE; --accent-tint:#12312F;
+      --ok:#54B583; --ok-tint:#14291F;
+      --warn:#D69A3C; --warn-tint:#2E2410;
+      --crit:#DE6A61; --crit-tint:#2F1512;
+      --blue:#7BA3DE; --blue-tint:#16243A;
+      --shadow:0 1px 2px rgba(0,0,0,.2), 0 6px 20px rgba(0,0,0,.28);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#0D1416; --surface:#141E1F; --surface-2:#192425;
+    --ink:#E7EEEC; --muted:#94A6A6; --faint:#6C8080;
+    --line:#243231; --grid:#1E2C2B;
+    --accent:#41B8AC; --accent-2:#5BC9BE; --accent-tint:#12312F;
+    --ok:#54B583; --ok-tint:#14291F;
+    --warn:#D69A3C; --warn-tint:#2E2410;
+    --crit:#DE6A61; --crit-tint:#2F1512;
+    --blue:#7BA3DE; --blue-tint:#16243A;
+    --shadow:0 1px 2px rgba(0,0,0,.2), 0 6px 20px rgba(0,0,0,.28);
+  }
+  :root[data-theme="light"] {
+    --bg:#EEF3F1; --surface:#FFFFFF; --surface-2:#F7FAF9;
+    --ink:#15242B; --muted:#5A6B74; --faint:#8A9CA3;
+    --line:#E1E8E6; --grid:#ECF1EF;
+    --accent:#0E7C7B; --accent-2:#0B6463; --accent-tint:#E4F0EF;
+    --ok:#2E7D4F; --ok-tint:#E8F2EC;
+    --warn:#A96F14; --warn-tint:#F7EFDC;
+    --crit:#B23A32; --crit-tint:#F8EAE8;
+    --blue:#2C5FA8; --blue-tint:#E9EFF7;
+    --shadow:0 1px 2px rgba(20,40,45,.04), 0 4px 16px rgba(20,40,45,.05);
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:13.5px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .num { font-variant-numeric:tabular-nums; }
+  .mono { font-family:var(--mono); }
+
+  .app { display:grid; grid-template-columns:236px 1fr; min-height:100vh; }
+
+  /* ── Rail ── */
+  .rail { background:var(--surface); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:16px 12px; gap:4px; position:sticky; top:0; height:100vh; }
+  .brand { display:flex; align-items:center; gap:10px; padding:4px 8px 14px; }
+  .brand .mk { width:34px; height:34px; border-radius:9px; background:linear-gradient(150deg,var(--accent),var(--accent-2)); color:#fff; font-family:var(--display); font-weight:700; font-size:11px; display:flex; align-items:center; justify-content:center; letter-spacing:-.3px; box-shadow:var(--shadow); }
+  .brand .nm { font-family:var(--display); font-weight:650; font-size:14.5px; letter-spacing:-.2px; }
+  .brand .nm span { color:var(--muted); font-weight:400; }
+  .nav-cap { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--faint); padding:14px 10px 5px; }
+  .nav-i { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:var(--ink); font-size:13px; cursor:pointer; position:relative; }
+  .nav-i:hover { background:var(--bg); }
+  .nav-i .g { width:18px; text-align:center; color:var(--muted); font-size:13px; }
+  .nav-i.on { background:var(--accent-tint); color:var(--accent); font-weight:600; }
+  .nav-i.on .g { color:var(--accent); }
+  .nav-i .bdg { margin-left:auto; font-size:10.5px; font-weight:700; color:var(--warn); background:var(--warn-tint); border-radius:20px; padding:1px 7px; }
+  .rail-foot { margin-top:auto; padding:12px 10px 2px; border-top:1px solid var(--line); }
+  .rail-foot .k { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  .rail-foot .v { font-family:var(--display); font-size:20px; font-weight:700; margin-top:2px; }
+  .rail-foot .v small { font-size:12px; color:var(--muted); font-weight:500; }
+
+  /* ── Main ── */
+  .main { min-width:0; display:flex; flex-direction:column; }
+  .top { height:58px; display:flex; align-items:center; gap:14px; padding:0 24px; border-bottom:1px solid var(--line); background:color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter:blur(8px); position:sticky; top:0; z-index:9; }
+  .top .ti { font-family:var(--display); font-size:16px; font-weight:650; letter-spacing:-.2px; }
+  .search { margin-left:6px; display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:7px 11px; width:300px; color:var(--faint); font-size:12.5px; }
+  .search .sl { margin-left:auto; border:1px solid var(--line); border-radius:5px; padding:0 6px; font-family:var(--mono); font-size:10px; background:var(--surface); }
+  .top .rt { margin-left:auto; display:flex; align-items:center; gap:14px; }
+  .date { font-size:12.5px; color:var(--muted); }
+  .icbtn { width:32px; height:32px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; }
+  .icbtn:hover { color:var(--ink); border-color:var(--accent); }
+  .ava { width:32px; height:32px; border-radius:50%; background:linear-gradient(150deg,var(--blue),#274e86); color:#fff; font-size:11.5px; font-weight:650; display:flex; align-items:center; justify-content:center; }
+
+  .content { padding:22px 24px 40px; display:flex; flex-direction:column; gap:16px; max-width:1360px; width:100%; }
+
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+  .card-pad { padding:18px 20px; }
+  .card-h { display:flex; align-items:center; gap:9px; margin-bottom:14px; }
+  .card-h h2 { font-family:var(--display); font-size:14px; font-weight:650; letter-spacing:-.1px; }
+  .card-h .hint { color:var(--faint); font-size:11.5px; }
+  .card-h .more { margin-left:auto; color:var(--accent); font-size:11.5px; font-weight:600; cursor:pointer; }
+
+  /* ── Command hero ── */
+  .hero { padding:20px 22px; }
+  .greet { display:flex; align-items:flex-end; gap:14px; flex-wrap:wrap; margin-bottom:18px; }
+  .greet h1 { font-family:var(--display); font-size:23px; font-weight:700; letter-spacing:-.5px; text-wrap:balance; }
+  .greet p { color:var(--muted); font-size:13px; padding-bottom:3px; }
+  .greet .three { margin-left:auto; display:flex; gap:6px; align-items:center; font-size:11.5px; color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:20px; padding:5px 12px; }
+  .greet .three b { color:var(--ink); font-weight:650; }
+
+  .cov { display:grid; grid-template-columns:auto 1fr; gap:26px; align-items:center; }
+  .cov-lead .big { font-family:var(--display); font-size:34px; font-weight:750; letter-spacing:-1px; line-height:1; }
+  .cov-lead .cap { font-size:12px; color:var(--muted); margin-top:4px; }
+  .cov-bar { display:flex; height:14px; border-radius:8px; overflow:hidden; gap:2px; }
+  .cov-bar > i { display:block; height:100%; width:0; transition:width .9s cubic-bezier(.2,.7,.2,1); border-radius:3px; }
+  .seg-auto { background:var(--accent); } .seg-you { background:var(--warn); } .seg-lock { background:var(--crit); }
+  .cov-leg { display:flex; gap:20px; margin-top:14px; flex-wrap:wrap; }
+  .lg { display:flex; gap:9px; align-items:flex-start; }
+  .lg .sw { width:11px; height:11px; border-radius:3px; margin-top:3px; flex:none; }
+  .lg .lt { font-size:12px; }
+  .lg .lt b { font-weight:650; } .lg .lt .num { font-weight:700; }
+  .lg .lt small { display:block; color:var(--faint); font-size:11px; }
+  .g0 { background:var(--ok); } .g1 { background:var(--accent); } .g2 { background:var(--warn); } .g3 { background:var(--crit); }
+
+  /* ── KPI tiles ── */
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .tile { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:15px 17px; }
+  .tile .lbl { font-size:11.5px; color:var(--muted); }
+  .tile .rowb { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; margin-top:7px; }
+  .tile .val { font-family:var(--display); font-size:27px; font-weight:700; letter-spacing:-.6px; line-height:1; }
+  .tile .val .u { font-size:13px; font-weight:500; color:var(--muted); }
+  .tile .dl { font-size:11.5px; font-weight:600; margin-top:8px; display:flex; align-items:center; gap:5px; }
+  .up { color:var(--ok); } .down-good { color:var(--ok); } .down { color:var(--crit); } .flat { color:var(--muted); }
+
+  /* ── Columns ── */
+  .split { display:grid; grid-template-columns:1.42fr 1fr; gap:16px; align-items:start; }
+  .colstack { display:flex; flex-direction:column; gap:16px; }
+
+  /* Needs-you queue */
+  .q { display:flex; flex-direction:column; gap:11px; }
+  .qi { border:1px solid var(--line); border-radius:11px; padding:13px 15px 13px 16px; position:relative; background:var(--surface-2); }
+  .qi::before { content:""; position:absolute; left:0; top:10px; bottom:10px; width:3px; border-radius:3px; background:var(--warn); }
+  .qi.crit::before { background:var(--crit); }
+  .qi.info::before { background:var(--blue); }
+  .qi-top { display:flex; align-items:center; gap:9px; margin-bottom:5px; }
+  .qi-top .qt { font-weight:650; font-size:13px; }
+  .qi-top .who { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+  .qi-body { font-size:12.5px; color:var(--muted); line-height:1.5; }
+  .qi-body b { color:var(--ink); font-weight:600; }
+  .qi-act { display:flex; gap:8px; align-items:center; margin-top:11px; }
+
+  .gate { font-family:var(--mono); font-size:10px; font-weight:700; border-radius:5px; padding:1.5px 6px; border:1px solid; letter-spacing:.02em; }
+  .gate.gt0 { color:var(--ok); border-color:color-mix(in srgb,var(--ok) 34%,transparent); background:var(--ok-tint); }
+  .gate.gt1 { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 34%,transparent); background:var(--accent-tint); }
+  .gate.gt2 { color:var(--warn); border-color:color-mix(in srgb,var(--warn) 40%,transparent); background:var(--warn-tint); }
+  .gate.gt3 { color:var(--crit); border-color:color-mix(in srgb,var(--crit) 40%,transparent); background:var(--crit-tint); }
+
+  .btn { font-size:11.5px; font-weight:650; border-radius:8px; padding:6px 13px; border:1px solid transparent; cursor:pointer; font-family:inherit; }
+  .btn-pri { background:var(--accent); color:#fff; }
+  .btn-pri:hover { background:var(--accent-2); }
+  .btn-gh { background:var(--surface); border-color:var(--line); color:var(--ink); }
+  .btn-gh:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-crit { background:var(--crit-tint); color:var(--crit); }
+  .avx { width:21px; height:21px; border-radius:50%; font-size:9px; font-weight:700; color:#fff; display:inline-flex; align-items:center; justify-content:center; }
+
+  /* Ran-automatically feed */
+  .feed { display:flex; flex-direction:column; }
+  .fi { display:grid; grid-template-columns:auto 1fr auto; gap:11px; align-items:start; padding:10px 0; border-bottom:1px solid var(--grid); }
+  .fi:last-child { border-bottom:none; }
+  .fi .tk { width:8px; height:8px; border-radius:50%; margin-top:5px; }
+  .tk.a { background:var(--accent); } .tk.b { background:var(--blue); }
+  .fi .ft { font-size:12.5px; line-height:1.45; }
+  .fi .ft .pill { font-family:var(--mono); font-size:10.5px; color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:5px; padding:0 5px; }
+  .fi .ft small { color:var(--faint); }
+  .fi .fr { text-align:right; white-space:nowrap; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+  .fi .fr .tm { font-size:10.5px; color:var(--faint); }
+
+  /* Automation-by-area bars */
+  .area { display:flex; flex-direction:column; gap:12px; }
+  .ar { display:grid; grid-template-columns:118px 1fr 42px; gap:11px; align-items:center; }
+  .ar .an { font-size:12px; font-weight:600; }
+  .ar .an small { display:block; color:var(--faint); font-size:10.5px; font-weight:400; }
+  .track { height:8px; border-radius:5px; background:var(--bg); overflow:hidden; border:1px solid var(--line); }
+  .track > i { display:block; height:100%; width:0; border-radius:5px; background:var(--accent); transition:width .9s cubic-bezier(.2,.7,.2,1); }
+  .track.warn > i { background:var(--warn); }
+  .ar .av { font-family:var(--mono); font-size:11.5px; font-weight:700; text-align:right; }
+
+  /* Workflows strip */
+  .wfstrip { display:flex; gap:10px; flex-wrap:wrap; }
+  .wf { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:10px; padding:8px 13px; background:var(--surface-2); font-size:12px; }
+  .wf .d { width:7px; height:7px; border-radius:50%; }
+  .wf .d.ok { background:var(--ok); box-shadow:0 0 0 3px var(--ok-tint); }
+  .wf .d.run { background:var(--accent); box-shadow:0 0 0 3px var(--accent-tint); }
+  .wf .d.wait { background:var(--warn); box-shadow:0 0 0 3px var(--warn-tint); }
+  .wf b { font-weight:650; } .wf small { color:var(--muted); }
+
+  .sec-lbl { font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--faint); }
+
+  @media (max-width:1080px) {
+    .app { grid-template-columns:1fr; }
+    .rail { display:none; }
+    .tiles { grid-template-columns:repeat(2,1fr); }
+    .split { grid-template-columns:1fr; }
+    .cov { grid-template-columns:1fr; gap:16px; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><div class="mk">20·80</div><div class="nm">20-80 <span>Platform</span></div></div>
+
+    <div class="nav-cap">Operate</div>
+    <div class="nav-i on"><span class="g">◧</span> Today <span class="bdg">6</span></div>
+    <div class="nav-i"><span class="g">◔</span> Clients</div>
+    <div class="nav-i"><span class="g">✉</span> Inbox</div>
+    <div class="nav-i"><span class="g">☎</span> Receptionists</div>
+
+    <div class="nav-cap">Monitor</div>
+    <div class="nav-i"><span class="g">◎</span> Google Ads</div>
+    <div class="nav-i"><span class="g">⌖</span> SEO Watchtower</div>
+    <div class="nav-i"><span class="g">♥</span> Site Health</div>
+
+    <div class="nav-cap">Deliver &amp; grow</div>
+    <div class="nav-i"><span class="g">⚒</span> Website Factory</div>
+    <div class="nav-i"><span class="g">◈</span> Prospects</div>
+    <div class="nav-i"><span class="g">▥</span> Reports</div>
+
+    <div class="nav-cap">System</div>
+    <div class="nav-i"><span class="g">⛓</span> Workflows</div>
+    <div class="nav-i"><span class="g">⇄</span> Integrations</div>
+
+    <div class="rail-foot">
+      <div class="k">Automated this week</div>
+      <div class="v">94<small>% of 8,140 actions</small></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="top">
+      <div class="ti">Today</div>
+      <div class="search">Search clients, flags, runs… <span class="sl">/</span></div>
+      <div class="rt">
+        <span class="date">Mon 7 Jul 2026 · 09:42</span>
+        <button class="icbtn" id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button>
+        <div class="ava">WC</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- Command hero -->
+      <section class="card hero">
+        <div class="greet">
+          <h1>Good morning, Wally.</h1>
+          <p>Here's what ran overnight — and the six things that need you.</p>
+          <span class="three">The three things only you do: <b>decide</b> · <b>approve</b> · <b>talk to a client</b></span>
+        </div>
+
+        <div class="cov">
+          <div class="cov-lead">
+            <div class="big num">1,182</div>
+            <div class="cap">actions since midnight</div>
+          </div>
+          <div>
+            <div class="cov-bar" id="covbar">
+              <i class="seg-auto" data-w="94"></i>
+              <i class="seg-you" data-w="5"></i>
+              <i class="seg-lock" data-w="1"></i>
+            </div>
+            <div class="cov-leg">
+              <div class="lg"><span class="sw g0"></span><span class="lt"><b>Ran automatically</b> · <span class="num">1,114</span> <small>G0 silent + G1 auto &amp; visible — logged, reversible</small></span></div>
+              <div class="lg"><span class="sw g2"></span><span class="lt"><b>Waited for you</b> · <span class="num">65</span> <small>G2 — a human approves before it acts</small></span></div>
+              <div class="lg"><span class="sw g3"></span><span class="lt"><b>Restricted</b> · <span class="num">3</span> <small>G3 — named senior human only; AI can't draft</small></span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- KPI tiles: plain patient-and-dollar language -->
+      <section class="tiles">
+        <div class="tile">
+          <div class="lbl">New patient enquiries · portfolio</div>
+          <div class="rowb"><div class="val num">128</div><svg class="spk" data-pts="18,22,20,26,24,31,29,34,33,38,41,44" width="86" height="30"></svg></div>
+          <div class="dl up">▲ 12 vs last week · forms + rescued calls</div>
+        </div>
+        <div class="tile">
+          <div class="lbl">Cost per enquiry · avg</div>
+          <div class="rowb"><div class="val num">$22<span class="u">.40</span></div><svg class="spk" data-pts="31,30,29,27,28,26,25,24,23,23,22,22" data-color="ok" width="86" height="30"></svg></div>
+          <div class="dl down-good">▼ $4.10 — cheaper is better</div>
+        </div>
+        <div class="tile">
+          <div class="lbl">Return per $1 on ads</div>
+          <div class="rowb"><div class="val num">$10<span class="u">.90</span></div><svg class="spk" data-pts="8.1,8.4,8.9,9.2,9.6,9.9,10.1,10.4,10.6,10.7,10.8,10.9" width="86" height="30"></svg></div>
+          <div class="dl up">▲ holding above the 10:1 line</div>
+        </div>
+        <div class="tile">
+          <div class="lbl">Portfolio health</div>
+          <div class="rowb"><div class="val num">82<span class="u">/100</span></div><svg class="spk" data-pts="76,77,75,78,79,80,79,81,82,81,82,82" width="86" height="30"></svg></div>
+          <div class="dl flat">21 healthy · 2 watch · <span class="down">1 at-risk</span></div>
+        </div>
+      </section>
+
+      <!-- Two lanes -->
+      <section class="split">
+        <!-- Needs you -->
+        <div class="card card-pad">
+          <div class="card-h">
+            <h2>Needs you today</h2>
+            <span class="hint">6 decisions · ranked by what moves the outcome</span>
+            <span class="more">Approval queue →</span>
+          </div>
+          <div class="q">
+
+            <div class="qi crit">
+              <div class="qi-top">
+                <span class="gate gt3">G3</span>
+                <span class="qt">Complaint — Hearts Dental</span>
+                <span class="who"><span class="avx" style="background:var(--blue)">WC</span> you only</span>
+              </div>
+              <div class="qi-body">Billing dispute, keywords <b>"leaving"</b>. Routed straight to you — <b>no AI acknowledgement was sent</b>, by design. The call recording and thread are attached.</div>
+              <div class="qi-act"><button class="btn btn-crit">Open &amp; respond</button><button class="btn btn-gh">Listen to call</button></div>
+            </div>
+
+            <div class="qi">
+              <div class="qi-top">
+                <span class="gate gt2">G2</span>
+                <span class="qt">Ads budget shift — Yarra Hills</span>
+                <span class="who"><span class="avx" style="background:var(--blue)">WC</span> Wally</span>
+              </div>
+              <div class="qi-body">CPL flagged red 5 days. ads-optimiser proposes <b>−28% / +31%</b> across two campaigns to recover cost-per-enquiry. Dry-run passed; snapshot ready to roll back. <b>Spend never changes without you.</b></div>
+              <div class="qi-act"><button class="btn btn-pri">Review &amp; approve</button><button class="btn btn-gh">See the math</button></div>
+            </div>
+
+            <div class="qi">
+              <div class="qi-top">
+                <span class="gate gt2">G2</span>
+                <span class="qt">Enable Ads account — Bayside Podiatry</span>
+                <span class="who"><span class="avx" style="background:var(--accent)">HK</span> Hamza</span>
+              </div>
+              <div class="qi-body">Factory built the account <b>paused</b>: 2 campaigns, $40/day, 28 keywords, RSAs AHPRA-checked ✓. A named human enables it — the last of five launch decisions.</div>
+              <div class="qi-act"><button class="btn btn-pri">Open campaign</button><button class="btn btn-gh">Defer</button></div>
+            </div>
+
+            <div class="qi info">
+              <div class="qi-top">
+                <span class="gate gt2">G2</span>
+                <span class="qt">Concept gallery ready — Smile To Go</span>
+                <span class="who">client choosing</span>
+              </div>
+              <div class="qi-body">Three sites passed slop-critic and design kill-review. The client is choosing in their portal; chase #1 goes out tomorrow if quiet. Nothing needed unless you want a look.</div>
+              <div class="qi-act"><button class="btn btn-gh">Preview concepts</button></div>
+            </div>
+
+            <div class="qi info">
+              <div class="qi-top">
+                <span class="gate gt2">G2</span>
+                <span class="qt">PRD v2 approval — Aspire One Physio</span>
+                <span class="who">after Fri kickoff</span>
+              </div>
+              <div class="qi-body">kickoff-miner diffed the brief with the client's own quotes preserved. Sharpen the differentiators, then design briefs unlock. This is the human 20%.</div>
+              <div class="qi-act"><button class="btn btn-gh">Review the diff</button></div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Ran automatically + by-area -->
+        <div class="colstack">
+          <div class="card card-pad">
+            <div class="card-h">
+              <h2>Ran automatically</h2>
+              <span class="hint">nothing here needed you — all logged</span>
+              <span class="more">Audit log →</span>
+            </div>
+            <div class="feed">
+              <div class="fi">
+                <span class="tk a"></span>
+                <span class="ft">Recall booking confirmed &amp; SMS sent — <b>Mrs Lin</b> <small>· in 中文, conf 0.91</small> <span class="pill">clinic-call-agent</span></span>
+                <span class="fr"><span class="gate gt0">G0</span><span class="tm">09:31</span></span>
+              </div>
+              <div class="fi">
+                <span class="tk b"></span>
+                <span class="ft">FAQ hours correction published — <b>Yarra Hills</b> <small>· safe lane, v215</small> <span class="pill">cms-edit-assistant</span></span>
+                <span class="fr"><span class="gate gt1">G1</span><span class="tm">09:02</span></span>
+              </div>
+              <div class="fi">
+                <span class="tk a"></span>
+                <span class="ft">Rescued call → uploaded to Google as a conversion — <b>Trowse Chiro</b> <small>· teaches the bidding</small> <span class="pill">offline-conv</span></span>
+                <span class="fr"><span class="gate gt0">G0</span><span class="tm">08:58</span></span>
+              </div>
+              <div class="fi">
+                <span class="tk b"></span>
+                <span class="ft">41 support emails triaged — 38 auto-tasked, <b>1 complaint escalated</b> to you <span class="pill">email-triage</span></span>
+                <span class="fr"><span class="gate gt1">G1</span><span class="tm">08:40</span></span>
+              </div>
+              <div class="fi">
+                <span class="tk a"></span>
+                <span class="ft">Ads daily pull — <b>21 accounts</b>, one out-of-band edit reconciled <span class="pill">ads-sync</span></span>
+                <span class="fr"><span class="gate gt0">G0</span><span class="tm">06:00</span></span>
+              </div>
+              <div class="fi">
+                <span class="tk a"></span>
+                <span class="ft">SEO sync — <b>14/15 synced</b>, Northcote stale so its alerts were suppressed <span class="pill">seo-sync</span></span>
+                <span class="fr"><span class="gate gt0">G0</span><span class="tm">05:30</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card card-pad">
+            <div class="card-h">
+              <h2>What runs itself, by area</h2>
+              <span class="hint">amber = a human is deliberately in the loop</span>
+            </div>
+            <div class="area">
+              <div class="ar"><div class="an">Receptionists<small>voice · realtime</small></div><div class="track"><i data-w="100"></i></div><div class="av">100%</div></div>
+              <div class="ar"><div class="an">Inbox triage<small>tasks + acks</small></div><div class="track"><i data-w="96"></i></div><div class="av">96%</div></div>
+              <div class="ar"><div class="an">SEO watchtower<small>diagnose + alert</small></div><div class="track"><i data-w="94"></i></div><div class="av">94%</div></div>
+              <div class="ar"><div class="an">Google Ads<small>spend stays human</small></div><div class="track warn"><i data-w="71"></i></div><div class="av">71%</div></div>
+              <div class="ar"><div class="an">Client content<small>AHPRA + approvals</small></div><div class="track warn"><i data-w="58"></i></div><div class="av">58%</div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Workflows running -->
+      <section class="card card-pad">
+        <div class="card-h"><h2>Workflows running now</h2><span class="hint">live automation pipelines · lit dot = executing</span></div>
+        <div class="wfstrip">
+          <div class="wf"><span class="d run"></span><b>Receptionist</b><small>3 calls live</small></div>
+          <div class="wf"><span class="d ok"></span><b>Inbox triage</b><small>idle · 41 today</small></div>
+          <div class="wf"><span class="d wait"></span><b>Ads optimise</b><small>1 waiting on you</small></div>
+          <div class="wf"><span class="d run"></span><b>SEO watchtower</b><small>diagnosing</small></div>
+          <div class="wf"><span class="d run"></span><b>Website Factory</b><small>3 builds</small></div>
+          <div class="wf"><span class="d run"></span><b>Sales · Prospect</b><small>audit composing</small></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // Theme toggle — stamp data-theme so it wins over the media query in both directions
+  (function () {
+    var root = document.documentElement, btn = document.getElementById('theme');
+    btn.addEventListener('click', function () {
+      var dark = matchMedia('(prefers-color-scheme: dark)').matches;
+      var cur = root.getAttribute('data-theme') || (dark ? 'dark' : 'light');
+      root.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+    });
+  })();
+
+  // Sparklines — area fill, faint line, emphasized endpoint
+  function draw(svg) {
+    var pts = svg.dataset.pts.split(',').map(Number);
+    var w = +svg.getAttribute('width'), h = +svg.getAttribute('height'), pad = 3;
+    var min = Math.min.apply(0, pts), max = Math.max.apply(0, pts);
+    var sx = w / (pts.length - 1);
+    var sy = function (v) { return max === min ? h / 2 : pad + (h - 2 * pad) * (1 - (v - min) / (max - min)); };
+    var line = pts.map(function (v, i) { return (i ? 'L' : 'M') + (i * sx).toFixed(1) + ' ' + sy(v).toFixed(1); }).join(' ');
+    var col = svg.dataset.color === 'ok' ? 'var(--ok)' : 'var(--accent)';
+    var ns = 'http://www.w3.org/2000/svg';
+    var area = document.createElementNS(ns, 'path');
+    area.setAttribute('d', line + ' L' + w + ' ' + h + ' L0 ' + h + ' Z');
+    area.setAttribute('fill', col); area.setAttribute('opacity', '.10');
+    var pl = document.createElementNS(ns, 'path');
+    pl.setAttribute('d', line); pl.setAttribute('fill', 'none');
+    pl.setAttribute('stroke', col); pl.setAttribute('stroke-width', '2');
+    pl.setAttribute('stroke-linecap', 'round'); pl.setAttribute('stroke-linejoin', 'round');
+    var lx = (pts.length - 1) * sx, ly = sy(pts[pts.length - 1]);
+    var dot = document.createElementNS(ns, 'circle');
+    dot.setAttribute('cx', lx.toFixed(1)); dot.setAttribute('cy', ly.toFixed(1)); dot.setAttribute('r', '3');
+    dot.setAttribute('fill', col); dot.setAttribute('stroke', 'var(--surface)'); dot.setAttribute('stroke-width', '2');
+    svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h); svg.style.overflow = 'visible';
+    svg.appendChild(area); svg.appendChild(pl); svg.appendChild(dot);
+  }
+  document.querySelectorAll('.spk').forEach(draw);
+
+  // Animate bar widths on load
+  requestAnimationFrame(function () {
+    requestAnimationFrame(function () {
+      document.querySelectorAll('#covbar > i, .track > i').forEach(function (el) {
+        el.style.width = el.dataset.w + '%';
+      });
+    });
+  });
+</script>

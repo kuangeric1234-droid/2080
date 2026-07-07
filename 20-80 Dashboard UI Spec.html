@@ -1,0 +1,809 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<title>2080 Solutions — Dashboard &amp; Client Portal UI Spec</title>
+<style>
+  :root{
+    --bg:#F1F4F3; --surface:#FFFFFF; --surface-2:#E9EEEC; --rail:#132029; --rail-ink:#C8D6D3; --rail-act:#1D3038;
+    --ink:#1C2A33; --muted:#5B6C75; --line:#D8E0DD;
+    --accent:#0E7C7B; --accent-soft:#DFF0ED;
+    --blue:#2C5FA8; --blue-soft:#E6EDF7;
+    --warn:#A96F14; --warn-soft:#F6ECD9;
+    --crit:#B23A32; --crit-soft:#F6E3E0;
+    --ok:#2E7D4F; --ok-soft:#E2F0E7;
+    --mono:"Cascadia Code",Consolas,"SF Mono",Menlo,monospace;
+    --sans:"Segoe UI Variable Text","Segoe UI",-apple-system,"Helvetica Neue",Arial,sans-serif;
+    --disp:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{--bg:#0E161B;--surface:#161F26;--surface-2:#1C2830;--rail:#0A1115;--rail-ink:#93A7A4;--rail-act:#16242C;
+      --ink:#E4ECEA;--muted:#8FA3AB;--line:#2B3B44;
+      --accent:#41B8AC;--accent-soft:#14332F;--blue:#7FA9DE;--blue-soft:#1B2A3F;
+      --warn:#D9A04C;--warn-soft:#382C15;--crit:#E07A6E;--crit-soft:#3D211D;--ok:#6FBF8F;--ok-soft:#1A3125}
+  }
+  :root[data-theme="dark"]{--bg:#0E161B;--surface:#161F26;--surface-2:#1C2830;--rail:#0A1115;--rail-ink:#93A7A4;--rail-act:#16242C;
+      --ink:#E4ECEA;--muted:#8FA3AB;--line:#2B3B44;
+      --accent:#41B8AC;--accent-soft:#14332F;--blue:#7FA9DE;--blue-soft:#1B2A3F;
+      --warn:#D9A04C;--warn-soft:#382C15;--crit:#E07A6E;--crit-soft:#3D211D;--ok:#6FBF8F;--ok-soft:#1A3125}
+  :root[data-theme="light"]{--bg:#F1F4F3;--surface:#FFFFFF;--surface-2:#E9EEEC;--rail:#132029;--rail-ink:#C8D6D3;--rail-act:#1D3038;
+      --ink:#1C2A33;--muted:#5B6C75;--line:#D8E0DD;
+      --accent:#0E7C7B;--accent-soft:#DFF0ED;--blue:#2C5FA8;--blue-soft:#E6EDF7;
+      --warn:#A96F14;--warn-soft:#F6ECD9;--crit:#B23A32;--crit-soft:#F6E3E0;--ok:#2E7D4F;--ok-soft:#E2F0E7}
+
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14.5px;line-height:1.55}
+  button{font-family:inherit}
+
+  /* ---------- intro ---------- */
+  .intro{max-width:1180px;margin:0 auto;padding:40px 20px 8px}
+  .intro .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+  .intro h1{font-family:var(--disp);font-size:clamp(26px,4vw,36px);margin:0 0 10px;font-weight:650;line-height:1.15;text-wrap:balance}
+  .intro p{color:var(--muted);max-width:78ch;margin:0 0 14px}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;font-size:12.5px}
+  .legend span{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 12px}
+  .legend .l-auto{border-left:3px solid var(--accent)}
+  .legend .l-ux{border-left:3px solid var(--warn)}
+
+  /* ---------- workspace switcher ---------- */
+  .ws-switch{max-width:1180px;margin:0 auto;padding:0 20px 14px;display:flex;gap:8px;flex-wrap:wrap}
+  .ws-btn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:9px 20px;font-size:14px;font-weight:600;cursor:pointer}
+  .ws-btn small{display:block;font-weight:400;font-size:11.5px;color:var(--muted)}
+  .ws-btn.active{border-color:var(--accent);background:var(--accent-soft)}
+  .ws-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  /* ---------- app frame ---------- */
+  .app{max-width:1180px;margin:0 auto 70px;padding:0 20px}
+  .frame{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 8px 30px rgba(10,25,30,.10)}
+  .topbar{display:flex;align-items:center;gap:14px;background:var(--rail);color:#fff;padding:10px 18px;flex-wrap:wrap}
+  .logo{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.02em}
+  .logo em{color:#57C9BC;font-style:normal}
+  .search{flex:1;min-width:140px;max-width:360px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.15);border-radius:8px;color:var(--rail-ink);font-size:12.5px;padding:6px 12px}
+  .topbar .who{font-size:12px;color:var(--rail-ink);margin-left:auto;white-space:nowrap}
+  .body{display:flex;min-height:640px}
+  nav.rail{width:216px;flex:0 0 216px;background:var(--rail);padding:10px 8px 18px;display:flex;flex-direction:column;gap:2px}
+  .rail .grp{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#5E7680;padding:12px 12px 4px}
+  .nav-btn{display:flex;align-items:center;gap:8px;width:100%;text-align:left;background:none;border:none;color:var(--rail-ink);font-size:13.5px;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .nav-btn:hover{background:var(--rail-act)}
+  .nav-btn.active{background:var(--rail-act);color:#fff;font-weight:600;box-shadow:inset 3px 0 0 #57C9BC}
+  .nav-btn:focus-visible{outline:2px solid #57C9BC;outline-offset:-2px}
+  .nav-btn .n{margin-left:auto;font-family:var(--mono);font-size:10.5px;background:#B23A32;color:#fff;border-radius:99px;padding:1px 7px}
+  .nav-btn .n.t{background:#0E7C7B}
+  main.stage{flex:1;min-width:0;padding:22px 24px 30px;background:var(--bg)}
+  .screen{display:none}
+  .screen.on{display:block}
+  .scr-head{margin-bottom:16px}
+  .scr-head h2{font-family:var(--disp);font-size:20px;margin:0 0 3px;font-weight:650}
+  .scr-head p{margin:0;color:var(--muted);font-size:13px;max-width:90ch}
+  @media (max-width:840px){
+    .body{flex-direction:column}
+    nav.rail{width:100%;flex:none;flex-direction:row;overflow-x:auto;padding:8px}
+    .rail .grp{display:none}
+    .nav-btn{white-space:nowrap;width:auto}
+  }
+
+  /* ---------- shared components ---------- */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:16px}
+  .tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+  .tile b{display:block;font-family:var(--mono);font-size:21px;font-variant-numeric:tabular-nums}
+  .tile span{font-size:12px;color:var(--muted)}
+  .tile.crit b{color:var(--crit)} .tile.warn b{color:var(--warn)} .tile.ok b{color:var(--ok)} .tile.acc b{color:var(--accent)}
+  .tile .delta{font-family:var(--mono);font-size:11px;margin-left:4px}
+  .up{color:var(--ok)} .dn{color:var(--crit)}
+
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .panel h3{font-family:var(--disp);font-size:15px;margin:0 0 12px;font-weight:650;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:900px){.cols2{grid-template-columns:1fr}}
+
+  .chipp{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;padding:2px 9px;border-radius:99px;white-space:nowrap}
+  .c-crit{background:var(--crit-soft);color:var(--crit)} .c-warn{background:var(--warn-soft);color:var(--warn)}
+  .c-ok{background:var(--ok-soft);color:var(--ok)} .c-ai{background:var(--accent-soft);color:var(--accent)}
+  .c-blue{background:var(--blue-soft);color:var(--blue)} .c-mut{background:var(--surface-2);color:var(--muted)}
+
+  .flag{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-left:4px solid var(--crit);border-radius:10px;background:var(--surface);padding:12px 14px;margin-bottom:10px}
+  .flag.warn{border-left-color:var(--warn)} .flag.ai{border-left-color:var(--accent)} .flag.blue{border-left-color:var(--blue)}
+  .flag .fb{flex:1;min-width:0}
+  .flag .fb b{font-size:13.5px}
+  .flag .fb p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0}
+  .btn{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:7px;font-size:12px;padding:5px 12px;cursor:pointer;font-weight:600}
+  .btn.p{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn.g{background:var(--ok);border-color:var(--ok);color:#fff}
+  .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+  table{border-collapse:collapse;width:100%;font-size:13px;background:var(--surface)}
+  .twrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin-bottom:14px}
+  th{font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;text-align:left;color:var(--muted);background:var(--surface-2);padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.num{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  .spec{border:1px solid var(--line);border-left:4px solid var(--accent);background:var(--surface);border-radius:10px;padding:12px 16px;margin:14px 0;font-size:13px}
+  .spec b.lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--accent);display:block;margin-bottom:6px}
+  .spec.ux{border-left-color:var(--warn)} .spec.ux b.lab{color:var(--warn)}
+  .mini{display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px;margin-top:6px}
+  .mini .s{border:1px solid var(--line);background:var(--surface-2);border-radius:7px;padding:3px 10px;white-space:nowrap}
+  .mini .s.ai{background:var(--accent-soft);border-color:transparent;color:var(--accent);font-weight:600}
+  .mini .s.hm{border-style:dashed;background:var(--surface)}
+  .mini .a{color:var(--muted);font-family:var(--mono)}
+
+  /* kanban */
+  .kb{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(200px,1fr);gap:10px;overflow-x:auto;padding-bottom:6px}
+  .kcol{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:200px}
+  .kcol h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 8px}
+  .kcard{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;font-size:12.5px;margin-bottom:8px}
+  .kcard b{display:block;font-size:12.5px}
+  .kcard small{color:var(--muted);font-size:11px;display:block;margin-top:2px}
+
+  /* cms editor mock */
+  .cms{display:grid;grid-template-columns:180px 1fr 230px;gap:12px}
+  @media (max-width:940px){.cms{grid-template-columns:1fr}}
+  .cms .pane{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12.5px}
+  .pg{padding:6px 9px;border-radius:6px;margin-bottom:2px;cursor:pointer}
+  .pg.on{background:var(--accent-soft);color:var(--accent);font-weight:600}
+  .blk{border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:9px;position:relative}
+  .blk.ed{border-color:var(--ok)} .blk.lk{background:var(--surface-2);color:var(--muted)}
+  .blk .tag{position:absolute;top:-9px;right:10px;font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;padding:1px 8px;border-radius:99px}
+  .blk.ed .tag{background:var(--ok);color:#fff} .blk.lk .tag{background:var(--muted);color:var(--surface)}
+  .aiassist{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+
+  .steps{counter-reset:st;display:flex;flex-direction:column;gap:0}
+  .step{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .step:last-child{border-bottom:none}
+  .step::before{counter-increment:st;content:counter(st,decimal-leading-zero);font-family:var(--mono);color:var(--accent);font-size:12px;padding-top:1px}
+  .step b{display:block;font-size:13px}
+  .step small{color:var(--muted)}
+  .step .done{color:var(--ok);font-family:var(--mono);font-size:11px;margin-left:auto;white-space:nowrap;padding-top:2px}
+
+  .skill{border:1px solid var(--line);border-radius:10px;background:var(--surface);padding:13px 15px;margin-bottom:10px}
+  .skill h4{margin:0 0 4px;font-size:13.5px;font-family:var(--mono);color:var(--accent)}
+  .skill p{margin:0 0 6px;font-size:12.5px;color:var(--muted)}
+  .skill .io{font-size:11.5px;display:grid;grid-template-columns:auto 1fr;gap:2px 10px}
+  .skill .io dt{font-family:var(--mono);color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding-top:1px}
+  .skill .io dd{margin:0}
+
+  .msg{border:1px solid var(--line);border-radius:10px;padding:11px 14px;margin-bottom:9px;font-size:12.5px;background:var(--surface)}
+  .msg .meta{font-family:var(--mono);font-size:10.5px;color:var(--muted);margin-bottom:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .msg.draft{background:var(--accent-soft);border-color:transparent}
+
+  .tog{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px dashed var(--line);padding:8px 0;font-size:13px}
+  .tog:last-child{border-bottom:none}
+  .tog small{display:block;color:var(--muted);font-size:11.5px}
+  .sw{width:34px;height:19px;border-radius:99px;background:var(--line);position:relative;flex-shrink:0}
+  .sw.on{background:var(--accent)}
+  .sw::after{content:"";position:absolute;top:2.5px;left:3px;width:14px;height:14px;border-radius:50%;background:#fff}
+  .sw.on::after{left:auto;right:3px}
+
+  .zh{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media (max-width:760px){.zh{grid-template-columns:1fr}}
+  .zh .pane{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;font-size:13px}
+  .zh .pane h5{margin:0 0 8px;font-family:var(--mono);font-size:11px;letter-spacing:.1em;color:var(--muted)}
+  .hl{background:var(--warn-soft);border-radius:3px;padding:0 3px}
+</style>
+
+<div class="intro">
+  <p class="eyebrow">UI Specification · Interactive Mockup · July 2026</p>
+  <h1>20-80 Automation Dashboard &amp; Client Portal — every tab, drawn and annotated</h1>
+  <p>Two products, one system: the <b>agency dashboard</b> (the team's command centre — CRM, inbox, calls, Ads, SEO, meetings, website factory, CMS, skills) and the <b>client portal</b> (what a practice like Hearts Dental logs into). Click the workspace buttons, then the sidebar tabs. Sample data uses 20-80's real portfolio clients. Every screen carries two annotations: how the automation behind it runs, and the usability decisions that shape it.</p>
+  <div class="legend">
+    <span class="l-auto">AUTOMATION — the workflow running behind the tab</span>
+    <span class="l-ux">UX — usability decisions for that screen</span>
+  </div>
+</div>
+
+<div class="ws-switch" role="tablist" aria-label="Workspace">
+  <button class="ws-btn active" id="wsA" onclick="ws('A')">🏢 Agency Dashboard<small>what the 20-80 team sees</small></button>
+  <button class="ws-btn" id="wsC" onclick="ws('C')">🦷 Client Portal<small>what a practice sees (Hearts Dental)</small></button>
+</div>
+
+<div class="app">
+<div class="frame">
+  <div class="topbar">
+    <span class="logo">20<em>/</em>80 <span id="tbmode">· Team Dashboard</span></span>
+    <input class="search" placeholder="Search clients, tasks, calls, pages…  ( / )" aria-label="Search">
+    <span class="who" id="tbwho">Hamza C. · SEO/SEM · <u>3 approvals waiting</u></span>
+  </div>
+  <div class="body">
+
+  <!-- ================= AGENCY NAV ================= -->
+  <nav class="rail" id="navA" aria-label="Agency navigation">
+    <div class="grp">Operate</div>
+    <button class="nav-btn active" data-s="a-today">▦ Today <span class="n">7</span></button>
+    <button class="nav-btn" data-s="a-clients">👥 Clients (CRM)</button>
+    <button class="nav-btn" data-s="a-inbox">✉ Inbox <span class="n">4</span></button>
+    <button class="nav-btn" data-s="a-calls">☎ Calls <span class="n t">2</span></button>
+    <div class="grp">Monitor</div>
+    <button class="nav-btn" data-s="a-ads">◎ Google Ads <span class="n">3</span></button>
+    <button class="nav-btn" data-s="a-seo">⌖ SEO Watchtower <span class="n">2</span></button>
+    <button class="nav-btn" data-s="a-meet">◉ Meetings</button>
+    <div class="grp">Deliver</div>
+    <button class="nav-btn" data-s="a-factory">⚒ Website Factory</button>
+    <button class="nav-btn" data-s="a-cms">▤ CMS &amp; Sites</button>
+    <button class="nav-btn" data-s="a-studio">文 Content Studio <span class="n t">1</span></button>
+    <button class="nav-btn" data-s="a-reports">▥ Reports</button>
+    <div class="grp">System</div>
+    <button class="nav-btn" data-s="a-skills">✦ Knowledge &amp; Skills</button>
+    <button class="nav-btn" data-s="a-set">⚙ Settings</button>
+  </nav>
+
+  <!-- ================= CLIENT NAV ================= -->
+  <nav class="rail" id="navC" aria-label="Client portal navigation" style="display:none">
+    <div class="grp">My Practice</div>
+    <button class="nav-btn active" data-s="c-home">▦ Overview</button>
+    <button class="nav-btn" data-s="c-site">▤ My Website</button>
+    <button class="nav-btn" data-s="c-req">✉ Requests <span class="n t">1</span></button>
+    <button class="nav-btn" data-s="c-reports">▥ Reports</button>
+    <button class="nav-btn" data-s="c-meet">◉ Meetings</button>
+    <button class="nav-btn" data-s="c-rep">★ Reviews</button>
+    <div class="grp">Account</div>
+    <button class="nav-btn" data-s="c-onb">➜ Getting Started</button>
+    <button class="nav-btn" data-s="c-bill">▧ Billing</button>
+    <button class="nav-btn" data-s="c-set">⚙ Settings</button>
+  </nav>
+
+  <main class="stage">
+
+  <!-- ======================================================= -->
+  <!-- ===================== AGENCY SCREENS ================== -->
+  <!-- ======================================================= -->
+
+  <!-- TODAY -->
+  <section class="screen on" id="a-today">
+    <div class="scr-head"><h2>Today</h2><p>The morning-coffee screen. Everything that needs a human decision, ranked by severity — nothing here is a dead-end statistic; every card ends in a button.</p></div>
+    <div class="tiles">
+      <div class="tile crit"><b>7</b><span>open flags</span></div>
+      <div class="tile warn"><b>4</b><span>approvals waiting</span></div>
+      <div class="tile acc"><b>2</b><span>callbacks due &lt; 1 h</span></div>
+      <div class="tile warn"><b>3</b><span>requests overdue</span></div>
+      <div class="tile ok"><b>96%</b><span>clients at benchmark</span></div>
+      <div class="tile"><b>2</b><span>meetings today</span></div>
+    </div>
+    <div class="cols2">
+      <div class="panel">
+        <h3>⚑ Flag feed <span class="chipp c-mut">live · from W1–W4</span></h3>
+        <div class="flag"><div class="fb"><b>Hearts Dental — rank drop</b> <span class="chipp c-crit">SEO</span><p>"dentist blackburn" 4 → 9 overnight. Claude's draft diagnosis: competitor GBP update + lost FAQ snippet.</p></div><div class="acts"><button class="btn p">Create task</button><button class="btn">Detail</button></div></div>
+        <div class="flag warn"><div class="fb"><b>Yarra Hills Chiro — below benchmark</b> <span class="chipp c-warn">ADS</span><p>CPL $38 vs $25 target for 9 days. Suggested: pause 2 broad keywords, shift $15/day to "sciatica" ad group.</p></div><div class="acts"><button class="btn p">Review</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Receptionist rescue — Smile To Go's line (普通话)</b> <span class="chipp c-ai">FLEET</span><p>Saturday call: 2-child booking request captured, caller SMS-confirmed, front-desk follow-up list updated. Booked Monday ✓</p></div><div class="acts"><button class="btn">View call</button><button class="btn">Fleet</button></div></div>
+        <div class="flag warn"><div class="fb"><b>Overdue: staff photo update</b> <span class="chipp c-warn">SUPPORT · 6d</span><p>Trowse Chiropractic asked Tuesday; task idle in ActiveCollab. Assignee: Ish.</p></div><div class="acts"><button class="btn">Nudge</button></div></div>
+      </div>
+      <div class="panel">
+        <h3>✓ Approval queue <span class="chipp c-mut">human gate — nothing client-facing or spend-changing goes out without a click here</span></h3>
+        <div class="flag ai"><div class="fb"><b>Ads change — Yarra Hills</b><p>Add 14 negative keywords · predicted −12% wasted spend. Full diff shown before approving.</p></div><div class="acts"><button class="btn g">Approve</button><button class="btn">Edit</button><button class="btn">Reject</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Client email — "opening hours updated"</b><p>Drafted after task #4312 completed. Tone-checked, in client's language (EN).</p></div><div class="acts"><button class="btn g">Send</button><button class="btn">Edit</button></div></div>
+        <div class="flag ai"><div class="fb"><b>中文 translation — Smile Council services page</b><p>3 glossary terms flagged for reviewer attention.</p></div><div class="acts"><button class="btn p">Review side-by-side</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Metadata batch — Aspire One Dental</b><p>12 pages of titles/descriptions from the SEO skill, AHPRA-checked, within limits.</p></div><div class="acts"><button class="btn g">Approve all</button><button class="btn">Open table</button></div></div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Severity is encoded in the left stripe (red/amber/teal), not just text. Badge counts in the sidebar mirror this screen. Keyboard: <code>/</code> focuses search, <code>j/k</code> moves through flags, <code>a</code> approves. The tile row answers "is today normal?" in two seconds.</div>
+  </section>
+
+  <!-- CLIENTS -->
+  <section class="screen" id="a-clients">
+    <div class="scr-head"><h2>Clients — the CRM backbone</h2><p>One record per practice. Every automation reads from and writes to this record — calls, emails, meetings, tasks, site changes all land on the same timeline.</p></div>
+    <div class="twrap"><table>
+      <tr><th>Practice</th><th>Type</th><th>Health</th><th>CPL / target</th><th>Rank health</th><th>Open req.</th><th>Next meeting</th><th>Owner</th></tr>
+      <tr><td><b>Hearts Dental</b></td><td>General dental</td><td><span class="chipp c-crit">● attention</span></td><td class="num">$21 / $25</td><td class="num dn">▼ 2 drops</td><td class="num">1</td><td>Tue 14 Jul (Q)</td><td>Hamza</td></tr>
+      <tr><td><b>Yarra Hills Chiropractic</b></td><td>Chiro</td><td><span class="chipp c-warn">● watch</span></td><td class="num dn">$38 / $25</td><td class="num">stable</td><td class="num">0</td><td>Thu 23 Jul (M)</td><td>Hamza</td></tr>
+      <tr><td><b>Smile Council Orthodontics</b></td><td>Ortho · EN+中文</td><td><span class="chipp c-ok">● healthy</span></td><td class="num">$31 / $40</td><td class="num up">▲ improving</td><td class="num">1</td><td>Mon 20 Jul (M)</td><td>Ish</td></tr>
+      <tr><td><b>Trowse Chiropractic</b></td><td>Chiro</td><td><span class="chipp c-ok">● healthy</span></td><td class="num">$19 / $25</td><td class="num">stable</td><td class="num">1 ⚠</td><td>Aug (Q)</td><td>Ish</td></tr>
+      <tr><td><b>Aspire One Dental</b></td><td>General dental</td><td><span class="chipp c-blue">● onboarding</span></td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td>Kickoff Fri</td><td>Wally</td></tr>
+      <tr><td><b>Smile To Go</b></td><td>Mobile dental · EN+中文</td><td><span class="chipp c-ok">● healthy</span></td><td class="num">$24 / $30</td><td class="num">stable</td><td class="num">0</td><td>Jul 28 (M)</td><td>Hamza</td></tr>
+    </table></div>
+    <div class="panel">
+      <h3>Client record — Hearts Dental <span class="chipp c-mut">what opens when you click a row</span></h3>
+      <div class="mini" style="margin-bottom:12px">
+        <span class="s ai">Timeline</span><span class="s">Practice Profile / PRD</span><span class="s">KPIs &amp; Benchmarks</span><span class="s">Site &amp; CMS</span><span class="s">Tasks</span><span class="s">Contacts</span><span class="s">Billing</span>
+      </div>
+      <div class="msg"><div class="meta"><span class="chipp c-crit">FLAG</span> today 06:12 · SEO Watchtower</div>"dentist blackburn" dropped 4→9 · diagnosis drafted · task #4388 created → Hamza</div>
+      <div class="msg"><div class="meta"><span class="chipp c-blue">CALL</span> yesterday 17:40 · AI receptionist</div>Practice manager asked about adding a new dentist's profile — task created, photos requested</div>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">MEETING</span> 30 Jun · Fathom → W5</div>Monthly review: 3 actions extracted (2 ours, 1 theirs) · summary emailed &amp; acknowledged</div>
+      <div class="msg"><div class="meta"><span class="chipp c-ok">DONE</span> 27 Jun · support loop</div>Opening-hours change → published via CMS → GBP synced → client notified automatically</div>
+    </div>
+    <div class="spec"><b class="lab">AUTOMATION — how records stay current</b>
+      <div class="mini"><span class="s">any event (call / email / rank / meeting)</span><span class="a">→</span><span class="s ai">entity matcher links it to the practice</span><span class="a">→</span><span class="s">timeline entry + KPI update</span><span class="a">→</span><span class="s">health score recomputed</span><span class="a">→</span><span class="s hm">humans only see the roll-up</span></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Health is one glanceable dot per client, computed — never manually set. The Practice Profile tab is the single source of truth that feeds every AI skill (PRD, translations, metadata, ad copy). Editing it there changes what every automation writes from that moment on.</div>
+  </section>
+
+  <!-- INBOX -->
+  <section class="screen" id="a-inbox">
+    <div class="scr-head"><h2>Inbox — support@ triage</h2><p>Claude reads every email to support@2080solutions.com.au, classifies it, splits multi-request emails, files it to the client, and drafts the paperwork. Humans do the work and click send.</p></div>
+    <div class="twrap"><table>
+      <tr><th>From</th><th>Classified as</th><th>Client</th><th>Status</th><th>Age</th><th>Assignee</th></tr>
+      <tr><td>reception@heartsdental…</td><td><span class="chipp c-blue">CONTENT CHANGE</span> + <span class="chipp c-blue">STAFF ADD</span></td><td>Hearts Dental</td><td><span class="chipp c-ai">2 tasks created</span></td><td class="num">18 m</td><td>Ish</td></tr>
+      <tr><td>dr.chen@smiletogoau…</td><td><span class="chipp c-blue">ADS REQUEST</span></td><td>Smile To Go</td><td><span class="chipp c-warn">awaiting triage OK</span></td><td class="num">1 h</td><td>Hamza</td></tr>
+      <tr><td>manager@trowsechiro…</td><td><span class="chipp c-mut">QUESTION</span></td><td>Trowse</td><td><span class="chipp c-ai">reply drafted</span></td><td class="num">3 h</td><td>—</td></tr>
+      <tr><td>newsletter@vendor…</td><td><span class="chipp c-mut">NOT ACTIONABLE</span></td><td>—</td><td><span class="chipp c-mut">filed</span></td><td class="num">4 h</td><td>—</td></tr>
+    </table></div>
+    <div class="cols2">
+      <div class="panel"><h3>Original email</h3>
+        <div class="msg"><div class="meta">reception@heartsdental.com.au · 08:41</div>"Hi team, two things — Dr Amelia Wong joins us next Monday, can you add her to the team page (photo attached)? Also our Saturday hours change to 9–1 from August."</div>
+        <div class="spec" style="margin:0"><b class="lab">CLAUDE'S EXTRACTION</b>2 requests found: ① add team member (photo attached ✓, bio missing — chase drafted) ② opening-hours change, <b>effective 1 Aug</b> — scheduled, will also sync Google Business Profile. Confidence high; no approval needed to create tasks.</div>
+      </div>
+      <div class="panel"><h3>The loop this tab runs (W2)</h3>
+        <div class="mini" style="flex-direction:column;align-items:flex-start">
+          <span class="s">email arrives</span>
+          <span class="s ai">↳ Claude: classify · split · match client · set urgency</span>
+          <span class="s">↳ ActiveCollab task(s) created, assigned, email attached</span>
+          <span class="s ai">↳ acknowledgement drafted to client ("got it, here's the ETA")</span>
+          <span class="s hm">↳ team does the work · dashboard tracks age, flags overdue</span>
+          <span class="s">↳ task completed (ActiveCollab webhook)</span>
+          <span class="s ai">↳ "it's done" email drafted — what changed, where to see it, client's language</span>
+          <span class="s hm">↳ one-click approve &amp; send (auto-send for safe categories after trust period)</span>
+        </div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>The queue is sorted by SLA risk, not arrival time. Multi-request emails show as one row that fans out into N task chips — the original email is never split visually, so context stays intact. "Awaiting triage OK" appears only when Claude's confidence is low; high-confidence classifications flow straight through.</div>
+  </section>
+
+  <!-- CALLS -->
+  <section class="screen" id="a-calls">
+    <div class="scr-head"><h2>Calls — AI receptionist fleet</h2><p>The receptionist is a client-facing product: it answers each practice's own phone line (after hours, weekends, front-desk overflow) in English or 中文. This tab is 20-80's fleet view — every deployment's health, calls rescued, and bookings won. Each practice sees its own follow-up list in its portal.</p></div>
+    <div class="tiles">
+      <div class="tile acc"><b>6</b><span>practices live on the receptionist</span></div>
+      <div class="tile ok"><b>47</b><span>patient calls rescued this week</span></div>
+      <div class="tile ok"><b>19</b><span>became appointments</span></div>
+      <div class="tile"><b>9</b><span>中文 calls this week</span></div>
+      <div class="tile warn"><b>1</b><span>emergency triage handled ✓</span></div>
+    </div>
+    <div class="twrap"><table>
+      <tr><th>When</th><th>Practice line</th><th>Lang</th><th>Caller wanted</th><th>AI outcome</th><th>Front-desk follow-up</th></tr>
+      <tr><td>Sat 08:47</td><td>Smile To Go</td><td>中文</td><td>Sat-morning booking, 2 children · asked "do you take Bupa?" — answered from profile</td><td><span class="chipp c-ai">captured + SMS confirm</span></td><td><span class="chipp c-ok">booked Mon 08:32 ✓</span></td></tr>
+      <tr><td>Fri 19:20</td><td>Hearts Dental</td><td>EN</td><td>Toothache, wants tomorrow — emergency screen: clear</td><td><span class="chipp c-ai">follow-up list P1</span></td><td><span class="chipp c-ok">called 8:40, seen 11:15 ✓</span></td></tr>
+      <tr><td>Sun 14:02</td><td>Trowse Chiro</td><td>EN</td><td>"Are you open on the public holiday?"</td><td><span class="chipp c-ok">FAQ answered on-call</span></td><td>— none needed</td></tr>
+    </table></div>
+    <div class="panel"><h3>Call detail — Sat 08:47 · Smile To Go · 中文</h3>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">AI SUMMARY (bilingual)</span></div>Existing patient family; mother wants a Saturday-morning appointment for two children; prefers Mandarin-speaking contact; told reception will confirm Monday 8:30; confirmation SMS sent in 中文.</div>
+      <div class="acts"><button class="btn p">View in Smile To Go's portal</button><button class="btn">Full transcript (中文 + EN)</button><button class="btn">Deployment health</button></div>
+    </div>
+    <div class="spec"><b class="lab">AUTOMATION (W1 — runs per practice)</b>
+      <div class="mini"><span class="s">patient calls the practice · unanswered / closed</span><span class="a">→</span><span class="s ai">AI answers as the practice, EN/中文</span><span class="a">→</span><span class="s ai">emergency screen → FAQ from practice profile → booking capture or booking-link SMS</span><span class="a">→</span><span class="s">practice portal follow-up list + caller SMS confirm</span><span class="a">→</span><span class="s hm">front desk books next morning, one tap per item</span><span class="a">→</span><span class="s">outcome → practice's monthly report + this fleet view</span></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>The agency sees health and outcomes, never the practice's day-to-day queue — that lives in each practice's portal. Emergencies are the only red in the fleet. "Bookings won" per practice is the number that sells this as a product: it appears automatically in every client's monthly report.</div>
+  </section>
+
+  <!-- ADS -->
+  <section class="screen" id="a-ads">
+    <div class="scr-head"><h2>Google Ads monitor</h2><p>Extends the existing benchmark dashboard: daily AI review, flagged accounts, and a recommend → approve → implement queue. Spend never changes without a human click.</p></div>
+    <div class="tiles">
+      <div class="tile ok"><b>11.4:1</b><span>portfolio ROI (target 10:1)</span></div>
+      <div class="tile crit"><b>3</b><span>accounts flagged</span></div>
+      <div class="tile warn"><b>2</b><span>changes awaiting approval</span></div>
+      <div class="tile"><b>$41.2k</b><span>managed spend / mo</span></div>
+      <div class="tile acc"><b>17</b><span>changes implemented by AI this month</span></div>
+    </div>
+    <div class="twrap"><table>
+      <tr><th>Account</th><th>ROI</th><th>CPL / target</th><th>Conv. 30d</th><th>Status</th><th>Top opportunity (AI)</th></tr>
+      <tr><td><b>Yarra Hills Chiro</b></td><td class="num dn">6.8:1</td><td class="num dn">$38 / $25</td><td class="num">22 ▼</td><td><span class="chipp c-crit">flagged 9d</span></td><td>Pause 2 broad kws · shift $15/day to "sciatica" · <b>est. CPL −$9</b></td></tr>
+      <tr><td><b>Hearts Dental</b></td><td class="num">10.9:1</td><td class="num">$21 / $25</td><td class="num">64</td><td><span class="chipp c-ok">on track</span></td><td>Add sitelink for new dentist page</td></tr>
+      <tr><td><b>Smile Council Ortho</b></td><td class="num up">14.2:1</td><td class="num">$31 / $40</td><td class="num">38 ▲</td><td><span class="chipp c-ok">on track</span></td><td>中文 search campaign expansion — box hill / glen waverley</td></tr>
+    </table></div>
+    <div class="panel"><h3>Approval queue — change diff</h3>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">PROPOSED · Yarra Hills</span> confidence 0.87 · predicted −12% wasted spend</div>+ 14 negative keywords (list shown) · − pause "chiropractor near me" broad · budget: Back Pain $25→$40/day, General $30→$15/day. <b>Rollback plan attached.</b></div>
+      <div class="acts"><button class="btn g">Approve — AI implements via Ads API</button><button class="btn">Edit first</button><button class="btn">Reject with reason (teaches the model)</button></div>
+    </div>
+    <div class="spec"><b class="lab">AUTOMATION (W3)</b>
+      <div class="mini"><span class="s">daily API pull</span><span class="a">→</span><span class="s">benchmark engine</span><span class="a">→</span><span class="s ai">flag + ranked recommendations</span><span class="a">→</span><span class="s hm">specialist approves</span><span class="a">→</span><span class="s ai">AI implements · audit-logged</span><span class="a">→</span><span class="s ai">client update drafted → W2 send loop</span></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Every recommendation shows predicted impact and a rollback plan — approvals are informed, not rubber-stamped. Rejections require a one-line reason, which is fed back as context to improve future suggestions.</div>
+  </section>
+
+  <!-- SEO -->
+  <section class="screen" id="a-seo">
+    <div class="scr-head"><h2>SEO Watchtower</h2><p>BrightLocal + Search Console + GBP in one place. Drops alert the team; opportunities queue as cards; nobody checks rankings manually.</p></div>
+    <div class="tiles">
+      <div class="tile crit"><b>2</b><span>drops flagged today</span></div>
+      <div class="tile warn"><b>5</b><span>opportunity cards</span></div>
+      <div class="tile ok"><b>212</b><span>keywords page 1 (all clients)</span></div>
+      <div class="tile"><b>14/15</b><span>clients synced overnight</span></div>
+    </div>
+    <div class="twrap"><table>
+      <tr><th>Client · keyword</th><th>Suburb</th><th>Was</th><th>Now</th><th>Δ</th><th>3-pack</th><th>Action</th></tr>
+      <tr><td><b>Hearts Dental</b> · dentist blackburn</td><td>Blackburn</td><td class="num">4</td><td class="num">9</td><td class="num dn">▼5</td><td><span class="chipp c-crit">exited</span></td><td><span class="chipp c-ai">task #4388 + diagnosis</span></td></tr>
+      <tr><td><b>Trowse Chiro</b> · chiropractor preston</td><td>Preston</td><td class="num">6</td><td class="num">8</td><td class="num dn">▼2</td><td><span class="chipp c-ok">in</span></td><td><span class="chipp c-warn">watching (2d rule)</span></td></tr>
+      <tr><td><b>Smile Council</b> · 箍牙 box hill</td><td>Box Hill</td><td class="num">12</td><td class="num">7</td><td class="num up">▲5</td><td>—</td><td><span class="chipp c-ok">中文 keywords rising</span></td></tr>
+    </table></div>
+    <div class="cols2">
+      <div class="panel"><h3>Opportunity cards</h3>
+        <div class="flag ai"><div class="fb"><b>Trowse — "sports chiro reservoir" at position 11</b><p>Page 1 reachable: internal link + 200-word section suggested. Draft ready.</p></div><div class="acts"><button class="btn p">Accept → task</button><button class="btn">Skip</button></div></div>
+        <div class="flag ai"><div class="fb"><b>Smile To Go — GBP posts gap</b><p>No posts in 6 weeks; competitors posting weekly. 4 posts drafted (EN + 中文).</p></div><div class="acts"><button class="btn p">Review drafts</button></div></div>
+      </div>
+      <div class="panel"><h3>Automation (W4)</h3>
+        <div class="mini" style="flex-direction:column;align-items:flex-start">
+          <span class="s">nightly BrightLocal / GSC / GBP sync</span>
+          <span class="s">↳ change detection vs yesterday + 30-day trend</span>
+          <span class="s ai">↳ drop → Slack alert + Claude diagnosis + ActiveCollab task</span>
+          <span class="s ai">↳ opportunity → card with drafted fix</span>
+          <span class="s hm">↳ specialist accepts/skips — accepted cards become tasks</span>
+          <span class="s">↳ recovery tracked until rank restored; feeds monthly report</span>
+        </div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Single-position wobbles don't alert (2-day confirmation rule) — alert fatigue kills trust in week one. Chinese keywords are first-class rows, not a separate report. The "watching" state is visible so the team knows the system saw it and chose patience.</div>
+  </section>
+
+  <!-- MEETINGS -->
+  <section class="screen" id="a-meet">
+    <div class="scr-head"><h2>Meetings</h2><p>Fathom records; Claude extracts; ActiveCollab receives; the client gets a summary. The support-loop's monthly/quarterly meetings run through here.</p></div>
+    <div class="twrap"><table>
+      <tr><th>Meeting</th><th>When</th><th>Actions found</th><th>Tasks</th><th>Client summary</th></tr>
+      <tr><td><b>Hearts Dental — monthly review</b></td><td>30 Jun</td><td class="num">3 (2 ours · 1 theirs)</td><td><span class="chipp c-ok">created ✓</span></td><td><span class="chipp c-ok">sent · opened ✓</span></td></tr>
+      <tr><td><b>Internal — support triage</b></td><td>1 Jul</td><td class="num">5</td><td><span class="chipp c-ok">created ✓</span></td><td class="num">— internal</td></tr>
+      <tr><td><b>Aspire One — kickoff</b></td><td>Fri (upcoming)</td><td colspan="3"><span class="chipp c-ai">agenda pre-built: PRD review + 2 open flags auto-added</span></td></tr>
+    </table></div>
+    <div class="panel"><h3>Extraction review — Hearts Dental monthly</h3>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">ACTION 1 · ours</span> owner: Hamza · due 11 Jul</div>Investigate Blackburn ranking drop and report back <em>(auto-linked to flag #4388 — Claude spotted they're the same issue)</em></div>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">ACTION 2 · ours</span> owner: Ish · due 15 Jul</div>Add Dr Amelia Wong profile page + photo</div>
+      <div class="msg"><div class="meta"><span class="chipp c-ai">ACTION 3 · theirs</span> owner: client PM</div>Send updated fee schedule for the payment calculator <em>(chase email scheduled for +5 days if not received)</em></div>
+      <div class="acts"><button class="btn g">Accept all → ActiveCollab</button><button class="btn">Edit</button><button class="btn">Send client summary</button></div>
+    </div>
+    <div class="spec"><b class="lab">AUTOMATION (W5)</b>
+      <div class="mini"><span class="s">Fathom webhook</span><span class="a">→</span><span class="s ai">Claude: summary · decisions · actions · owners · dates · client match</span><span class="a">→</span><span class="s">tasks + timeline entry</span><span class="a">→</span><span class="s ai">client summary email draft</span><span class="a">→</span><span class="s">Slack digest to attendees</span><span class="a">→</span><span class="s hm">one-click accept &amp; send</span></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Actions are editable inline before acceptance — the human gate is a review, not a re-typing exercise. "Theirs" actions get automatic polite chasing, which quietly fixes the #1 cause of stalled projects: waiting on client input.</div>
+  </section>
+
+  <!-- FACTORY -->
+  <section class="screen" id="a-factory">
+    <div class="scr-head"><h2>Website Factory</h2><p>The P-A build process as a live pipeline. Onboarding answers become a PRD; the PRD drives the AI builder; SEO setup runs as a skill; go-live auto-enrols monitoring.</p></div>
+    <div class="kb">
+      <div class="kcol"><h4>1 · Onboarding</h4>
+        <div class="kcard"><b>Aspire One Dental</b><small>questionnaire 80% · logo missing — chase sent Tue · kickoff Fri</small><span class="chipp c-blue">W6</span></div>
+      </div>
+      <div class="kcol"><h4>2 · PRD review</h4>
+        <div class="kcard"><b>Preston Physio (new)</b><small>PRD generated · differentiators need sharpening — Wally reviewing</small><span class="chipp c-ai">prd-generator</span></div>
+      </div>
+      <div class="kcol"><h4>3 · Build (staging)</h4>
+        <div class="kcard"><b>Northcote Vet Clinic</b><small>design+content pass done via builder · staging link ready · internal peer review Wed</small></div>
+      </div>
+      <div class="kcol"><h4>4 · Client approval</h4>
+        <div class="kcard"><b>Glen Iris Osteo</b><small>approval #2 pending 4 days · reminder scheduled</small><span class="chipp c-warn">waiting on client</span></div>
+      </div>
+      <div class="kcol"><h4>5 · SEO setup</h4>
+        <div class="kcard"><b>Aspire One (site v1)</b><small>metadata batch: 12 pages generated · awaiting approval</small><span class="chipp c-ai">seo-metadata skill</span></div>
+      </div>
+      <div class="kcol"><h4>6 · Live + handover</h4>
+        <div class="kcard"><b>Camberwell Dental</b><small>live 24 Jun · training booked · enrolled in Watchtower + Ads monitor ✓ · survey sent</small><span class="chipp c-ok">auto-enrolled</span></div>
+      </div>
+    </div>
+    <div class="cols2" style="margin-top:14px">
+      <div class="panel"><h3>PRD viewer — Preston Physio (excerpt)</h3>
+        <div class="msg"><div class="meta"><span class="chipp c-ai">GENERATED FROM</span> onboarding form + knowledge base v: philosophy 3.2 · SEO rules 2.1 · AHPRA 4.0 · design 1.8</div>
+        <b>Differentiators:</b> only clinic in Preston with dry-needling + Mandarin-speaking physio · same-day appointments.<br>
+        <b>Target suburbs:</b> Preston, Reservoir, Thornbury. <b>Ideal patients:</b> desk workers 30–55, sports injuries, 中文-speaking families.<br>
+        <b>Compliance notes:</b> no outcome guarantees, no patient testimonials (AHPRA) — enforced downstream in every content skill.</div>
+      </div>
+      <div class="panel"><h3>Automation (W6 + W7)</h3>
+        <div class="mini" style="flex-direction:column;align-items:flex-start">
+          <span class="s hm">client completes onboarding wizard (portal)</span>
+          <span class="s">↳ assets validated · missing items auto-chased</span>
+          <span class="s ai">↳ prd-generator skill merges client input + knowledge base</span>
+          <span class="s hm">↳ strategist sharpens differentiators (the human 20%)</span>
+          <span class="s ai">↳ PRD → AI builder (Claude / Emergent / Lovable) → staging</span>
+          <span class="s hm">↳ peer review + client approvals (tracked, auto-reminded)</span>
+          <span class="s ai">↳ seo-metadata skill crawls finished site → titles/descriptions</span>
+          <span class="s">↳ go-live → auto-enrol Watchtower, Ads monitor, support loop</span>
+        </div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Cards move themselves — stage transitions fire from real events (form completed, approval clicked, deploy finished), not manual dragging. "Waiting on client" is a first-class amber state with automatic reminders, so the board honestly shows where time is actually lost.</div>
+  </section>
+
+  <!-- CMS -->
+  <section class="screen" id="a-cms">
+    <div class="scr-head"><h2>CMS &amp; Sites</h2><p>Agency view of the custom CMS: every client site, its edit queue, bilingual sync state, and publish history. The Emergent/WordPress exit path.</p></div>
+    <div class="twrap"><table>
+      <tr><th>Site</th><th>Platform</th><th>Pending edits</th><th>EN⇄中文 sync</th><th>Last publish</th><th>Health</th></tr>
+      <tr><td><b>heartsdental.com.au</b></td><td>20-80 CMS</td><td class="num">2 (1 auto-ok)</td><td>—</td><td>27 Jun · hours</td><td><span class="chipp c-ok">✓</span></td></tr>
+      <tr><td><b>smilecouncil.com.au</b></td><td>20-80 CMS</td><td class="num">1</td><td><span class="chipp c-warn">中文 1 page behind</span></td><td>2 Jul</td><td><span class="chipp c-ok">✓</span></td></tr>
+      <tr><td><b>trowsechiro.com.au</b></td><td>WordPress (migrating Q3)</td><td class="num">1 ⚠ 6d</td><td>—</td><td>12 Jun</td><td><span class="chipp c-warn">plugin updates due</span></td></tr>
+    </table></div>
+    <div class="panel"><h3>Edit queue</h3>
+      <div class="flag ai"><div class="fb"><b>Hearts Dental — Saturday hours 9–1 from 1 Aug</b> <span class="chipp c-ok">client-safe</span><p>Within guardrails · scheduled publish 1 Aug 00:01 · GBP + footer + contact page all update together.</p></div><div class="acts"><button class="btn g">Confirm schedule</button></div></div>
+      <div class="flag warn"><div class="fb"><b>Smile Council — new "early orthodontics" paragraph</b> <span class="chipp c-warn">needs review</span><p>AHPRA checker flagged: "guaranteed straighter teeth" — rewrite suggested. 中文 version will regenerate on approval.</p></div><div class="acts"><button class="btn p">Review rewrite</button></div></div>
+    </div>
+    <div class="spec"><b class="lab">AUTOMATION (W8)</b>
+      <div class="mini"><span class="s">edit enters (portal / W2 task / internal)</span><span class="a">→</span><span class="s">guardrails: content-only fields, media auto-resized</span><span class="a">→</span><span class="s ai">AI: house tone · AHPRA check · 中文 sync</span><span class="a">→</span><span class="s">safe? publish + version</span><span class="a">/</span><span class="s hm">else → review queue</span><span class="a">→</span><span class="s ai">client notified via W2</span></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>One publish action updates every surface the fact lives on (page, footer, GBP, schema) — clients never learn which pages mention their hours. Every publish is versioned with one-click rollback, which is what makes client self-service safe enough to allow.</div>
+  </section>
+
+  <!-- STUDIO -->
+  <section class="screen" id="a-studio">
+    <div class="scr-head"><h2>Content Studio — EN ⇄ 中文</h2><p>Side-by-side bilingual editing with philosophy-aware adaptation, a living glossary, and AHPRA checking. Serves the CMS, GBP posts, newsletters and social.</p></div>
+    <div class="zh">
+      <div class="pane"><h5>ENGLISH · SOURCE</h5>
+        <b>Gentle orthodontics for growing smiles</b><br>
+        At Smile Council, we believe early assessment (from age 7) helps us guide your child's smile with <span class="hl">less intervention later</span>. Our Box Hill team offers…</div>
+      <div class="pane"><h5>中文 · CLAUDE DRAFT — adapted, not literal</h5>
+        <b>呵护成长中的微笑 — 温和正畸</b><br>
+        Smile Council 相信，从7岁开始的早期评估能够帮助我们引导孩子牙齿的健康发育，<span class="hl">减少日后更复杂的矫正需求</span>。我们位于博士山（Box Hill）的团队…<br>
+        <small style="color:var(--muted)">⚑ glossary: 正畸 (orthodontics) locked · Box Hill renders bilingual · tone: warm-professional per practice profile</small></div>
+    </div>
+    <div class="acts" style="margin-top:10px"><button class="btn g">Approve pair → CMS publish</button><button class="btn">Edit 中文</button><button class="btn">Add term to glossary</button><button class="btn">AHPRA re-check</button></div>
+    <div class="spec"><b class="lab">AUTOMATION (W5 in blueprint / studio flow)</b>
+      <div class="mini"><span class="s">content enters (factory · CMS edit · campaign)</span><span class="a">→</span><span class="s">practice profile + glossary loaded</span><span class="a">→</span><span class="s ai">translate + adapt + compliance check</span><span class="a">→</span><span class="s hm">bilingual reviewer approves side-by-side</span><span class="a">→</span><span class="s">both language versions publish as a pair · hreflang automatic</span></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Reviewer edits feed the glossary, so the system provably improves — the review burden shrinks month over month. Highlighted spans show exactly where the translation made a judgement call, so reviewers check 3 phrases instead of re-reading 300 words.</div>
+  </section>
+
+  <!-- REPORTS -->
+  <section class="screen" id="a-reports">
+    <div class="scr-head"><h2>Reports</h2><p>The support loop's monthly deliverables — new-patients report, ROI &amp; SEO report — generated from data the system already holds, reviewed, then sent.</p></div>
+    <div class="twrap"><table>
+      <tr><th>Report</th><th>Client</th><th>Period</th><th>Status</th><th></th></tr>
+      <tr><td>ROI &amp; SEO report</td><td>Hearts Dental</td><td>June</td><td><span class="chipp c-ai">generated — review</span></td><td><button class="btn p">Open</button></td></tr>
+      <tr><td>New patients report</td><td>Hearts Dental</td><td>June</td><td><span class="chipp c-ok">sent · opened ✓</span></td><td><button class="btn">View</button></td></tr>
+      <tr><td>ROI &amp; SEO report</td><td>Yarra Hills</td><td>June</td><td><span class="chipp c-warn">held — includes below-benchmark note, owner review required</span></td><td><button class="btn p">Open</button></td></tr>
+    </table></div>
+    <div class="panel"><h3>Report preview — plain-language, client-facing</h3>
+      <div class="msg"><div class="meta">Hearts Dental · June · auto-drafted</div>"Your website brought <b>41 new patient enquiries</b> in June (May: 34). Google Ads returned <b>$10.90 for every $1</b> spent. You now rank page 1 for <b>14 searches</b> in Blackburn and Nunawading. One ranking dipped this week — we've already found the cause and are fixing it; details inside."</div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Reports lead with outcomes in patient/revenue language, not marketing jargon — written for a practice owner between appointments. Bad news is never hidden and always paired with the action already taken; that sentence pattern ("dipped — we've already…") is a house style rule the report skill enforces.</div>
+  </section>
+
+  <!-- SKILLS -->
+  <section class="screen" id="a-skills">
+    <div class="scr-head"><h2>Knowledge &amp; Skills</h2><p>The productisable core. Left: versioned knowledge documents (seeded from the existing intranet SOPs + training videos). Right: the Claude skills that consume them. Swap the knowledge, keep the machine — that's the future SaaS.</p></div>
+    <div class="cols2">
+      <div class="panel"><h3>Knowledge base <span class="chipp c-mut">versioned · every AI output logs which versions it used</span></h3>
+        <div class="steps">
+          <div class="step"><div><b>Website philosophy</b><small>differentiation-first structure, conversion patterns, 20/80 page priorities</small></div><span class="done">v3.2 · used by 5 skills</span></div>
+          <div class="step"><div><b>SEO rules</b><small>local-first keyword strategy, suburb targeting, metadata patterns</small></div><span class="done">v2.1 · used by 4</span></div>
+          <div class="step"><div><b>AHPRA compliance</b><small>prohibited claims, testimonial rules, before/after policy — hard gate on all content</small></div><span class="done">v4.0 · Jun 2026</span></div>
+          <div class="step"><div><b>Design principles</b><small>layout system, accessibility, practice-type templates</small></div><span class="done">v1.8</span></div>
+          <div class="step"><div><b>中文 glossary &amp; tone guide</b><small>locked clinical terms, suburb renderings — grows from every reviewer edit</small></div><span class="done">living</span></div>
+          <div class="step"><div><b>SOP library</b><small>ingested from the Google Sites intranet + the 26-video web-dev playlist and support playlist</small></div><span class="done">imported</span></div>
+        </div>
+      </div>
+      <div class="panel"><h3>Skills library</h3>
+        <div class="skill"><h4>email-triage</h4><p>Classifies support@ mail, splits multi-requests, matches client, drafts acknowledgement.</p><div class="io"><dt>gate</dt><dd>auto below confidence 0.8 → human</dd><dt>uses</dt><dd>client records</dd></div></div>
+        <div class="skill"><h4>call-agent / call-summary</h4><p>Answers in EN/中文, FAQ from knowledge base, summarises + classifies every call.</p><div class="io"><dt>gate</dt><dd>never books/promises; always logs</dd></div></div>
+        <div class="skill"><h4>meeting-actions</h4><p>Fathom transcript → summary, decisions, owned/dated action items, client summary email.</p><div class="io"><dt>gate</dt><dd>human accepts tasks &amp; sends</dd></div></div>
+        <div class="skill"><h4>ads-optimiser</h4><p>Daily account review → ranked recommendations with predicted impact + rollback plan.</p><div class="io"><dt>gate</dt><dd>write only after approval</dd><dt>uses</dt><dd>benchmarks, SEO rules</dd></div></div>
+        <div class="skill"><h4>seo-metadata</h4><p>Crawls finished site → titles/descriptions within char limits.</p><div class="io"><dt>uses</dt><dd>SEO rules, AHPRA, practice profile</dd><dt>gate</dt><dd>batch approval table</dd></div></div>
+        <div class="skill"><h4>prd-generator</h4><p>Onboarding answers + knowledge base → build-ready PRD for any AI builder.</p><div class="io"><dt>gate</dt><dd>strategist review — always</dd></div></div>
+        <div class="skill"><h4>translate-zh · ahpra-check · report-writer · content-writer</h4><p>Bilingual adaptation with glossary; compliance gate; monthly reports; GBP/social/newsletter drafts.</p><div class="io"><dt>gate</dt><dd>reviewer approval; ahpra-check can hard-block any skill's output</dd></div></div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Each skill card shows its human gate — the trust contract is visible, not buried in settings. When a knowledge doc updates, the dashboard lists which automations are affected and offers a re-run (e.g. AHPRA v4.1 → "re-check 214 published pages?").</div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="screen" id="a-set">
+    <div class="scr-head"><h2>Settings</h2><p>Integrations, benchmarks, automation trust levels, team and language.</p></div>
+    <div class="cols2">
+      <div class="panel"><h3>Integrations</h3>
+        <div class="tog"><div>ActiveCollab<small>tasks two-way sync · webhooks on complete</small></div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>Slack<small>#alerts-seo · #alerts-ads · #reception · per-severity routing</small></div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>Fathom<small>webhook on meeting end</small></div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>Google Ads API<small>read ✓ · write enabled per-account after approval queue</small></div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>GA4 + Search Console + GBP</div><span class="chipp c-ok">connected</span></div>
+        <div class="tog"><div>BrightLocal<small>API needs Growth plan — CSV-parse bridge active meanwhile</small></div><span class="chipp c-warn">bridge mode</span></div>
+        <div class="tog"><div>Telephony / voice AI<small>EN + 中文 voice bake-off in progress</small></div><span class="chipp c-warn">evaluating</span></div>
+        <div class="tog"><div>support@ mailbox<small>read + draft; send stays human until trust period ends</small></div><span class="chipp c-ok">connected</span></div>
+      </div>
+      <div class="panel"><h3>Automation trust levels <span class="chipp c-mut">the auto-send dial</span></h3>
+        <div class="tog"><div>Task-completed client emails<small>after 90-day review period, low-risk only</small></div><span class="sw on" role="switch" aria-checked="true"></span></div>
+        <div class="tog"><div>Ads changes auto-implement<small>always requires approval — permanently</small></div><span class="sw" role="switch" aria-checked="false"></span></div>
+        <div class="tog"><div>Client-safe CMS publishes<small>hours, staff, photos — guardrailed fields only</small></div><span class="sw on" role="switch" aria-checked="true"></span></div>
+        <div class="tog"><div>中文 auto-publish without reviewer<small>off until glossary maturity ≥ 95% hit rate</small></div><span class="sw" role="switch" aria-checked="false"></span></div>
+        <h3 style="margin-top:16px">Benchmarks (per practice type)</h3>
+        <div class="twrap" style="margin:0"><table>
+          <tr><th>Type</th><th>CPL target</th><th>Leads/mo</th><th>ROI line</th></tr>
+          <tr><td>General dental</td><td class="num">$25</td><td class="num">30+</td><td class="num">10:1</td></tr>
+          <tr><td>Chiro / physio</td><td class="num">$25</td><td class="num">25+</td><td class="num">10:1</td></tr>
+          <tr><td>Ortho / specialist</td><td class="num">$40</td><td class="num">15+</td><td class="num">10:1</td></tr>
+        </table></div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Trust levels are per-category switches with the reasoning written on them — the "how much do we let the AI do alone" conversation happens in one screen, is auditable, and defaults conservative. Team roles: Admin (Wally), Specialist (approve in own domain), Coordinator (triage), Viewer.</div>
+  </section>
+
+  <!-- ======================================================= -->
+  <!-- ===================== CLIENT SCREENS ================== -->
+  <!-- ======================================================= -->
+
+  <!-- C HOME -->
+  <section class="screen" id="c-home">
+    <div class="scr-head"><h2>Good morning, Hearts Dental 👋</h2><p>Your practice's marketing at a glance — in plain language, updated automatically.</p></div>
+    <div class="tiles">
+      <div class="tile acc"><b>41</b><span>new patient enquiries · June <span class="delta up">▲ 21%</span></span></div>
+      <div class="tile ok"><b>$10.90</b><span>back for every $1 on Google Ads</span></div>
+      <div class="tile"><b>14</b><span>searches you rank page 1 for</span></div>
+      <div class="tile ok"><b>4.9 ★</b><span>Google rating · 132 reviews <span class="delta up">+6</span></span></div>
+      <div class="tile"><b>3</b><span>calls answered for you after hours</span></div>
+    </div>
+    <div class="cols2">
+      <div class="panel"><h3>What 20-80 did for you recently</h3>
+        <div class="steps">
+          <div class="step"><div><b>Updated your opening hours everywhere</b><small>website, Google, footer — done 27 Jun</small></div><span class="done">✓</span></div>
+          <div class="step"><div><b>Fixed a Google ranking dip in Blackburn</b><small>found the cause the morning it happened; recovering</small></div><span class="done">in progress</span></div>
+          <div class="step"><div><b>Optimised your ads</b><small>removed wasted clicks — saving ≈ $140/month</small></div><span class="done">✓</span></div>
+        </div>
+      </div>
+      <div class="panel"><h3>Coming up</h3>
+        <div class="msg"><div class="meta"><span class="chipp c-blue">MEETING</span></div><b>Quarterly review — Tue 14 Jul, 2:00pm</b> with Hamza. Agenda and your June reports will appear here the day before.</div>
+        <div class="msg"><div class="meta"><span class="chipp c-warn">WE NEED FROM YOU</span></div>Dr Amelia Wong's short bio for her new profile page. <button class="btn p">Add it now</button></div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Everything is phrased in patient-and-dollar language, never marketing jargon. The "we need from you" card is the portal's only nag — one item at a time, biggest blocker first.</div>
+  </section>
+
+  <!-- C SITE -->
+  <section class="screen" id="c-site">
+    <div class="scr-head"><h2>My Website</h2><p>Edit your own content safely. Green blocks are yours to change — the design can't break. Anything else, just ask us.</p></div>
+    <div class="cms">
+      <div class="pane">
+        <b style="font-size:12px">Pages</b>
+        <div class="pg on">Home</div><div class="pg">About / Team</div><div class="pg">Services</div><div class="pg">Fees &amp; Payment</div><div class="pg">Contact &amp; Hours</div><div class="pg">新病人 (中文)</div>
+      </div>
+      <div class="pane">
+        <div class="blk lk"><span class="tag">DESIGN — LOCKED</span>Hero banner · layout · navigation<br><small>managed by 20-80 so your site always looks right</small></div>
+        <div class="blk ed"><span class="tag">EDITABLE</span><b>Welcome text</b><br>"Gentle, modern dentistry for the whole family in Blackburn…"
+          <div class="aiassist"><button class="btn">✦ Improve wording</button><button class="btn">✦ 翻译成中文</button><button class="btn">✦ Compliance check</button></div></div>
+        <div class="blk ed"><span class="tag">EDITABLE</span><b>Opening hours</b><br>Mon–Fri 8:30–6 · Sat 9–1 <small>(from 1 Aug — scheduled ✓)</small><br><small>updates website + Google automatically</small></div>
+        <div class="blk ed"><span class="tag">EDITABLE</span><b>Team photos &amp; bios</b><br><small>+ Add Dr Amelia Wong (photo received ✓ — bio needed)</small></div>
+        <div class="acts" style="margin-top:10px"><button class="btn g">Publish changes</button><button class="btn">Preview</button><button class="btn">Undo last change</button></div>
+      </div>
+      <div class="pane">
+        <b style="font-size:12px">What happens when you publish</b>
+        <div class="mini" style="flex-direction:column;align-items:flex-start;margin-top:8px">
+          <span class="s">your edit</span>
+          <span class="s ai">AI tidies wording &amp; checks health-advertising rules</span>
+          <span class="s ai">中文 page updates to match (if enabled)</span>
+          <span class="s">safe change → live in minutes</span>
+          <span class="s hm">bigger change → our team reviews same day</span>
+          <span class="s">every version saved — we can always undo</span>
+        </div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>The lock/edit distinction is visual and physical — locked blocks are grey and unclickable. Clients get confidence ("I can't break it") which is precisely what makes them actually use it instead of emailing every change.</div>
+  </section>
+
+  <!-- C REQUESTS -->
+  <section class="screen" id="c-req">
+    <div class="scr-head"><h2>Requests</h2><p>Ask for anything — here, by email, or by phone. It all lands in the same tracked list, so nothing gets lost.</p></div>
+    <div class="panel">
+      <h3>New request</h3>
+      <div class="msg" style="border-style:dashed">Type it here, email <b>support@2080solutions.com.au</b>, or call — our AI receptionist takes requests after hours too (English or 中文).</div>
+      <div class="acts"><button class="btn p">Submit request</button></div>
+    </div>
+    <div class="twrap"><table>
+      <tr><th>Request</th><th>Received</th><th>Status</th><th>Expected</th></tr>
+      <tr><td>Add Dr Amelia Wong to team page</td><td>Today 08:41 · email</td><td><span class="chipp c-blue">in progress</span></td><td>by Mon</td></tr>
+      <tr><td>Saturday hours change (from 1 Aug)</td><td>Today 08:41 · email</td><td><span class="chipp c-ok">scheduled ✓</span></td><td>1 Aug, automatic</td></tr>
+      <tr><td>Update whitening price</td><td>27 Jun · portal</td><td><span class="chipp c-ok">done · view change</span></td><td>—</td></tr>
+    </table></div>
+    <div class="spec ux"><b class="lab">UX</b>Every channel (email, phone, portal) converges into this one list — the client sees identical status regardless of how they asked. "Done" always links to the visible result, closing the loop that used to require a follow-up email.</div>
+  </section>
+
+  <!-- C REPORTS -->
+  <section class="screen" id="c-reports">
+    <div class="scr-head"><h2>Reports</h2><p>Monthly, in plain English. Numbers you can act on, not analytics dumps.</p></div>
+    <div class="panel"><h3>June 2026 — ROI &amp; SEO report</h3>
+      <div class="msg"><div class="meta">delivered 3 Jul · <span class="chipp c-ok">3 min read</span></div>"41 new patient enquiries (up from 34). Every $1 on Google Ads returned $10.90. Page 1 for 14 Blackburn/Nunawading searches. One ranking dipped late June — cause found, fix underway, we'll confirm recovery next month."</div>
+      <div class="acts"><button class="btn p">Read full report</button><button class="btn">New patients report</button><button class="btn">All past reports</button></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Each report opens with three sentences a practice owner can read between patients. Charts sit below for those who want them. The same data feeds the quarterly meeting agenda — no separate prep.</div>
+  </section>
+
+  <!-- C MEETINGS -->
+  <section class="screen" id="c-meet">
+    <div class="scr-head"><h2>Meetings</h2><p>Summaries and action lists from every catch-up — who's doing what, visible to both sides.</p></div>
+    <div class="panel"><h3>Last meeting — 30 Jun monthly review</h3>
+      <div class="steps">
+        <div class="step"><div><b>20-80: investigate Blackburn ranking dip</b><small>started same day</small></div><span class="done">in progress</span></div>
+        <div class="step"><div><b>20-80: add Dr Wong's profile page</b></div><span class="done">by Mon</span></div>
+        <div class="step"><div><b>You: send updated fee schedule</b><small>for the payment calculator</small></div><span class="done">waiting ⚠</span></div>
+      </div>
+    </div>
+    <div class="msg"><div class="meta"><span class="chipp c-blue">NEXT</span></div><b>Quarterly review — Tue 14 Jul 2:00pm</b> · agenda arrives the day before, built from your reports and any open items.</div>
+    <div class="spec ux"><b class="lab">UX</b>The client sees their own outstanding items — gentle mutual accountability, which shortens the "waiting on client" state that stalls most agency work.</div>
+  </section>
+
+  <!-- C REVIEWS -->
+  <section class="screen" id="c-rep">
+    <div class="scr-head"><h2>Reviews &amp; Reputation</h2><p>Your Google reputation, and the tools to grow it — including the review link your front desk shares.</p></div>
+    <div class="tiles">
+      <div class="tile ok"><b>4.9 ★</b><span>Google rating</span></div>
+      <div class="tile"><b>132</b><span>total reviews <span class="delta up">+6 this month</span></span></div>
+      <div class="tile acc"><b>68%</b><span>of asked patients leave a review</span></div>
+    </div>
+    <div class="panel"><h3>Latest review</h3>
+      <div class="msg"><div class="meta">★★★★★ · 2 days ago</div>"Dr Guo was wonderful with my daughter — gentle and patient…"<br><br><span class="chipp c-ai">suggested reply drafted</span> "Thank you so much…" <button class="btn g">Post reply</button> <button class="btn">Edit</button></div>
+      <div class="acts" style="margin-top:8px"><button class="btn p">Get review link / QR</button><button class="btn">Send review request by SMS</button></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Reply drafts respect AHPRA (no clinical detail, no patient identification confirmations). The QR poster regenerates branded from the CMS — front desk prints it, done.</div>
+  </section>
+
+  <!-- C ONBOARDING -->
+  <section class="screen" id="c-onb">
+    <div class="scr-head"><h2>Getting Started — onboarding wizard</h2><p>New clients answer these ten steps once. The answers become the build brief for the whole website — and the profile every future update draws from.</p></div>
+    <div class="panel">
+      <div class="steps">
+        <div class="step"><div><b>Practice details</b><small>name, locations, contact, AHPRA registration</small></div><span class="done">✓ done</span></div>
+        <div class="step"><div><b>What makes you unique</b><small>the differentiators — the most important step; a strategist reviews this with you</small></div><span class="done">✓ done</span></div>
+        <div class="step"><div><b>Services</b><small>pick from your specialty's list, add your own</small></div><span class="done">✓ done</span></div>
+        <div class="step"><div><b>Ideal patients</b><small>who you most want to attract</small></div><span class="done">✓ done</span></div>
+        <div class="step"><div><b>Target suburbs</b><small>where your patients come from — drives all local SEO</small></div><span class="done">✓ done</span></div>
+        <div class="step"><div><b>Preferred providers &amp; funds</b></div><span class="done">✓ done</span></div>
+        <div class="step"><div><b>Booking links &amp; practice software</b><small>HealthEngine, Praktika, Core Practice…</small></div><span class="done">✓ done</span></div>
+        <div class="step"><div><b>Design preferences</b><small>pick styles you like from our gallery</small></div><span class="done">✓ done</span></div>
+        <div class="step"><div><b>Websites you admire</b><small>2–3 references, and why</small></div><span class="done">⟳ current</span></div>
+        <div class="step"><div><b>Logo &amp; brand assets</b><small>upload files — we'll chase anything missing</small></div><span class="done">waiting</span></div>
+      </div>
+      <div class="acts" style="margin-top:10px"><button class="btn p">Continue — step 9 of 10</button><button class="btn">Save &amp; finish later</button></div>
+    </div>
+    <div class="spec"><b class="lab">AUTOMATION (W6)</b>
+      <div class="mini"><span class="s hm">answers submitted</span><span class="a">→</span><span class="s">assets validated · gaps auto-chased</span><span class="a">→</span><span class="s ai">prd-generator merges with 20-80 knowledge base</span><span class="a">→</span><span class="s hm">strategist call to sharpen differentiators</span><span class="a">→</span><span class="s">Website Factory pipeline begins · kickoff booked</span></div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Ten short steps, save-anywhere, ~25 minutes total, mobile-friendly (practice managers fill this in at the front desk). Uploads accept phone photos. Progress is visible to the agency, so the "waiting on client" chase is automatic and polite.</div>
+  </section>
+
+  <!-- C BILLING -->
+  <section class="screen" id="c-bill">
+    <div class="scr-head"><h2>Billing</h2><p>Invoices and your plan — no surprises.</p></div>
+    <div class="twrap"><table>
+      <tr><th>Invoice</th><th>Period</th><th>Amount</th><th>Status</th></tr>
+      <tr><td>#2080-1187 — Support &amp; Growth plan</td><td>July</td><td class="num">$1,650</td><td><span class="chipp c-warn">due 14 Jul</span></td></tr>
+      <tr><td>#2080-1142</td><td>June</td><td class="num">$1,650</td><td><span class="chipp c-ok">paid</span></td></tr>
+    </table></div>
+    <div class="msg"><div class="meta"><span class="chipp c-mut">YOUR PLAN</span></div>Support &amp; Growth: hosting, unlimited small content changes, SEO monitoring, Google Ads management, monthly reports, monthly meeting. No lock-in · 6-month guarantee.</div>
+  </section>
+
+  <!-- C SETTINGS -->
+  <section class="screen" id="c-set">
+    <div class="scr-head"><h2>Settings</h2><p>Facts about your practice, entered once — they update everywhere automatically.</p></div>
+    <div class="cols2">
+      <div class="panel"><h3>Practice profile <span class="chipp c-mut">syncs to website · Google · directories</span></h3>
+        <div class="tog"><div>Opening hours<small>Sat 9–1 scheduled from 1 Aug ✓</small></div><button class="btn">Edit</button></div>
+        <div class="tog"><div>Team members<small>5 listed · Dr Wong pending bio</small></div><button class="btn">Edit</button></div>
+        <div class="tog"><div>Services &amp; fees shown online</div><button class="btn">Edit</button></div>
+        <div class="tog"><div>Booking link<small>HealthEngine</small></div><button class="btn">Edit</button></div>
+      </div>
+      <div class="panel"><h3>Preferences</h3>
+        <div class="tog"><div>Portal language / 界面语言<small>English · 中文</small></div><span class="chipp c-blue">EN</span></div>
+        <div class="tog"><div>中文 website pages<small>kept in sync with English automatically</small></div><span class="sw on" role="switch" aria-checked="true"></span></div>
+        <div class="tog"><div>After-hours AI phone answering<small>English + Mandarin</small></div><span class="sw on" role="switch" aria-checked="true"></span></div>
+        <div class="tog"><div>Monthly report by email</div><span class="sw on" role="switch" aria-checked="true"></span></div>
+        <div class="tog"><div>SMS review requests to patients</div><span class="sw" role="switch" aria-checked="false"></span></div>
+        <div class="tog"><div>Who can approve website changes<small>Practice owner + practice manager</small></div><button class="btn">Manage</button></div>
+      </div>
+    </div>
+    <div class="spec ux"><b class="lab">UX</b>Settings are facts, not configuration — "opening hours" lives here once and every surface consumes it. The portal itself is fully bilingual; switching to 中文 re-renders navigation, reports and emails.</div>
+  </section>
+
+  </main>
+  </div>
+</div>
+</div>
+
+<script>
+  function activate(nav, id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+    var el=document.getElementById(id); if(el) el.classList.add('on');
+    nav.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  }
+  document.querySelectorAll('nav.rail').forEach(function(nav){
+    nav.addEventListener('click',function(e){
+      var btn=e.target.closest('.nav-btn'); if(!btn) return;
+      activate(nav, btn.dataset.s); btn.classList.add('active');
+    });
+  });
+  function ws(mode){
+    var A=mode==='A';
+    document.getElementById('navA').style.display=A?'':'none';
+    document.getElementById('navC').style.display=A?'none':'';
+    document.getElementById('wsA').classList.toggle('active',A);
+    document.getElementById('wsC').classList.toggle('active',!A);
+    document.getElementById('tbmode').textContent=A?'· Team Dashboard':'· Client Portal';
+    document.getElementById('tbwho').innerHTML=A?'Hamza C. · SEO/SEM · <u>3 approvals waiting</u>':'Hearts Dental · practice manager';
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+    document.getElementById(A?'a-today':'c-home').classList.add('on');
+    var nav=document.getElementById(A?'navA':'navC');
+    nav.querySelectorAll('.nav-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
+  }
+</script>
+
+</html>

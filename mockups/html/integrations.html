@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<title>Integrations — 20-80 Platform</title>
+<link rel="stylesheet" href="./tokens.css">
+</head><body>
+<div class="app">
+  <aside class="rail">
+    <div class="logo"><div class="logo-mark">20·80</div><div class="logo-name">20-80 <span>Platform</span></div></div>
+    
+      <div class="nav-group">
+        <div class="nav-cap">Operate</div>
+        
+        <a class="nav-item" href="./today.html">
+          <span class="ic">▦</span>Today
+          <span class="nav-badge">7</span>
+        </a>
+        <a class="nav-item" href="./clients.html">
+          <span class="ic">👥</span>Clients
+          
+        </a>
+        <a class="nav-item" href="./inbox.html">
+          <span class="ic">✉</span>Inbox
+          <span class="nav-badge">4</span>
+        </a>
+        <a class="nav-item" href="./receptionists.html">
+          <span class="ic">☎</span>Receptionists
+          
+        </a>
+        <a class="nav-item" href="./meetings.html">
+          <span class="ic">◉</span>Meetings
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Monitor</div>
+        
+        <a class="nav-item" href="./google-ads.html">
+          <span class="ic">◎</span>Google Ads
+          <span class="nav-badge">3</span>
+        </a>
+        <a class="nav-item" href="./seo-watchtower.html">
+          <span class="ic">⌖</span>SEO Watchtower
+          <span class="nav-badge">2</span>
+        </a>
+        <a class="nav-item" href="./site-health.html">
+          <span class="ic">♥</span>Site Health
+          <span class="nav-badge">1</span>
+        </a>
+        <a class="nav-item" href="./calendar.html">
+          <span class="ic">◷</span>Calendar
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Deliver</div>
+        
+        <a class="nav-item" href="./website-factory.html">
+          <span class="ic">⚒</span>Website Factory
+          
+        </a>
+        <a class="nav-item" href="./cms-sites.html">
+          <span class="ic">▤</span>CMS & Sites
+          
+        </a>
+        <a class="nav-item" href="./content-studio.html">
+          <span class="ic">文</span>Content Studio
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">Grow</div>
+        
+        <a class="nav-item" href="./prospects.html">
+          <span class="ic">◈</span>Prospects
+          
+        </a>
+        <a class="nav-item" href="./reports.html">
+          <span class="ic">▥</span>Reports
+          
+        </a>
+        <a class="nav-item" href="./billing.html">
+          <span class="ic">▧</span>Billing
+          
+        </a>
+        <a class="nav-item" href="./guarantee.html">
+          <span class="ic">✓</span>Guarantee Tracker
+          
+        </a>
+      </div>
+      <div class="nav-group">
+        <div class="nav-cap">System</div>
+        
+        <a class="nav-item" href="./workflows.html">
+          <span class="ic">⛓</span>Workflows
+          <span class="nav-badge nb-gray">5</span>
+        </a>
+        <a class="nav-item active" href="./integrations.html">
+          <span class="ic">⇄</span>Integrations
+          <span class="nav-badge nb-gray">3</span>
+        </a>
+        <a class="nav-item" href="./audit-log.html">
+          <span class="ic">≡</span>Audit Log
+          
+        </a>
+        <a class="nav-item" href="./knowledge-skills.html">
+          <span class="ic">✦</span>Knowledge & Skills
+          
+        </a>
+        <a class="nav-item" href="./settings.html">
+          <span class="ic">⚙</span>Settings
+          
+        </a>
+      </div>
+    <div class="rail-foot"><span class="dot dk-warn"></span> 2 integrations degraded <span style="margin-left:auto" class="mono">v0.9</span></div>
+  </aside>
+  <div class="main">
+    <div class="topbar">
+      <div class="tb-title">Integrations</div>
+      <div class="tb-search">Search clients, flags, runs… <span class="slash">/</span></div>
+      <div class="tb-right">
+        <span class="tb-date">Mon 6 Jul 2026 · 09:42</span>
+        <span class="tb-bell">&#128276;</span>
+        <div class="avatar">WC</div>
+      </div>
+    </div>
+    <div class="content">
+
+<div class="tiles">
+  <div class="tile"><div class="lbl">Connectors connected</div><div class="row"><div class="val">20<span class="unit">/21</span></div><div class="delta d-flat">2 degraded · 1 disconnected · 5 planned</div></div></div>
+  <div class="tile"><div class="lbl">Oldest data · honest</div><div class="row"><div class="val">48<span class="unit">h</span></div><div class="delta d-flat">BrightLocal · Northcote suppressed</div></div></div>
+  <div class="tile"><div class="lbl">Ads API budget · today</div><div class="row"><div class="val">62<span class="unit">%</span></div><div class="delta d-flat">operation budgeter · caps in code</div></div></div>
+  <div class="tile"><div class="lbl">OAuth tokens expiring ≤7d</div><div class="row"><div class="val">1</div><div class="delta d-down">Meta page token · reconnect</div></div></div>
+</div>
+
+<div class="banner b-info" style="margin-bottom:14px">
+  <span>Every integration is an <b>MCP connector</b>. It holds the credential in the platform secret store and exposes a <b>capped tool surface</b> — skills call the tools (e.g. <span class="mono">ads.mutate</span> refuses an over-cap change in code) and never see a raw key. A confused model cannot exceed a budget cap because the tool refuses.</span>
+  <span class="bx">credentials · tool layer only</span>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+  <div class="card-h">
+    <h2>Connectors</h2>
+    <span class="hint">21 connectors · 6 groups · Sydney region · webhooks enqueue-then-process</span>
+    <span class="btn btn-soft btn-sm" style="margin-left:auto">+ Add connector</span>
+  </div>
+  <table class="t dense">
+    <tr><th>Connector · auth</th><th>Exposes</th><th>What it does</th><th>Last sync / lag</th><th>Status</th><th></th></tr>
+    
+  <tr><td colspan="6" class="sec-lbl" style="padding:12px 10px 6px">Money & billing</td></tr>
+  
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Xero<div class="sub-cell">OAuth2</div></td>
+    <td><span class="mono">xero.status</span> <span class="mono">xero.invoice</span></td>
+    <td class="xs">Accounting · invoice-status webhooks fire the factory</td>
+    <td class="xs faint" style="white-space:nowrap">webhook 09:12</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Stripe<div class="sub-cell">API key + webhook</div></td>
+    <td><span class="mono">stripe.read</span> <span class="mono">/hooks/stripe</span></td>
+    <td class="xs">Deposits + receptionist subscriptions</td>
+    <td class="xs faint" style="white-space:nowrap">✓ 08:31</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr><td colspan="6" class="sec-lbl" style="padding:12px 10px 6px">Ads, SEO & analytics</td></tr>
+  
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Google Ads · MCC<div class="sub-cell">OAuth2 · dev token</div></td>
+    <td><span class="mono">ads.query</span> <span class="mono">ads.mutate</span> <span class="pill p-outline">capped</span></td>
+    <td class="xs">21 client accounts · offline conversion upload from the fleet</td>
+    <td class="xs faint" style="white-space:nowrap">GAQL 06:00</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Google Analytics 4<div class="sub-cell">OAuth2</div></td>
+    <td><span class="mono">ga4.report</span></td>
+    <td class="xs">Traffic + conversion attribution</td>
+    <td class="xs faint" style="white-space:nowrap">nightly ✓</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Search Console<div class="sub-cell">OAuth2</div></td>
+    <td><span class="mono">gsc.query</span></td>
+    <td class="xs">Impressions, queries, index coverage</td>
+    <td class="xs faint" style="white-space:nowrap">nightly ✓</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Google Business Profile<div class="sub-cell">OAuth2</div></td>
+    <td><span class="mono">gbp.read</span> <span class="mono">gbp.post</span> <span class="gate g2">G2</span></td>
+    <td class="xs">Rankings, reviews, posts — practice is primary owner</td>
+    <td class="xs faint" style="white-space:nowrap">nightly ✓</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Google Tag Manager<div class="sub-cell">OAuth2</div></td>
+    <td><span class="mono">gtm.container</span></td>
+    <td class="xs">Tag deploy on new sites (owner access to practice)</td>
+    <td class="xs faint" style="white-space:nowrap">on build</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-warn"></span> BrightLocal<div class="sub-cell">API key</div></td>
+    <td><span class="mono">rank.pull</span></td>
+    <td class="xs">Local rank + citation tracking</td>
+    <td class="xs faint" style="white-space:nowrap">05:30 · <b>Northcote stale 48h</b></td>
+    <td><span class="pill p-warn">degraded</span></td>
+    <td style="text-align:right"><span class="btn btn-ghost btn-sm">Retry sync</span></td>
+  </tr>
+  <tr><td colspan="6" class="sec-lbl" style="padding:12px 10px 6px">Comms & social</td></tr>
+  
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Gmail · support@<div class="sub-cell">OAuth2 + Pub/Sub</div></td>
+    <td><span class="mono">gmail.read</span> <span class="mono">gmail.draft</span></td>
+    <td class="xs">Inbound triage push → W2</td>
+    <td class="xs faint" style="white-space:nowrap">webhook 09:40</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Google Workspace Admin<div class="sub-cell">OAuth2 · domain-wide</div></td>
+    <td><span class="mono">gsuite.provision</span></td>
+    <td class="xs">Client mailbox creation (factory launch chain)</td>
+    <td class="xs faint" style="white-space:nowrap">on build</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Slack<div class="sub-cell">OAuth · bot</div></td>
+    <td><span class="mono">slack.notify</span></td>
+    <td class="xs">Internal routing + evening digests</td>
+    <td class="xs faint" style="white-space:nowrap">live</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-crit"></span> Meta Graph · Pages<div class="sub-cell">OAuth · page tokens</div></td>
+    <td><span class="mono">social.post</span> <span class="gate g2">G2</span></td>
+    <td class="xs">FB/IG posting for clients — blocks the social module</td>
+    <td class="xs faint" style="white-space:nowrap"><b style="color:var(--crit)">needs connect</b></td>
+    <td><span class="pill p-crit">disconnected</span></td>
+    <td style="text-align:right"><span class="btn btn-pri btn-sm">Reconnect</span></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-warn"></span> Twilio<div class="sub-cell">API key · SIP</div></td>
+    <td><span class="mono">voice.*</span> <span class="mono">sms.send</span></td>
+    <td class="xs">Telephony + SMS for the receptionist fleet</td>
+    <td class="xs faint" style="white-space:nowrap">streaming · <b>1 line outage</b></td>
+    <td><span class="pill p-warn">degraded</span></td>
+    <td style="text-align:right"><span class="btn btn-ghost btn-sm">View line</span></td>
+  </tr>
+  <tr><td colspan="6" class="sec-lbl" style="padding:12px 10px 6px">Meetings, scheduling & tasks</td></tr>
+  
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Fathom<div class="sub-cell">webhook</div></td>
+    <td><span class="mono">/hooks/fathom</span></td>
+    <td class="xs">Meeting transcripts → W5 extraction</td>
+    <td class="xs faint" style="white-space:nowrap">Fri 15:20</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> ActiveCollab<div class="sub-cell">API token</div></td>
+    <td><span class="mono">tasks.*</span></td>
+    <td class="xs">Task surface (revisit absorbing after Stage 3)</td>
+    <td class="xs faint" style="white-space:nowrap">API 09:35</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-blue"></span> Calendly<div class="sub-cell">OAuth2</div></td>
+    <td><span class="mono">cal.read</span></td>
+    <td class="xs">Read-only — being absorbed by meeting-scheduler</td>
+    <td class="xs faint" style="white-space:nowrap">migration</td>
+    <td><span class="pill p-blue">migrating</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr><td colspan="6" class="sec-lbl" style="padding:12px 10px 6px">Web & hosting</td></tr>
+  
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Cloudflare<div class="sub-cell">API token</div></td>
+    <td><span class="mono">dns.*</span> <span class="mono">pages.deploy</span></td>
+    <td class="xs">Client DNS/SSL + static-site CDN (Pages)</td>
+    <td class="xs faint" style="white-space:nowrap">✓</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> WordPress / Emergent<div class="sub-cell">app password · REST</div></td>
+    <td><span class="mono">cms.import</span></td>
+    <td class="xs">Legacy import during the W8 migration</td>
+    <td class="xs faint" style="white-space:nowrap">on demand</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr><td colspan="6" class="sec-lbl" style="padding:12px 10px 6px">AI & platform</td></tr>
+  
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Anthropic API · Claude<div class="sub-cell">API key</div></td>
+    <td>model tiers · <span class="mono">Batches</span> (evals)</td>
+    <td class="xs">The intelligence layer — token telemetry per skill/run</td>
+    <td class="xs faint" style="white-space:nowrap">telemetry live</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Sentry<div class="sub-cell">DSN</div></td>
+    <td>error + perf</td>
+    <td class="xs">Observability alongside the audit trace</td>
+    <td class="xs faint" style="white-space:nowrap">live</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  <tr>
+    <td class="main-cell" style="white-space:nowrap"><span class="dot dk-ok"></span> Postgres backups<div class="sub-cell">internal</div></td>
+    <td>snapshot + PITR</td>
+    <td class="xs">Daily 03:00 + point-in-time recovery</td>
+    <td class="xs faint" style="white-space:nowrap">✓ 03:00</td>
+    <td><span class="pill p-ok">live</span></td>
+    <td style="text-align:right"></td>
+  </tr>
+  </table>
+</div>
+
+<div class="cols">
+  <div class="col" style="flex:1.2">
+    <div class="card">
+      <div class="card-h"><h2>Quota &amp; rate</h2><span class="hint">caps enforced in code, not by the model</span></div>
+      <table class="t dense">
+        <tr><th>Connector</th><th style="width:150px">Usage today</th><th class="num">Headroom</th></tr>
+        <tr><td>Google Ads · operations</td><td><div class="meter m-blue"><i style="width:62%"></i></div></td><td class="num xs">13.2k / 21k</td></tr>
+        <tr><td>Gmail push · Pub/Sub</td><td><div class="meter m-ok"><i style="width:24%"></i></div></td><td class="num xs">healthy</td></tr>
+        <tr><td>Twilio · concurrent lines</td><td><div class="meter m-warn"><i style="width:70%"></i></div></td><td class="num xs">1 on fallback</td></tr>
+        <tr><td>Anthropic · spend (mo)</td><td><div class="meter"><i style="width:41%"></i></div></td><td class="num xs">$214 · $0.025/run</td></tr>
+        <tr><td>Cloudflare · Pages builds</td><td><div class="meter m-ok"><i style="width:18%"></i></div></td><td class="num xs">plenty</td></tr>
+      </table>
+      <div class="xs faint" style="margin-top:8px">Over-budget calls are refused by the connector and logged to the audit trail — never silently dropped.</div>
+    </div>
+  </div>
+  <div class="col" style="flex:1">
+    <div class="card">
+      <div class="card-h"><h2>Needs attention</h2></div>
+      <div class="stack">
+        <div class="flag f-crit">
+          <div class="flag-top"><span class="who">Meta Graph disconnected</span><span class="when">page token expired</span></div>
+          <div class="flag-body">FB/IG posting can't run until reconnected — app review + page-token refresh. Blocks the social-management module (open q #9).</div>
+          <div class="flag-act"><span class="btn btn-pri btn-sm">Reconnect</span><span class="btn btn-ghost btn-sm">Docs</span></div>
+        </div>
+        <div class="flag f-warn">
+          <div class="flag-top"><span class="who">Twilio · Preston line outage</span><span class="when">08:51</span></div>
+          <div class="flag-body">Voicemail fallback active, transcribed on recovery. outage-sentinel auto-reverts on carrier heartbeat.</div>
+        </div>
+        <div class="flag f-warn">
+          <div class="flag-top"><span class="who">BrightLocal · Northcote stale 48h</span><span class="when">05:30</span></div>
+          <div class="flag-body">That client's rank alerts are suppressed until fresh data returns — never a stale alarm.</div>
+          <div class="flag-act"><span class="btn btn-ghost btn-sm">Retry sync</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="card-h"><h2>Planned / phase 2</h2><span class="hint">decide at the mapped stage</span></div>
+      <table class="t dense">
+        <tr><td class="main-cell">GoCardless</td><td class="xs">Direct debit for monthly plans</td><td class="xs faint">Stage 4</td></tr>
+        <tr><td class="main-cell">Meta Ads</td><td class="xs">FB/IG paid alongside Google Ads</td><td class="xs faint">Stage 4</td></tr>
+        <tr><td class="main-cell">Praktika / Core Practice</td><td class="xs">PMS booking + patient reconcile</td><td class="xs faint">Voice phase 2</td></tr>
+        <tr><td class="main-cell">HealthEngine</td><td class="xs">Booking availability</td><td class="xs faint">Voice phase 2</td></tr>
+        <tr><td class="main-cell">Microsoft / Bing Ads</td><td class="xs">Secondary search network</td><td class="xs faint">later</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+</body></html>

@@ -1,0 +1,978 @@
+<style>
+  :root {
+    --bg:#EEF3F1; --surface:#FFFFFF; --surface-2:#F7FAF9;
+    --ink:#15242B; --muted:#5A6B74; --faint:#8A9CA3;
+    --line:#E1E8E6; --grid:#ECF1EF;
+    --accent:#0E7C7B; --accent-2:#0B6463; --accent-tint:#E4F0EF;
+    --ok:#2E7D4F; --ok-tint:#E8F2EC;
+    --warn:#A96F14; --warn-tint:#F7EFDC;
+    --crit:#B23A32; --crit-tint:#F8EAE8;
+    --blue:#2C5FA8; --blue-tint:#E9EFF7;
+    --shadow:0 1px 2px rgba(20,40,45,.04), 0 4px 16px rgba(20,40,45,.05);
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+    --display:"Segoe UI Variable Display","Segoe UI Semibold","Segoe UI",system-ui,sans-serif;
+    --mono:"Cascadia Code",ui-monospace,"SF Mono",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --bg:#0D1416; --surface:#141E1F; --surface-2:#192425;
+    --ink:#E7EEEC; --muted:#94A6A6; --faint:#6C8080;
+    --line:#243231; --grid:#1E2C2B;
+    --accent:#41B8AC; --accent-2:#5BC9BE; --accent-tint:#12312F;
+    --ok:#54B583; --ok-tint:#14291F; --warn:#D69A3C; --warn-tint:#2E2410;
+    --crit:#DE6A61; --crit-tint:#2F1512; --blue:#7BA3DE; --blue-tint:#16243A;
+    --shadow:0 1px 2px rgba(0,0,0,.2), 0 6px 20px rgba(0,0,0,.28);
+  } }
+  :root[data-theme="dark"] {
+    --bg:#0D1416; --surface:#141E1F; --surface-2:#192425;
+    --ink:#E7EEEC; --muted:#94A6A6; --faint:#6C8080;
+    --line:#243231; --grid:#1E2C2B;
+    --accent:#41B8AC; --accent-2:#5BC9BE; --accent-tint:#12312F;
+    --ok:#54B583; --ok-tint:#14291F; --warn:#D69A3C; --warn-tint:#2E2410;
+    --crit:#DE6A61; --crit-tint:#2F1512; --blue:#7BA3DE; --blue-tint:#16243A;
+    --shadow:0 1px 2px rgba(0,0,0,.2), 0 6px 20px rgba(0,0,0,.28);
+  }
+  :root[data-theme="light"] {
+    --bg:#EEF3F1; --surface:#FFFFFF; --surface-2:#F7FAF9;
+    --ink:#15242B; --muted:#5A6B74; --faint:#8A9CA3;
+    --line:#E1E8E6; --grid:#ECF1EF;
+    --accent:#0E7C7B; --accent-2:#0B6463; --accent-tint:#E4F0EF;
+    --ok:#2E7D4F; --ok-tint:#E8F2EC; --warn:#A96F14; --warn-tint:#F7EFDC;
+    --crit:#B23A32; --crit-tint:#F8EAE8; --blue:#2C5FA8; --blue-tint:#E9EFF7;
+    --shadow:0 1px 2px rgba(20,40,45,.04), 0 4px 16px rgba(20,40,45,.05);
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:13.5px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+  .num { font-variant-numeric:tabular-nums; } .mono { font-family:var(--mono); }
+  .zh { font-family:"Segoe UI","Microsoft YaHei",var(--sans); }
+  .faint { color:var(--faint); } .muted { color:var(--muted); }
+  .app { display:grid; grid-template-columns:238px 1fr; min-height:100vh; }
+
+  /* Rail */
+  .rail { background:var(--surface); border-right:1px solid var(--line); display:flex; flex-direction:column; padding:16px 12px; gap:2px; position:sticky; top:0; height:100vh; overflow-y:auto; }
+  .brand { display:flex; align-items:center; gap:10px; padding:4px 8px 12px; }
+  .brand .mk { width:34px; height:34px; border-radius:9px; background:linear-gradient(150deg,var(--accent),var(--accent-2)); color:#fff; font-family:var(--display); font-weight:700; font-size:11px; display:flex; align-items:center; justify-content:center; letter-spacing:-.3px; box-shadow:var(--shadow); }
+  .brand .nm { font-family:var(--display); font-weight:650; font-size:14.5px; letter-spacing:-.2px; }
+  .brand .nm span { color:var(--muted); font-weight:400; }
+  .nav-cap { font-size:10px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--faint); padding:12px 10px 4px; }
+  .nav-i { display:flex; align-items:center; gap:10px; padding:7px 10px; border-radius:8px; color:var(--ink); font-size:12.8px; cursor:pointer; }
+  .nav-i:hover { background:var(--bg); }
+  .nav-i .g { width:18px; text-align:center; color:var(--muted); font-size:13px; }
+  .nav-i.on { background:var(--accent-tint); color:var(--accent); font-weight:600; }
+  .nav-i.on .g { color:var(--accent); }
+  .nav-i .bdg { margin-left:auto; font-size:10px; font-weight:700; color:#fff; background:var(--crit); border-radius:20px; padding:1px 6px; min-width:17px; text-align:center; }
+  .nav-i .bdg.gray { color:var(--warn); background:var(--warn-tint); }
+  .rail-foot { margin-top:auto; padding:12px 10px 2px; border-top:1px solid var(--line); }
+  .rail-foot .k { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--faint); }
+  .rail-foot .v { font-family:var(--display); font-size:19px; font-weight:700; margin-top:2px; }
+  .rail-foot .v small { font-size:11.5px; color:var(--muted); font-weight:500; }
+
+  /* Topbar */
+  .main { min-width:0; display:flex; flex-direction:column; }
+  .top { height:58px; display:flex; align-items:center; gap:14px; padding:0 24px; border-bottom:1px solid var(--line); background:color-mix(in srgb, var(--surface) 82%, transparent); backdrop-filter:blur(8px); position:sticky; top:0; z-index:9; }
+  .top .ti { font-family:var(--display); font-size:16px; font-weight:650; letter-spacing:-.2px; }
+  .search { margin-left:6px; display:flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:7px 11px; width:290px; color:var(--faint); font-size:12.5px; }
+  .search .sl { margin-left:auto; border:1px solid var(--line); border-radius:5px; padding:0 6px; font-family:var(--mono); font-size:10px; background:var(--surface); }
+  .top .rt { margin-left:auto; display:flex; align-items:center; gap:13px; }
+  .date { font-size:12.5px; color:var(--muted); }
+  .icbtn { width:32px; height:32px; border-radius:8px; border:1px solid var(--line); background:var(--surface); color:var(--muted); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:15px; }
+  .icbtn:hover { color:var(--ink); border-color:var(--accent); }
+  .ava { width:32px; height:32px; border-radius:50%; background:linear-gradient(150deg,var(--blue),#274e86); color:#fff; font-size:11.5px; font-weight:650; display:flex; align-items:center; justify-content:center; }
+  .content { padding:20px 24px 44px; display:flex; flex-direction:column; gap:16px; max-width:1380px; width:100%; }
+
+  /* Page head */
+  .ph { display:flex; align-items:flex-end; gap:12px; }
+  .ph h1 { font-family:var(--display); font-size:20px; font-weight:700; letter-spacing:-.4px; text-wrap:balance; }
+  .ph .sub { color:var(--muted); font-size:12.5px; padding-bottom:2px; }
+  .ph .actions { margin-left:auto; display:flex; gap:8px; }
+
+  /* Cards & layout */
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); }
+  .card-pad { padding:17px 19px; }
+  .card-h { display:flex; align-items:center; gap:9px; margin-bottom:13px; }
+  .card-h h2 { font-family:var(--display); font-size:13.5px; font-weight:650; letter-spacing:-.1px; }
+  .card-h .hint { color:var(--faint); font-size:11.5px; }
+  .card-h .more { margin-left:auto; color:var(--accent); font-size:11.5px; font-weight:600; cursor:pointer; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+  .split { display:grid; grid-template-columns:1.42fr 1fr; gap:16px; align-items:start; }
+  .split-r { display:grid; grid-template-columns:1fr 1.42fr; gap:16px; align-items:start; }
+  .colstack { display:flex; flex-direction:column; gap:16px; }
+  .stack { display:flex; flex-direction:column; gap:11px; }
+
+  /* Tiles */
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+  .tiles.t3 { grid-template-columns:repeat(3,1fr); }
+  .tiles.t5 { grid-template-columns:repeat(5,1fr); }
+  .tile { background:var(--surface); border:1px solid var(--line); border-radius:14px; box-shadow:var(--shadow); padding:14px 16px; }
+  .tile .lbl { font-size:11.5px; color:var(--muted); }
+  .tile .rowb { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; margin-top:6px; }
+  .tile .val { font-family:var(--display); font-size:26px; font-weight:700; letter-spacing:-.6px; line-height:1; }
+  .tile .val .u { font-size:12.5px; font-weight:500; color:var(--muted); }
+  .tile .dl { font-size:11.5px; font-weight:600; margin-top:7px; }
+  .up,.down-good { color:var(--ok); } .down { color:var(--crit); } .flat { color:var(--muted); }
+
+  /* Pills, dots, gates */
+  .pill { display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:650; border-radius:20px; padding:1.5px 8px; white-space:nowrap; }
+  .p-teal { background:var(--accent-tint); color:var(--accent); } .p-blue { background:var(--blue-tint); color:var(--blue); }
+  .p-warn { background:var(--warn-tint); color:var(--warn); } .p-crit { background:var(--crit-tint); color:var(--crit); }
+  .p-ok { background:var(--ok-tint); color:var(--ok); } .p-gray { background:var(--bg); color:var(--muted); border:1px solid var(--line); }
+  .dot { display:inline-block; width:8px; height:8px; border-radius:50%; }
+  .dk-ok { background:var(--ok); } .dk-warn { background:var(--warn); } .dk-crit { background:var(--crit); } .dk-gray { background:var(--faint); } .dk-teal { background:var(--accent); } .dk-blue { background:var(--blue); }
+  .gate { font-family:var(--mono); font-size:10px; font-weight:700; border-radius:5px; padding:1.5px 6px; border:1px solid; letter-spacing:.02em; white-space:nowrap; }
+  .gt0 { color:var(--ok); border-color:color-mix(in srgb,var(--ok) 34%,transparent); background:var(--ok-tint); }
+  .gt1 { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 34%,transparent); background:var(--accent-tint); }
+  .gt2 { color:var(--warn); border-color:color-mix(in srgb,var(--warn) 40%,transparent); background:var(--warn-tint); }
+  .gt3 { color:var(--crit); border-color:color-mix(in srgb,var(--crit) 40%,transparent); background:var(--crit-tint); }
+
+  /* Buttons */
+  .btn { font-size:11.5px; font-weight:650; border-radius:8px; padding:6px 12px; border:1px solid transparent; cursor:pointer; font-family:inherit; white-space:nowrap; }
+  .btn-pri { background:var(--accent); color:#fff; } .btn-pri:hover { background:var(--accent-2); }
+  .btn-gh { background:var(--surface); border-color:var(--line); color:var(--ink); } .btn-gh:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-soft { background:var(--accent-tint); color:var(--accent); } .btn-crit { background:var(--crit-tint); color:var(--crit); }
+  .btn-sm { font-size:10.5px; padding:4px 9px; border-radius:7px; }
+  .avx { width:21px; height:21px; border-radius:50%; font-size:9px; font-weight:700; color:#fff; display:inline-flex; align-items:center; justify-content:center; background:var(--muted); }
+
+  /* Tables */
+  table.t { width:100%; border-collapse:collapse; }
+  .t th { text-align:left; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--faint); padding:0 11px 8px; border-bottom:1px solid var(--line); white-space:nowrap; }
+  .t td { padding:9px 11px; border-bottom:1px solid var(--grid); font-size:12.5px; vertical-align:middle; }
+  .t tr:last-child td { border-bottom:none; }
+  .t .num { text-align:right; } .t th.num { text-align:right; }
+  .t .main-cell { font-weight:650; } .t .sub-cell { font-size:11px; color:var(--muted); margin-top:1px; font-weight:400; }
+  .t.dense td { padding:6px 11px; font-size:12px; }
+  .t tr.hl td { background:var(--ok-tint); } .t tr.hlw td { background:var(--warn-tint); }
+  .tw { overflow-x:auto; }
+
+  /* Queue / flag cards */
+  .qi { border:1px solid var(--line); border-radius:11px; padding:12px 15px 12px 16px; position:relative; background:var(--surface-2); }
+  .qi::before { content:""; position:absolute; left:0; top:11px; bottom:11px; width:3px; border-radius:3px; background:var(--faint); }
+  .qi.ok::before { background:var(--ok); } .qi.warn::before { background:var(--warn); } .qi.crit::before { background:var(--crit); } .qi.info::before { background:var(--blue); }
+  .qi-top { display:flex; align-items:center; gap:9px; margin-bottom:4px; flex-wrap:wrap; }
+  .qi-top .qt { font-weight:650; font-size:12.8px; }
+  .qi-top .who { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); }
+  .qi-body { font-size:12.3px; color:var(--muted); line-height:1.5; }
+  .qi-body b { color:var(--ink); font-weight:600; }
+  .qi-act { display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+
+  /* Feed */
+  .feed { display:flex; flex-direction:column; }
+  .fi { display:grid; grid-template-columns:auto 1fr auto; gap:11px; align-items:start; padding:9px 0; border-bottom:1px solid var(--grid); }
+  .fi:last-child { border-bottom:none; }
+  .fi .tk { width:8px; height:8px; border-radius:50%; margin-top:5px; }
+  .tk.a { background:var(--accent); } .tk.b { background:var(--blue); } .tk.g0 { background:var(--ok); }
+  .fi .ft { font-size:12.3px; line-height:1.45; }
+  .fi .ft .cpill { font-family:var(--mono); font-size:10px; color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:5px; padding:0 5px; }
+  .fi .ft small { color:var(--faint); }
+  .fi .fr { text-align:right; white-space:nowrap; display:flex; flex-direction:column; align-items:flex-end; gap:4px; }
+  .fi .fr .tm { font-size:10.5px; color:var(--faint); }
+
+  /* Meters / tracks */
+  .track { height:8px; border-radius:5px; background:var(--bg); overflow:hidden; border:1px solid var(--line); }
+  .track > i { display:block; height:100%; width:0; border-radius:5px; background:var(--accent); transition:width .9s cubic-bezier(.2,.7,.2,1); }
+  .track.warn > i { background:var(--warn); } .track.crit > i { background:var(--crit); } .track.ok > i { background:var(--ok); } .track.blue > i { background:var(--blue); }
+  .area { display:flex; flex-direction:column; gap:11px; }
+  .ar { display:grid; grid-template-columns:130px 1fr 44px; gap:11px; align-items:center; }
+  .ar .an { font-size:12px; font-weight:600; } .ar .an small { display:block; color:var(--faint); font-size:10.5px; font-weight:400; }
+  .ar .av { font-family:var(--mono); font-size:11.5px; font-weight:700; text-align:right; }
+
+  /* Coverage bar */
+  .cov { display:grid; grid-template-columns:auto 1fr; gap:26px; align-items:center; }
+  .cov-lead .big { font-family:var(--display); font-size:33px; font-weight:750; letter-spacing:-1px; line-height:1; }
+  .cov-lead .cap { font-size:12px; color:var(--muted); margin-top:4px; }
+  .cov-bar { display:flex; height:14px; border-radius:8px; overflow:hidden; gap:2px; }
+  .cov-bar > i { display:block; height:100%; width:0; transition:width .9s cubic-bezier(.2,.7,.2,1); border-radius:3px; }
+  .seg-auto { background:var(--accent); } .seg-you { background:var(--warn); } .seg-lock { background:var(--crit); }
+  .cov-leg { display:flex; gap:20px; margin-top:14px; flex-wrap:wrap; }
+  .lg { display:flex; gap:9px; align-items:flex-start; } .lg .sw { width:11px; height:11px; border-radius:3px; margin-top:3px; flex:none; }
+  .lg .lt { font-size:12px; } .lg .lt b { font-weight:650; } .lg .lt small { display:block; color:var(--faint); font-size:11px; }
+  .sw.g0 { background:var(--ok); } .sw.g1 { background:var(--accent); } .sw.g2 { background:var(--warn); } .sw.g3 { background:var(--crit); }
+
+  /* Kanban */
+  .kan { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; align-items:start; }
+  .kan-col { background:var(--surface-2); border:1px solid var(--line); border-radius:11px; padding:10px; }
+  .kan-h { display:flex; align-items:baseline; gap:6px; padding:0 3px 9px; }
+  .kan-h .n { font-size:12px; font-weight:700; } .kan-h .c { font-size:11px; color:var(--muted); }
+  .kan-h .sum { margin-left:auto; font-size:11px; color:var(--muted); }
+  .deal { background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:10px 11px; margin-bottom:8px; box-shadow:var(--shadow); }
+  .deal .dn { font-weight:650; font-size:12px; margin-bottom:2px; } .deal .ds { font-size:11px; color:var(--muted); line-height:1.4; }
+  .deal .df { display:flex; align-items:center; gap:6px; margin-top:8px; } .deal .dv { margin-left:auto; font-size:11px; font-weight:700; }
+
+  /* Workflow chain */
+  .wf-row { display:flex; align-items:center; gap:14px; padding:11px 0; border-bottom:1px solid var(--grid); }
+  .wf-row:last-child { border-bottom:none; }
+  .wf-name { width:172px; min-width:172px; } .wf-name .n { font-weight:650; font-size:12.5px; display:flex; align-items:center; gap:7px; } .wf-name .s { font-size:11px; color:var(--muted); margin-top:2px; }
+  .wf-chain { display:flex; align-items:center; gap:3px; flex-wrap:wrap; flex:1; min-width:0; }
+  .wf-node { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:600; border-radius:6px; padding:3px 8px; border:1px solid var(--line); background:var(--bg); color:var(--muted); white-space:nowrap; }
+  .wf-node.done { background:var(--accent-tint); color:var(--accent); border-color:color-mix(in srgb,var(--accent) 30%,transparent); }
+  .wf-node.active { background:var(--accent); color:#fff; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-tint); }
+  .wf-node.active .pulse { width:6px; height:6px; border-radius:50%; background:#fff; }
+  .wf-node.gate { background:var(--warn-tint); color:var(--warn); border-color:color-mix(in srgb,var(--warn) 34%,transparent); }
+  .wf-node.block { background:var(--crit-tint); color:var(--crit); border-color:color-mix(in srgb,var(--crit) 34%,transparent); }
+  .wf-node.queued { background:var(--surface); color:var(--faint); border-style:dashed; }
+  .wf-arrow { color:var(--faint); font-size:10px; }
+  .wf-now { width:220px; min-width:220px; font-size:11px; color:var(--muted); line-height:1.4; }
+
+  /* Banner */
+  .banner { display:flex; align-items:center; gap:10px; border-radius:10px; padding:10px 14px; font-size:12.5px; }
+  .b-info { background:var(--blue-tint); color:var(--blue); } .b-warn { background:var(--warn-tint); color:var(--warn); } .b-ok { background:var(--ok-tint); color:var(--ok); }
+  .banner b { font-weight:700; } .banner .bx { margin-left:auto; font-weight:700; }
+  .sec-lbl { font-size:10.5px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:var(--faint); }
+
+  .wfstrip { display:flex; gap:10px; flex-wrap:wrap; }
+  .wfc { display:flex; align-items:center; gap:8px; border:1px solid var(--line); border-radius:10px; padding:8px 13px; background:var(--surface-2); font-size:12px; }
+  .wfc .d { width:7px; height:7px; border-radius:50%; }
+  .d.ok { background:var(--ok); box-shadow:0 0 0 3px var(--ok-tint); } .d.run { background:var(--accent); box-shadow:0 0 0 3px var(--accent-tint); } .d.wait { background:var(--warn); box-shadow:0 0 0 3px var(--warn-tint); }
+  .wfc b { font-weight:650; } .wfc small { color:var(--muted); }
+
+  /* Intake wizard */
+  .wz { max-width:760px; margin:0 auto; }
+  .wz-type { display:flex; gap:8px; margin-bottom:16px; }
+  .wz-type button { flex:1; background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:9px 10px; font-family:inherit; font-size:12px; font-weight:600; color:var(--muted); cursor:pointer; }
+  .wz-type button.on { border-color:var(--accent); background:var(--accent-tint); color:var(--accent); }
+  .wz-type button small { display:block; font-weight:400; font-size:10.5px; color:var(--faint); margin-top:1px; }
+  .wz-type button.on small { color:var(--accent); }
+  .wz-rail { display:flex; align-items:center; gap:0; margin-bottom:18px; }
+  .wz-node { display:flex; align-items:center; gap:0; flex:1; }
+  .wz-node:last-child { flex:0; }
+  .wz-node .b { width:24px; height:24px; min-width:24px; border-radius:50%; border:2px solid var(--line); background:var(--surface); font-size:11px; font-weight:700; color:var(--faint); display:flex; align-items:center; justify-content:center; cursor:pointer; }
+  .wz-node.done .b { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .wz-node.cur .b { border-color:var(--accent); color:var(--accent); box-shadow:0 0 0 4px var(--accent-tint); }
+  .wz-node .ln { flex:1; height:2px; background:var(--line); margin:0 4px; }
+  .wz-node.done .ln { background:var(--accent); }
+  .wz-step-lbl { text-align:center; font-size:11px; color:var(--faint); margin:-10px 0 16px; font-weight:600; letter-spacing:.03em; }
+  .wz-card { background:var(--surface); border:1px solid var(--line); border-radius:16px; box-shadow:var(--shadow); padding:26px 28px; }
+  .wz-card h2 { font-family:var(--display); font-size:19px; font-weight:700; letter-spacing:-.3px; }
+  .wz-card .lead { color:var(--muted); font-size:13px; margin-top:5px; margin-bottom:20px; text-wrap:balance; }
+  .fld { margin-bottom:16px; }
+  .fld > label { display:block; font-size:12.5px; font-weight:650; margin-bottom:3px; }
+  .fld .fh { font-size:11.5px; color:var(--faint); margin-bottom:7px; }
+  .fld input[type=text], .fld textarea, .fld select { width:100%; font-family:inherit; font-size:13px; color:var(--ink); background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:9px 11px; }
+  .fld textarea { resize:vertical; min-height:64px; line-height:1.5; }
+  .fld input:focus, .fld textarea:focus, .fld select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-tint); }
+  .prefill { display:inline-flex; align-items:center; gap:5px; font-size:10.5px; font-weight:600; color:var(--accent); background:var(--accent-tint); border-radius:20px; padding:1px 8px; margin-left:6px; }
+  .pushback { display:none; margin-top:8px; border-radius:9px; padding:9px 12px; background:var(--warn-tint); color:var(--warn); font-size:11.5px; line-height:1.45; }
+  .pushback.show { display:block; }
+  .pushback b { font-weight:700; }
+  .chips { display:flex; gap:7px; flex-wrap:wrap; }
+  .chip { font-size:11.5px; font-weight:600; border:1px solid var(--line); background:var(--surface-2); border-radius:20px; padding:5px 12px; cursor:pointer; color:var(--muted); }
+  .chip.on { border-color:var(--accent); background:var(--accent-tint); color:var(--accent); }
+  .ahpra { display:flex; gap:10px; border-radius:10px; padding:12px 14px; font-size:12px; line-height:1.5; margin-bottom:16px; }
+  .ahpra.warn { background:var(--warn-tint); color:var(--warn); } .ahpra.ok { background:var(--ok-tint); color:var(--ok); }
+  .ahpra b { font-weight:700; }
+  .slot { display:flex; align-items:center; gap:11px; border:1.5px dashed var(--line); border-radius:11px; padding:12px 14px; margin-bottom:9px; }
+  .slot.done { border-style:solid; border-color:color-mix(in srgb,var(--ok) 40%,transparent); background:var(--ok-tint); }
+  .slot .si { width:34px; height:34px; border-radius:9px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; font-size:15px; color:var(--muted); }
+  .slot.done .si { background:var(--ok); color:#fff; }
+  .slot .sn { font-weight:650; font-size:12.5px; } .slot .ss { font-size:11px; color:var(--muted); }
+  .slot .sa { margin-left:auto; }
+  .rev { border:1px solid var(--line); border-radius:10px; overflow:hidden; }
+  .rev-row { display:flex; gap:10px; padding:10px 13px; border-bottom:1px solid var(--grid); font-size:12px; }
+  .rev-row:last-child { border-bottom:none; }
+  .rev-row .rl { width:190px; min-width:190px; color:var(--muted); font-weight:600; }
+  .rev-row .rv { flex:1; } .rev-row .re { color:var(--accent); font-weight:600; cursor:pointer; font-size:11px; }
+  .wz-foot { display:flex; align-items:center; gap:10px; margin-top:22px; padding-top:18px; border-top:1px solid var(--grid); }
+  .wz-save { font-size:11px; color:var(--faint); display:flex; align-items:center; gap:6px; }
+  .wz-save .d { width:6px; height:6px; border-radius:50%; background:var(--ok); }
+  .wz-count { margin-left:auto; font-size:11.5px; color:var(--muted); }
+
+  @media (max-width:1100px) {
+    .app { grid-template-columns:1fr; } .rail { display:none; }
+    .tiles,.tiles.t3,.tiles.t5 { grid-template-columns:repeat(2,1fr); }
+    .split,.split-r,.grid2,.grid3 { grid-template-columns:1fr; }
+    .cov { grid-template-columns:1fr; } .kan { grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
+</style>
+
+<div class="app">
+  <aside class="rail">
+    <div class="brand"><div class="mk">20·80</div><div class="nm">20-80 <span>Platform</span></div></div>
+    <nav id="nav"></nav>
+    <div class="rail-foot"><div class="k">Automated this week</div><div class="v">94<small>% of 8,140</small></div></div>
+  </aside>
+  <div class="main">
+    <div class="top">
+      <div class="ti" id="ptitle">Today</div>
+      <div class="search">Search clients, flags, runs… <span class="sl">/</span></div>
+      <div class="rt">
+        <span class="date">Mon 7 Jul 2026 · 09:42</span>
+        <button class="icbtn" id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button>
+        <div class="ava">WC</div>
+      </div>
+    </div>
+    <div class="content" id="view"></div>
+  </div>
+</div>
+
+<script>
+/* ---------- component kit ---------- */
+const gate = n => `<span class="gate gt${n}">G${n}</span>`;
+const H = { WC:'var(--blue)', HK:'var(--accent)', IS:'var(--warn)', QG:'var(--muted)' };
+const av = i => `<span class="avx" style="background:${H[i]||'var(--muted)'}">${i}</span>`;
+const spk = (pts,color) => `<svg class="spk" data-pts="${pts}"${color?` data-color="${color}"`:''} width="84" height="30"></svg>`;
+const tile = (lbl,val,unit,dl,dcls,sp) =>
+  `<div class="tile"><div class="lbl">${lbl}</div><div class="rowb"><div class="val num">${val}${unit?`<span class="u">${unit}</span>`:''}</div>${sp||''}</div><div class="dl ${dcls||'flat'}">${dl}</div></div>`;
+const qi = ({sev,g,t,who,body,acts}) =>
+  `<div class="qi ${sev||''}"><div class="qi-top">${g!=null?gate(g):''}<span class="qt">${t}</span>${who?`<span class="who">${who}</span>`:''}</div><div class="qi-body">${body}</div>${acts?`<div class="qi-act">${acts}</div>`:''}</div>`;
+const ph = (title,sub,actions) =>
+  `<div class="ph"><h1>${title}</h1>${sub?`<span class="sub">${sub}</span>`:''}${actions?`<div class="actions">${actions}</div>`:''}</div>`;
+const chain = nodes => nodes.map((n,i)=>`${i?'<span class="wf-arrow">→</span>':''}<span class="wf-node ${n[0]}">${n[0]==='active'?'<span class="pulse"></span>':''}${n[1]}</span>`).join('');
+
+/* ---------- nav ---------- */
+const NAV = [
+  ['Operate', [['today','◧','Today','6'],['clients','◔','Clients'],['inbox','✉','Inbox','4'],['receptionists','☎','Receptionists'],['meetings','◉','Meetings']]],
+  ['Monitor', [['ads','◎','Google Ads','3'],['seo','⌖','SEO Watchtower','2'],['sitehealth','♥','Site Health','1'],['calendar','◷','Calendar']]],
+  ['Deliver', [['factory','⚒','Website Factory'],['intake','➜','Intake Wizard'],['cms','▤','CMS & Sites'],['studio','文','Content Studio']]],
+  ['Grow', [['prospects','◈','Prospects'],['reports','▥','Reports'],['billing','▧','Billing'],['guarantee','✓','Guarantee']]],
+  ['System', [['workflows','⛓','Workflows','5g'],['integrations','⇄','Integrations','3g'],['audit','≡','Audit Log'],['skills','✦','Knowledge & Skills'],['settings','⚙','Settings']]],
+];
+const TITLES = {};
+document.getElementById('nav').innerHTML = NAV.map(([grp,items])=>
+  `<div class="nav-cap">${grp}</div>`+items.map(([id,g,label,bdg])=>{
+    TITLES[id]=label;
+    let b='';
+    if(bdg){ const gray=bdg.endsWith('g'); b=`<span class="bdg${gray?' gray':''}">${bdg.replace('g','')}</span>`; }
+    return `<div class="nav-i" data-page="${id}"><span class="g">${g}</span>${label}${b}</div>`;
+  }).join('')
+).join('');
+
+/* ---------- pages ---------- */
+const P = {};
+
+P.today = () => ph('Good morning, Wally.','Here\'s what ran overnight — and the six things that need you.',
+    `<button class="btn btn-gh">Daily briefing</button><button class="btn btn-pri">Approval queue · 6</button>`)
+  + `<section class="card card-pad"><div class="cov">
+      <div class="cov-lead"><div class="big num">1,182</div><div class="cap">actions since midnight</div></div>
+      <div><div class="cov-bar" data-bar><i class="seg-auto" data-w="94"></i><i class="seg-you" data-w="5"></i><i class="seg-lock" data-w="1"></i></div>
+      <div class="cov-leg">
+        <div class="lg"><span class="sw g0"></span><span class="lt"><b>Ran automatically</b> · <span class="num">1,114</span><small>G0 silent + G1 auto &amp; visible — logged, reversible</small></span></div>
+        <div class="lg"><span class="sw g2"></span><span class="lt"><b>Waited for you</b> · <span class="num">65</span><small>G2 — a human approves before it acts</small></span></div>
+        <div class="lg"><span class="sw g3"></span><span class="lt"><b>Restricted</b> · <span class="num">3</span><small>G3 — named senior human only</small></span></div>
+      </div></div></div></section>`
+  + `<section class="tiles">
+      ${tile('New patient enquiries · portfolio','128','','▲ 12 vs last week · forms + rescued calls','up',spk('18,22,20,26,24,31,29,34,33,38,41,44'))}
+      ${tile('Cost per enquiry · avg','$22','.40','▼ $4.10 — cheaper is better','down-good',spk('31,30,29,27,28,26,25,24,23,23,22,22','ok'))}
+      ${tile('Return per $1 on ads','$10','.90','▲ holding above the 10:1 line','up',spk('8.1,8.4,8.9,9.2,9.6,9.9,10.1,10.4,10.6,10.7,10.8,10.9'))}
+      ${tile('Portfolio health','82','/100','21 healthy · 2 watch · <span class="down">1 at-risk</span>','flat',spk('76,77,75,78,79,80,79,81,82,81,82,82'))}
+    </section>`
+  + `<section class="split">
+      <div class="card card-pad"><div class="card-h"><h2>Needs you today</h2><span class="hint">6 decisions · ranked by impact</span><span class="more">Approval queue →</span></div><div class="stack">
+        ${qi({sev:'crit',g:3,t:'Complaint — Hearts Dental',who:av('WC')+' you only',body:'Billing dispute, keyword <b>"leaving"</b>. Routed straight to you — <b>no AI acknowledgement sent</b>, by design.',acts:'<button class="btn btn-crit">Open &amp; respond</button><button class="btn btn-gh btn-sm">Listen to call</button>'})}
+        ${qi({sev:'warn',g:2,t:'Ads budget shift — Yarra Hills',who:av('WC')+' Wally',body:'CPL red 5 days. ads-optimiser proposes <b>−28% / +31%</b>. Dry-run passed, rollback ready. <b>Spend never changes without you.</b>',acts:'<button class="btn btn-pri">Review &amp; approve</button><button class="btn btn-gh btn-sm">See the math</button>'})}
+        ${qi({sev:'warn',g:2,t:'Enable Ads account — Bayside Podiatry',who:av('HK')+' Hamza',body:'Factory built it <b>paused</b>: $40/day, 28 keywords, RSAs AHPRA-checked ✓. A named human enables it.',acts:'<button class="btn btn-pri">Open campaign</button>'})}
+        ${qi({sev:'info',g:2,t:'Concept gallery ready — Smile To Go',who:'client choosing',body:'Three sites passed slop-critic + kill-review. Client choosing in portal; chase #1 tomorrow if quiet.',acts:'<button class="btn btn-gh">Preview concepts</button>'})}
+        ${qi({sev:'info',g:2,t:'PRD v2 approval — Aspire One',who:'after Fri kickoff',body:'kickoff-miner diffed the brief with client quotes preserved. Sharpen the differentiators — the human 20%.',acts:'<button class="btn btn-gh">Review the diff</button>'})}
+      </div></div>
+      <div class="colstack">
+        <div class="card card-pad"><div class="card-h"><h2>Ran automatically</h2><span class="hint">nothing here needed you</span><span class="more">Audit log →</span></div><div class="feed">
+          ${feedRow('a','Recall booking confirmed &amp; SMS — <b>Mrs Lin</b> <small>· 中文, conf 0.91</small>','clinic-call-agent',0,'09:31')}
+          ${feedRow('b','FAQ hours published — <b>Yarra Hills</b> <small>· safe lane v215</small>','cms-edit-assistant',1,'09:02')}
+          ${feedRow('a','Rescued call → Google conversion — <b>Trowse</b> <small>· teaches bidding</small>','offline-conv',0,'08:58')}
+          ${feedRow('b','41 emails triaged — 38 tasked, <b>1 complaint escalated</b>','email-triage',1,'08:40')}
+          ${feedRow('a','Ads pull — <b>21 accounts</b>, 1 out-of-band edit reconciled','ads-sync',0,'06:00')}
+          ${feedRow('a','SEO sync — <b>14/15</b>, Northcote stale so alerts suppressed','seo-sync',0,'05:30')}
+        </div></div>
+        <div class="card card-pad"><div class="card-h"><h2>What runs itself, by area</h2><span class="hint">amber = human deliberately in the loop</span></div><div class="area">
+          ${areaRow('Receptionists','voice · realtime',100,'')}
+          ${areaRow('Inbox triage','tasks + acks',96,'')}
+          ${areaRow('SEO watchtower','diagnose + alert',94,'')}
+          ${areaRow('Google Ads','spend stays human',71,'warn')}
+          ${areaRow('Client content','AHPRA + approvals',58,'warn')}
+        </div></div>
+      </div>
+    </section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Workflows running now</h2><span class="hint">live pipelines · lit dot = executing</span><span class="more" data-go="workflows">Open Workflows →</span></div><div class="wfstrip">
+      <div class="wfc"><span class="d run"></span><b>Receptionist</b><small>3 calls live</small></div>
+      <div class="wfc"><span class="d ok"></span><b>Inbox triage</b><small>idle · 41 today</small></div>
+      <div class="wfc"><span class="d wait"></span><b>Ads optimise</b><small>1 waiting on you</small></div>
+      <div class="wfc"><span class="d run"></span><b>SEO watchtower</b><small>diagnosing</small></div>
+      <div class="wfc"><span class="d run"></span><b>Website Factory</b><small>3 builds</small></div>
+      <div class="wfc"><span class="d run"></span><b>Sales · Prospect</b><small>audit composing</small></div>
+    </div></section>`;
+
+const feedRow = (tk,txt,pill,g,tm) => `<div class="fi"><span class="tk ${tk}"></span><span class="ft">${txt} <span class="cpill">${pill}</span></span><span class="fr">${gate(g)}<span class="tm">${tm}</span></span></div>`;
+const areaRow = (n,s,w,cls) => `<div class="ar"><div class="an">${n}<small>${s}</small></div><div class="track ${cls}"><i data-w="${w}"></i></div><div class="av">${w}%</div></div>`;
+
+P.clients = () => ph('Clients','24 practices · one record, ten surfaces',`<button class="btn btn-gh">Filter ▾</button><button class="btn btn-pri">+ Add client</button>`)
+  + `<section class="tiles">
+      ${tile('Active clients','24','','21 healthy · 2 watch · 1 at-risk','flat')}
+      ${tile('MRR','$68','k','▲ $4.2k this month','up')}
+      ${tile('Portfolio health · avg','82','/100','computed, never set','flat')}
+      ${tile('At-risk','1','','Preston Family — save-plan active','down')}
+    </section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Portfolio</h2><span class="hint">health = 35% KPI vs benchmark + flags + engagement + SLA + sentiment + billing</span><span class="more">All 24 →</span></div>
+    <div class="tw"><table class="t"><tr><th>Practice</th><th>Lifecycle</th><th class="num">Health</th><th class="num">Enquiries 30d</th><th class="num">Cost / enq</th><th>Automation</th><th>Flags</th></tr>
+      ${clientRow('Hearts Dental','Preston VIC · dental','Operate',88,'ok',42,'$19',96,'1 complaint')}
+      ${clientRow('Yarra Hills Dental','Warrandyte · dental','Operate',79,'warn',31,'$24',71,'CPL red')}
+      ${clientRow('Smile Council','Box Hill · dental','Operate',84,'ok',26,'$21',88,'—')}
+      ${clientRow('Trowse Chiropractic','Geelong · chiro','Operate',81,'ok',18,'$27',92,'line outage')}
+      ${clientRow('Aspire One Physio','Blackburn · physio','Build',null,'',null,'—',60,'day 5')}
+      ${clientRow('Smile To Go','Richmond · dental','Build',null,'',null,'—',58,'concept choice')}
+      ${clientRow('Northcote Dental','Northcote · dental','Operate',77,'warn',22,'$23',94,'data stale')}
+      ${clientRow('Preston Family Dental','Preston · dental','At-risk',38,'crit',9,'$41',55,'save-plan')}
+    </table></div></section>`;
+const clientRow = (n,s,lc,h,hc,enq,cpl,auto,flag) => {
+  const lcp = {Operate:'p-ok',Build:'p-blue','At-risk':'p-crit',Grow:'p-teal'}[lc]||'p-gray';
+  const hcell = h==null?'<span class="faint">—</span>':`<b class="${hc==='crit'?'down':hc==='warn'?'':'up'}">${h}</b>`;
+  return `<tr><td class="main-cell">${n}<div class="sub-cell">${s}</div></td><td><span class="pill ${lcp}">${lc}</span></td>
+    <td class="num">${hcell}</td><td class="num">${enq??'<span class="faint">—</span>'}</td><td class="num">${cpl}</td>
+    <td><div style="display:flex;align-items:center;gap:8px"><div class="track ${auto<75?'warn':''}" style="width:66px"><i data-w="${auto}"></i></div><span class="mono" style="font-size:11px">${auto}%</span></div></td>
+    <td class="faint" style="font-size:11.5px">${flag}</td></tr>`;
+};
+
+P.inbox = () => ph('Inbox','support@ triage · W2 · zero-loss, audited weekly',`<button class="btn btn-gh">Filter ▾</button>`)
+  + `<section class="tiles">
+      ${tile('Unread','4','','all triaged &lt; 90s','flat')}
+      ${tile('Auto-tasked today','38','/41','93% ≥0.8 confidence','up')}
+      ${tile('Drafted acks awaiting','2','','G2 send','flat')}
+      ${tile('Escalated to a human','1','','complaint → Wally','down')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Triage queue</h2><span class="hint">≥0.8 → auto task + drafted ack · complaint/cancel → human, no AI ack</span></div><div class="stack">
+      ${qi({sev:'crit',g:3,t:'Re: our account — Hearts Dental',who:av('WC')+' Wally',body:'Keywords <b>billing · leaving</b>. Complaint lane: routed to you, <b>no AI acknowledgement</b>. SLA: same day.',acts:'<button class="btn btn-crit">Open thread</button>'})}
+      ${qi({sev:'warn',g:2,t:'Two requests in one email — Hearts',who:'split into 2 tasks',body:'multi-request email split: (1) update Saturday hours (2) new team bio. Ack drafted; bio-photo chase scheduled +2d.',acts:'<button class="btn btn-pri">Approve ack</button><button class="btn btn-gh btn-sm">Edit</button>'})}
+      ${qi({sev:'ok',g:1,t:'Change opening hours — Yarra Hills',who:'auto-tasked',body:'Confidence 0.94 → task created, routed to CMS safe lane. Ack sent. Nothing needed.',acts:'<button class="btn btn-gh btn-sm">View task</button>'})}
+      ${qi({sev:'info',g:1,t:'New enquiry via web form — Smile Council',who:'auto',body:'Non-client domain → lead-capture created a Cold Lead in Prospects. Never lost mail.',acts:'<button class="btn btn-gh btn-sm">Open prospect</button>'})}
+    </div></div>
+    <div class="card card-pad"><div class="card-h"><h2>SLA matrix</h2><span class="hint">per request type</span></div><div class="tw"><table class="t dense">
+      <tr><th>Type</th><th>Ack</th><th>Resolve</th><th class="num">Hit rate</th></tr>
+      <tr><td>Complaint</td><td>human · same day</td><td>—</td><td class="num up">100%</td></tr>
+      <tr><td>Content change</td><td>1 bus. hr</td><td>2 days</td><td class="num up">98%</td></tr>
+      <tr><td>New enquiry</td><td>&lt; 15 min</td><td>1 day</td><td class="num up">96%</td></tr>
+      <tr><td>Technical</td><td>1 bus. hr</td><td>3 days</td><td class="num">92%</td></tr>
+    </table></div>
+    <div class="banner b-ok" style="margin-top:12px"><span>Zero-loss check: <b>every inbound this week mapped</b> to a request or timeline entry.</span><span class="bx">✓</span></div>
+    </div></section>`;
+
+P.receptionists = () => ph('Receptionists','AI voice fleet · W1 · answers as each practice, EN / 普通话',`<button class="btn btn-gh">Holiday mode</button><button class="btn btn-pri">Fleet health</button>`)
+  + `<section class="tiles t5">
+      ${tile('Lines live','21','/21','1 on voicemail fallback','flat')}
+      ${tile('Calls today','312','','after-hours + overflow','up')}
+      ${tile('Rescued bookings','47','','→ uploaded as conversions','up')}
+      ${tile('First-audio p95','740','ms','target &lt; 800ms ✓','up')}
+      ${tile('Blind-test detection','54','%','target ≤60% — human-like','up')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Live &amp; recent calls</h2><span class="hint">emergency stream armed · clinical questions refused in the guardrail layer</span></div><div class="stack">
+      ${qi({sev:'info',g:0,t:'Live · Mrs Lin — Hearts Dental',who:'中文 · 01:12',body:'Booking a recall. Captured name + preferred day; confirming time. Language switched mid-call EN→中文, same voice.',acts:'<span class="pill p-teal">● live</span><button class="btn btn-gh btn-sm">Listen</button>'})}
+      ${qi({sev:'crit',g:0,t:'Emergency script read — Yarra Hills',who:'08:58',body:'Keyword <b>"severe swelling"</b> → practice-approved script, <b>P1 SMS sent</b>. Deterministic stream, not a model judgement. Recording kept.',acts:'<button class="btn btn-gh btn-sm">Transcript</button>'})}
+      ${qi({sev:'ok',g:0,t:'After-hours booking captured — Trowse',who:'07:40',body:'Follow-up item created for front desk; SMS confirmation sent both ways. conf 0.88.',acts:'<button class="btn btn-gh btn-sm">Follow-up item</button>'})}
+      ${qi({sev:'warn',g:0,t:'Low confidence — Smile Council',who:'07:02',body:'conf 0.63 → "reception will confirm" + flagged "listen to recording". Never guesses FAQs outside the profile.',acts:'<button class="btn btn-gh btn-sm">Review</button>'})}
+    </div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Fleet health</h2></div><div class="area">
+      ${areaRow('Latency p95','first audio',92,'')}
+      ${areaRow('Barge-in','interrupt handling',97,'')}
+      ${areaRow('Language ID','EN / 中文 switch',95,'')}
+      ${areaRow('Twilio lines','1 outage → fallback',95,'warn')}
+    </div>
+    <div class="banner b-warn" style="margin-top:14px"><span><b>Preston line</b> on voicemail fallback since 08:51 — outage-sentinel auto-reverts on carrier heartbeat.</span></div>
+    <div class="card-h" style="margin:16px 0 10px"><h2 style="font-size:12.5px">This week's QA</h2></div>
+    <div class="qi ok" style="background:var(--surface)"><div class="qi-body">call-qa-sampler scored 40 calls: humanness 4.4/5, accuracy 96%. One escalation-miss added as a negative example to the golden set.</div></div>
+    </div></section>`;
+
+P.meetings = () => ph('Meetings','Fathom → tasks → summaries · W5',`<button class="btn btn-pri">Prep next agenda</button>`)
+  + `<section class="tiles t3">
+      ${tile('This week','3','','2 QBRs · 1 kickoff','flat')}
+      ${tile('Actions extracted','14','','deduped vs open tasks','up')}
+      ${tile('"Theirs" items chased','5','','+5d auto-chase','flat')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Recent meetings</h2><span class="hint">extraction dedupes against existing tasks/flags before creating anything</span></div><div class="stack">
+      ${qi({sev:'ok',g:1,t:'Hearts Dental — Q3 review',who:'Fri · Wally + Qing',body:'Summary generated · <b>6 actions</b> extracted (2 auto-linked to open flags, no duplicates). Next agenda pre-built from open items.',acts:'<button class="btn btn-gh btn-sm">Summary</button><button class="btn btn-gh btn-sm">Actions (6)</button>'})}
+      ${qi({sev:'info',g:2,t:'Aspire One — kickoff',who:'Fri · Ish',body:'Transcript mined → PRD v1→v2 diff with client quotes preserved. <b>Awaiting H1 approval</b> before design briefs unlock.',acts:'<button class="btn btn-pri btn-sm">Review PRD diff</button>'})}
+      ${qi({sev:'ok',g:1,t:'Smile Council — monthly',who:'Thu · Wally',body:'2 promises added to the promise register — checked before next report goes out.',acts:'<button class="btn btn-gh btn-sm">Promise register</button>'})}
+    </div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Upcoming · agendas ready</h2></div><div class="tw"><table class="t dense">
+      <tr><th>When</th><th>Practice</th><th>Agenda</th></tr>
+      <tr><td>Wed 10:00</td><td class="main-cell">Trowse Chiro</td><td class="faint">built from 3 open flags</td></tr>
+      <tr><td>Thu 14:00</td><td class="main-cell">Yarra Hills</td><td class="faint">CPL remediation + upsell brief</td></tr>
+      <tr><td>Fri 09:00</td><td class="main-cell">Smile To Go</td><td class="faint">concept walkthrough</td></tr>
+    </table></div>
+    <div class="banner b-info" style="margin-top:12px"><span>agenda-builder assembles agendas from open flags — meetings stay human, prep doesn't.</span></div>
+    </div></section>`;
+
+P.ads = () => ph('Google Ads','Monitor → approve → implement · W3 · one MCC, spend stays human',`<button class="btn btn-gh">Run auditor</button><button class="btn btn-pri">Approval queue · 3</button>`)
+  + `<section class="tiles">
+      ${tile('Accounts','21','','GAQL pull 06:00 ✓','flat')}
+      ${tile('Blended ROAS','10.9',':1','above the 10:1 line','up')}
+      ${tile('CPL flags','2','','1 amber · 1 red','down')}
+      ${tile('Pending approvals','3','','all &gt;25% or Tier C','flat')}
+    </section>`
+  + `<section class="banner b-info"><span>Autonomy ladder: <b>Tier A</b> auto (negatives, zero-conv pauses, pacing ±10%) · <b>Tier B</b> auto after trust streak · <b>Tier C</b> human forever (budgets, launches, &gt;25% moves). Caps enforced in the connector, not the model.</span></section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Change queue</h2><span class="hint">validateOnly dry-run → execute → snapshot → 7-day change-watch</span></div><div class="stack">
+      ${qi({sev:'warn',g:2,t:'Budget shift — Yarra Hills',who:av('WC')+' Wally · Tier C',body:'CPL red 5 days. <b>−28% / +31%</b> across 2 campaigns (marginal CPL + impression-share-lost). >25% move = high risk = human.',acts:'<button class="btn btn-pri">Review &amp; approve</button><button class="btn btn-gh btn-sm">Rollback plan</button>'})}
+      ${qi({sev:'ok',g:0,t:'18 negative keywords added — Hearts',who:'auto · Tier A',body:'Search-term intent classified vs practice profile. Under spend threshold → auto, logged. change-watch armed.',acts:'<button class="btn btn-gh btn-sm">View terms</button>'})}
+      ${qi({sev:'ok',g:1,t:'Bid nudge +12% — Trowse',who:'auto · Tier B',body:'Within cap, outside learning period, cooldown respected. Trust streak 3/5.',acts:'<button class="btn btn-gh btn-sm">Detail</button>'})}
+      ${qi({sev:'info',g:2,t:'RSA copy refresh — Smile Council',who:'AHPRA-checked ✓',body:'3 headlines, 2 descriptions. Passed ahpra-checker + slop-critic. Awaiting approve.',acts:'<button class="btn btn-pri btn-sm">Approve</button>'})}
+    </div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Account auditor</h2><span class="hint">seeded checks</span></div>
+    <div class="qi warn" style="background:var(--surface);margin-bottom:11px"><div class="qi-top"><span class="qt">Yarra Hills — 10 / 12 issues</span></div><div class="qi-body">Tracking healthy ✓ · 3 zero-conv keywords · impression share lost (budget) 34% · 1 broad-match leak. Recs generated with all 6 components.</div></div>
+    <div class="card-h" style="margin:4px 0 10px"><h2 style="font-size:12.5px">The moat</h2></div>
+    <div class="banner b-ok"><span><b>47 rescued calls</b> uploaded as offline conversions today — teaching Google's bidding what a real patient looks like.</span></div>
+    <div class="ar" style="margin-top:14px"><div class="an">Recommendations feed<small>Google's own</small></div><div class="track"><i data-w="22"></i></div><div class="av">22%</div></div>
+    <div class="faint" style="font-size:11px;margin-top:6px">Most of Google's auto-recommendations dismissed via API — we optimise for the client, not for Google.</div>
+    </div></section>`;
+
+P.seo = () => ph('SEO Watchtower','Drops &amp; opportunities · W4 · 05:30 sync',`<button class="btn btn-pri">Opportunities · 4</button>`)
+  + `<section class="tiles">
+      ${tile('Keywords tracked','1,240','','across 24 practices','flat')}
+      ${tile('Rank drops flagged','2','','2-day confirmation rule','down')}
+      ${tile('Opportunities','4','','opportunity-writer','up')}
+      ${tile('Sync','14','/15','Northcote stale → suppressed','flat')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Movements</h2><span class="hint">single-keyword wobbles wait 2 days · money keyword + 3-pack exit skips the wait</span></div><div class="stack">
+      ${qi({sev:'crit',g:1,t:'"dentist blackburn" 4 → 9 — Aspire One',who:'confirmed',body:'Money keyword + <b>3-pack exit</b> → no wait. seo-diagnose read our CMS deploy log first: a hero H1 change 3 days ago. Fix proposed.',acts:'<button class="btn btn-pri btn-sm">View diagnosis</button><button class="btn btn-gh btn-sm">Apply fix</button>'})}
+      ${qi({sev:'warn',g:1,t:'"invisalign box hill" 6 → 8 — Smile Council',who:'watching',body:'Single-keyword wobble → <b>2-day confirmation</b> before alerting. Likely noise; no action yet.',acts:'<button class="btn btn-gh btn-sm">Watch</button>'})}
+      ${qi({sev:'ok',g:1,t:'Opportunity: "emergency dentist preston"',who:'Hearts',body:'Ranking 11, high intent, thin content. opportunity-writer drafted a page brief from the block library.',acts:'<button class="btn btn-gh btn-sm">See brief</button>'})}
+    </div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Rank distribution</h2></div><div class="area">
+      ${areaRow('Top 3','money keywords',62,'')}
+      ${areaRow('4–10','page one',26,'')}
+      ${areaRow('11–20','opportunity zone',9,'warn')}
+      ${areaRow('20+','long tail',3,'warn')}
+    </div>
+    <div class="banner b-warn" style="margin-top:14px"><span><b>Northcote</b> data stale 48h → its alerts suppressed only for that client. Never a stale alarm.</span></div>
+    </div></section>`;
+
+P.sitehealth = () => ph('Site Health','Uptime · SSL · form-canary · Core Web Vitals',`<button class="btn btn-gh">Run canary now</button>`)
+  + `<section class="tiles">
+      ${tile('Sites monitored','24','','all green but 1','flat')}
+      ${tile('Uptime · 30d','99.98','%','one 4-min blip','up')}
+      ${tile('SSL / domain expiry','0','','none &lt; 30 days','up')}
+      ${tile('Form-canary fails','1','','Hearts · task raised','down')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Alerts</h2><span class="hint">a broken form is a lost patient — canary posts a test lead every hour</span></div><div class="stack">
+      ${qi({sev:'crit',g:0,t:'Form-canary failed — Hearts Dental',who:av('IS')+' Ish · P1',body:'No confirmation email in 90s, <b>3rd consecutive fail</b> → task #4183 created automatically. Likely SMTP.',acts:'<button class="btn btn-crit btn-sm">Open task</button><button class="btn btn-gh btn-sm">Canary log</button>'})}
+      ${qi({sev:'warn',g:0,t:'CWV regression — Smile Council',who:'auto',body:'LCP 2.1s → 3.4s on mobile after a hero image swap. Flagged; suggests re-optimising the asset.',acts:'<button class="btn btn-gh btn-sm">Detail</button>'})}
+      ${qi({sev:'ok',g:0,t:'SSL renewed — 6 domains',who:'Cloudflare',body:'Auto-renewed 45+ days out. No action.',acts:''})}
+    </div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Core Web Vitals</h2><span class="hint">acceptance criteria, not enhancements</span></div><div class="area">
+      ${areaRow('LCP passing','&lt; 2.5s',88,'')}
+      ${areaRow('CLS passing','&lt; 0.1',96,'')}
+      ${areaRow('INP passing','&lt; 200ms',91,'')}
+      ${areaRow('Mobile speed','portfolio avg',84,'warn')}
+    </div></div></section>`;
+
+P.calendar = () => ph('Calendar','Publishes · posts · reports · meetings · seasonal',`<button class="btn btn-gh">Month ▾</button><button class="btn btn-pri">+ Schedule</button>`)
+  + `<section class="tiles t3">
+      ${tile('Scheduled this week','18','','posts, publishes, reports','flat')}
+      ${tile('Seasonal windows','2','','back-to-school · EOFY wind-down','up')}
+      ${tile('Awaiting approval','3','','G2 client-facing','flat')}
+    </section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Upcoming</h2><span class="hint">season-planner seeds campaigns from the marketing calendar</span></div><div class="tw"><table class="t">
+      <tr><th>When</th><th>What</th><th>Client</th><th>Owner</th><th>Gate</th></tr>
+      <tr><td class="main-cell">Tue 00:01</td><td>CMS change set — Saturday hours</td><td>Hearts Dental</td><td>cms-edit-assistant</td><td>${gate(1)}</td></tr>
+      <tr><td class="main-cell">Tue 09:00</td><td>GBP post — open day</td><td>Smile Council</td><td>gbp-post-writer</td><td>${gate(2)}</td></tr>
+      <tr><td class="main-cell">Wed 10:00</td><td>Monthly meeting</td><td>Trowse Chiro</td><td>${av('WC')} Wally</td><td class="faint">human</td></tr>
+      <tr><td class="main-cell">Thu 06:00</td><td>Monthly ROI + SEO report</td><td>All Operate</td><td>report-writer</td><td>${gate(2)}</td></tr>
+      <tr><td class="main-cell">Fri 09:00</td><td>Back-to-school campaign launch</td><td>3 practices</td><td>marketing-content-writer</td><td>${gate(2)}</td></tr>
+    </table></div></section>`;
+
+P.factory = () => ph('Website Factory','Deposit → launch · ~15 days · 8 stages · 24 skills · 5 human decisions',`<button class="btn btn-pri">New build</button>`)
+  + `<section class="tiles">
+      ${tile('Builds in flight','3','','capacity 6','flat')}
+      ${tile('Deposit → launch · median','15','days','target ≤15 ✓','up')}
+      ${tile('First-mock SLA (48h)','100','%','last 8 builds','up')}
+      ${tile('Human decisions pending','2','','H1 · H5','flat')}
+    </section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Builds in flight</h2><span class="hint">H1 PRD · H2 briefs · H3 kill-review · H4 launch · H5 Ads enable</span></div>
+    <div class="tw"><table class="t"><tr><th>Client</th><th>Stage</th><th style="width:170px">Progress</th><th>Current step</th><th>Waiting on</th></tr>
+      ${factoryRow('Smile To Go','deposit 22 Jun · day 14','5 · Three concepts',[1,1,1,1,2,0,0,0],'Concept gallery live — 3 passed slop-critic + H3','<span class="pill p-warn">client choice · 2d</span>')}
+      ${factoryRow('Aspire One Physio','deposit 1 Jul · day 5','2 · First mock',[1,2,0,0,0,0,0,0],'PRD v1 + IA drafted · style tile composing — due 31h','<span class="pill p-gray">machine</span>')}
+      ${factoryRow('Bayside Podiatry','deposit 16 Jun · day 20','7 · Launch chain',[1,1,1,1,1,1,2,0],'DNS ✓ SSL ✓ GBP ✓ — Ads built, paused','<span class="pill p-crit">H5 · Hamza</span>')}
+    </table></div></section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Human decisions pending</h2></div><div class="stack">
+      ${qi({sev:'warn',g:2,t:'H5 · Bayside — enable Ads',who:av('HK')+' Hamza',body:'2 campaigns, $40/day, RSAs AHPRA-checked ✓. Account paused until a named human enables. <b>Spend never starts itself.</b>',acts:'<button class="btn btn-pri btn-sm">Open review</button>'})}
+      ${qi({sev:'info',g:2,t:'H1 · Aspire One — PRD v2',who:'after Fri kickoff',body:'kickoff-miner diffs v1→v2, client quotes preserved. Strategist approves before design briefs unlock.',acts:'<button class="btn btn-gh btn-sm">Preview PRD</button>'})}
+    </div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Factory feed</h2><span class="hint">latest</span></div><div class="feed">
+      ${feedRow('b','Smile To Go · concept B revision — 4 comments → 6 block changes','feedback-interpreter',1,'09:14')}
+      ${feedRow('a','Aspire One · research pack ready — 3 competitors, 214 reviews','practice-researcher',0,'08:40')}
+      ${feedRow('a','Bayside · 4 mailboxes created; DNS propagated','gsuite-provisioner',0,'08:22')}
+      ${feedRow('b','Smile To Go · slop-critic failed concept C d2 → re-ran, passed d3','slop-critic',1,'Fri')}
+    </div></div></section>`;
+const factoryRow = (n,s,stage,prog,step,wait) => `<tr><td class="main-cell">${n}<div class="sub-cell">${s}</div></td><td><span class="pill p-teal">${stage}</span></td>
+  <td><div style="display:flex;gap:3px">${prog.map(x=>`<span style="flex:1;height:5px;border-radius:3px;background:${x===1?'var(--accent)':x===2?'var(--warn)':'var(--accent-tint)'}"></span>`).join('')}</div></td>
+  <td class="faint" style="font-size:11.5px">${step}</td><td>${wait}</td></tr>`;
+
+P.cms = () => ph('CMS & Sites','W8 · content as structured data · every publish versioned, reversible',`<button class="btn btn-pri">New change set</button>`)
+  + `<section class="tiles">
+      ${tile('Sites on W8 CMS','9','/24','▲ 2 migrated in June','up')}
+      ${tile('Scheduled change sets','4','','next Tue 00:01','flat')}
+      ${tile('Publishes this week','11','','all rollback-ready','flat')}
+      ${tile('Rollbacks · 30d','1','','hero swap, reverted 4 min','flat')}
+    </section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Change sets</h2><span class="hint">guardrail chain: ahpra-checker → seo-guard → propagation-mapper → tone-checker</span></div><div class="stack">
+      ${qi({sev:'info',g:1,t:'Saturday hours from 1 Aug — Hearts',who:'from Inbox #4181',body:'propagation-mapper fan-out: hours page · footer ×11 · schema · GBP · phone-AI FAQ pack. <b>14 surfaces, one change set.</b> Scheduled Tue 00:01.',acts:'<button class="btn btn-pri btn-sm">Preview all 14</button><span class="pill p-ok">✓ seo-guard</span>'})}
+      ${qi({sev:'warn',g:2,t:'Homepage hero swap — Smile Council',who:'sensitive lane',body:'Money page → same-day agency review. seo-guard: H1 + title untouched ✓. Client asked via prompt box.',acts:'<button class="btn btn-pri btn-sm">Approve &amp; publish</button><span class="faint" style="font-size:11px">clean-edit streak 7/10</span>'})}
+      ${qi({sev:'crit',g:0,t:'"pain-free implants guaranteed" — Preston Family',who:'blocked',body:'ahpra-checker <b>hard block</b>: outcome guarantee + clinical claim. 2 compliant rewrites offered; original never published.',acts:'<button class="btn btn-gh btn-sm">View rewrites</button>'})}
+      ${qi({sev:'ok',g:1,t:'Friday hours FAQ — Yarra Hills',who:'published 09:02',body:'Structured field edit → instant publish after compliance scan. Phone-AI pack updated same transaction. v215.',acts:'<button class="btn btn-gh btn-sm">Diff</button><button class="btn btn-gh btn-sm">Rollback</button>'})}
+    </div></section>`
+  + `<section class="grid2"><div class="card card-pad"><div class="card-h"><h2>Client editing tiers</h2><span class="hint">graduate by clean-edit streak</span></div><div class="tw"><table class="t dense">
+      <tr><td>Tier 1 · structured fields</td><td class="num">9</td></tr>
+      <tr><td>Tier 2 · change anything by asking</td><td class="num">7</td></tr>
+      <tr><td>Tier 3 · visual block editor</td><td class="num">3</td></tr>
+      <tr><td>Tier 4 · unmanaged zones (contract)</td><td class="num">0</td></tr>
+    </table></div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Emergent / WordPress exit</h2><span class="hint">rolling migration · fragile high-rank sites last</span></div>
+    <div class="area"><div class="ar"><div class="an">Migrated<small>to W8</small></div><div class="track"><i data-w="38"></i></div><div class="av">9/24</div></div></div>
+    <div class="banner b-info" style="margin-top:12px"><span>Each cutover held in W4 "migration mode" 4 weeks — zero rank loss beyond noise.</span></div>
+    </div></section>`;
+
+P.studio = () => ph('Content Studio','Translation EN⇄中文 · 中文 is first-class, not a bolt-on',`<button class="btn btn-pri">New content</button>`)
+  + `<section class="tiles">
+      ${tile('In translation','6','','2 in review','flat')}
+      ${tile('Glossary terms','412','','▲ 18 this month','up')}
+      ${tile('TM leverage','64','%','▲ 6pts — cost falling','up')}
+      ${tile('Published · Jul','14','','pages 4 · GBP 8 · blog 2','flat')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Translation queue</h2><span class="hint">translator-zh · glossary + TM enforced · clinical pages need reviewer sign-off</span></div><div class="tw"><table class="t">
+      <tr><th>Item</th><th>Direction</th><th class="num">TM</th><th>Status</th></tr>
+      <tr><td class="main-cell">Hearts · implants page<div class="sub-cell zh">种植牙 — 完整流程</div></td><td class="faint">EN→中文</td><td class="num">58%</td><td><span class="pill p-warn">review · Qing</span></td></tr>
+      <tr><td class="main-cell">Hearts · FAQ pack v13<div class="sub-cell">phone AI + site</div></td><td class="faint">EN→中文</td><td class="num">81%</td><td><span class="pill p-teal">drafting</span></td></tr>
+      <tr><td class="main-cell">Smile Council · open-day<div class="sub-cell zh">开放日 — 免费检查</div></td><td class="faint">EN→中文</td><td class="num">42%</td><td><span class="pill p-warn">review · Qing</span></td></tr>
+      <tr><td class="main-cell">Mrs Lin SMS template<div class="sub-cell">fleet · both languages</div></td><td class="faint">中文→EN</td><td class="num">90%</td><td><span class="pill p-ok">published</span></td></tr>
+    </table></div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Content drafts</h2><span class="hint">every claim traces to a client-record field</span></div><div class="stack">
+      ${qi({sev:'ok',g:2,t:'Open-day GBP post — Hearts',who:'task #4177',body:'Drafted from meeting quote. <span class="pill p-ok">✓ slop-critic</span> <span class="pill p-ok">✓ AHPRA</span> <span class="pill p-ok">✓ 4/4 grounded</span>',acts:'<button class="btn btn-pri btn-sm">Approve</button><button class="btn btn-gh btn-sm">Edit</button>'})}
+      ${qi({sev:'crit',g:1,t:'Sciatica blog draft 1 — Trowse',who:'re-running',body:'<span class="pill p-crit">✗ slop-critic</span> "we pride ourselves on…" + 2 unsourced claims. Re-drafting against profile v8.',acts:'<button class="btn btn-gh btn-sm">View critique</button>'})}
+    </div></div></section>`;
+
+P.prospects = () => ph('Prospects','Sales pipeline · Agile CRM absorbed · audit microsite is the flagship',`<button class="btn btn-gh">Quick-add lead</button><button class="btn btn-pri">+ New deal</button>`)
+  + `<section class="tiles">
+      ${tile('Live deals','6','','$92k pipeline','flat')}
+      ${tile('Audit → live · median','11','min','target &lt;15 ✓','up')}
+      ${tile('Won this month','3','','$21k','up')}
+      ${tile('CAC by channel','$340','','SEO cheapest at $180','flat')}
+    </section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Pipeline</h2><span class="hint">stage transitions fire on events — audit opened → warm · deposit webhook → won → fires the factory</span></div>
+    <div class="kan">
+      ${kanCol('Cold Lead','2','$18k',[['Brighton Dental','web form · audit generating','Cold · today','$9k'],['Kew Physio','conference quick-add','Cold · 2d','$9k']])}
+      ${kanCol('Warm Lead','2','$34k',[['Camberwell Chiro','audit opened 4× · replied','Warm','$16k'],['Malvern Dental','Suburb report viewed','Warm','$18k']])}
+      ${kanCol('Meeting Held','1','$22k',[['Toorak Ortho','proposal drafting','post-meeting','$22k']])}
+      ${kanCol('Proposal Sent','1','$18k',[['Hawthorn Dental','warm-lead video sent','+3d chase','$18k']])}
+      ${kanCol('Won','1','',[['Aspire One Physio','deposit paid → factory','stage 1 fired','$14k']])}
+    </div></section>`
+  + `<section class="banner b-ok"><span>The unlock: <b>every cold lead gets a personalised audit microsite in minutes</b> — effortful for the machine, impressive to the prospect, zero team time. It doubles as a taste of the client portal.</span></section>`;
+const kanCol = (n,c,sum,deals) => `<div class="kan-col"><div class="kan-h"><span class="n">${n}</span><span class="c">${c}</span><span class="sum">${sum}</span></div>${deals.map(([dn,ds,tag,dv])=>`<div class="deal"><div class="dn">${dn}</div><div class="ds">${ds}</div><div class="df"><span class="pill p-gray">${tag}</span><span class="dv">${dv}</span></div></div>`).join('')}</div>`;
+
+P.reports = () => ph('Reports','Monthly ROI + SEO · lead with 3 plain sentences, charts after',`<button class="btn btn-pri">Generate month-end</button>`)
+  + `<section class="tiles t3">
+      ${tile('Reports due','21','','month-end · auto-generated','flat')}
+      ${tile('New-patient numbers confirmed','18','/21','one-tap by practice — verified ROI','up')}
+      ${tile('Avg open rate','88','%','clients actually read them','up')}
+    </section>`
+  + `<section class="split-r"><div class="card card-pad"><div class="card-h"><h2>June — Hearts Dental</h2><span class="hint">preview · patient-and-dollar language</span></div>
+    <div class="banner b-ok" style="margin-bottom:12px"><span>Your website brought <b>41 new patient enquiries</b> in June. Every $1 on ads returned <b>$10.90</b>. One ranking dipped — we found the cause the same morning and it's already recovering.</span></div>
+    <div class="tw"><table class="t dense"><tr><th>Metric</th><th class="num">June</th><th class="num">vs May</th></tr>
+      <tr><td>New enquiries</td><td class="num">41</td><td class="num up">▲ 6</td></tr>
+      <tr><td>Cost per enquiry</td><td class="num">$19</td><td class="num up">▼ $3</td></tr>
+      <tr><td>Return per $1 (ads)</td><td class="num">$10.90</td><td class="num up">▲</td></tr>
+      <tr><td>Confirmed new patients</td><td class="num">28</td><td class="num flat">one-tap ✓</td></tr>
+    </table></div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Generation status</h2></div><div class="tw"><table class="t dense">
+      <tr><th>Practice</th><th>Status</th><th>New-patient #</th></tr>
+      <tr><td class="main-cell">Hearts Dental</td><td><span class="pill p-ok">ready</span></td><td class="faint">28 · confirmed</td></tr>
+      <tr><td class="main-cell">Yarra Hills</td><td><span class="pill p-ok">ready</span></td><td class="faint">confirmed</td></tr>
+      <tr><td class="main-cell">Smile Council</td><td><span class="pill p-teal">generating</span></td><td class="faint">awaiting one-tap</td></tr>
+      <tr><td class="main-cell">Trowse Chiro</td><td><span class="pill p-warn">needs #</span></td><td class="faint">reminder sent</td></tr>
+    </table></div>
+    <div class="banner b-info" style="margin-top:12px"><span>new-patient-reconciler turns <b>claimed ROI into verified ROI</b> — one-tap monthly confirm, pre-filled with our number.</span></div>
+    </div></section>`;
+
+P.billing = () => ph('Billing','Xero-integrated · invoices · MRR · dunning',`<button class="btn btn-pri">Run invoices</button>`)
+  + `<section class="tiles">
+      ${tile('MRR','$68','k','▲ $4.2k','up')}
+      ${tile('Invoices due · month-end','21','','auto-generated','flat')}
+      ${tile('Overdue','2','','dunning-writer active','down')}
+      ${tile('Guarantee clock','1','','Preston — month 4 of 6','flat')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Recent activity</h2><span class="hint">invoice-status webhooks from Xero fire lifecycle events</span></div><div class="stack">
+      ${qi({sev:'ok',g:1,t:'Deposit received — Aspire One',who:'Stripe',body:'$1,400 deposit → <b>fired factory stage 1</b> automatically. Portal login + checklist live in 1 min.',acts:'<button class="btn btn-gh btn-sm">View</button>'})}
+      ${qi({sev:'warn',g:1,t:'Invoice overdue 14d — Preston Family',who:'dunning',body:'2nd reminder drafted (polite, on-brand). At 30d → lifecycle flags at-risk + G1 privileges suspend for that client.',acts:'<button class="btn btn-pri btn-sm">Send reminder</button>'})}
+      ${qi({sev:'ok',g:1,t:'21 monthly invoices generated',who:'invoice-runner',body:'Xero-synced, MRR updated. 19 auto-charged, 2 on manual terms.',acts:'<button class="btn btn-gh btn-sm">Reconcile</button>'})}
+    </div></div>
+    <div class="card card-pad"><div class="card-h"><h2>MRR by plan</h2></div><div class="area">
+      ${areaRow('Full service','12 practices',54,'')}
+      ${areaRow('SEO + Ads','6 practices',28,'')}
+      ${areaRow('Receptionist','7 practices',22,'')}
+      ${areaRow('Hosting only','3 practices',6,'')}
+    </div>
+    <div class="banner b-info" style="margin-top:14px"><span>Payment rails: Stripe for deposits/subscriptions · Xero stays as accounting. GoCardless (direct debit) planned.</span></div>
+    </div></section>`;
+
+P.guarantee = () => ph('Guarantee Tracker','6-month promise vs actuals · the forcing function',`<button class="btn btn-gh">Export</button>`)
+  + `<section class="tiles t3">
+      ${tile('Under guarantee','8','','practices in first 6 months','flat')}
+      ${tile('On track','7','/8','meeting or beating targets','up')}
+      ${tile('Off-track','1','','Preston — save-plan active','down')}
+    </section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Guarantee clocks</h2><span class="hint">off-track → Wally save-plan brief, cadence doubled, G1 suspended for that client</span></div><div class="tw"><table class="t">
+      <tr><th>Practice</th><th>Month</th><th style="width:170px">Progress to target</th><th class="num">Enquiries</th><th>Status</th></tr>
+      ${guarRow('Hearts Dental',5,86,'42/40','ok')}
+      ${guarRow('Smile Council',3,74,'26/30','ok')}
+      ${guarRow('Trowse Chiro',2,68,'18/25','ok')}
+      ${guarRow('Bayside Podiatry',1,40,'baseline','ok')}
+      ${guarRow('Preston Family',4,32,'9/28','crit')}
+    </table></div></section>`;
+const guarRow = (n,m,pct,enq,s) => `<tr><td class="main-cell">${n}</td><td>month ${m}/6</td>
+  <td><div class="track ${s==='crit'?'crit':pct>=70?'':'warn'}"><i data-w="${pct}"></i></div></td>
+  <td class="num">${enq}</td><td>${s==='crit'?'<span class="pill p-crit">off-track</span>':'<span class="pill p-ok">on track</span>'}</td></tr>`;
+
+P.workflows = () => ph('Workflows','Automation runtime — what\'s running, and tune it in place',`<button class="btn btn-gh">All 14</button>`)
+  + `<section class="tiles">
+      ${tile('Workflows live','12','/14','2 paused for tuning','flat')}
+      ${tile('Runs in flight','34','','across 12 workflows','flat')}
+      ${tile('Waiting at a gate','5','','human approvals','up')}
+      ${tile('Changes in shadow','3','','eval-gated before live','flat')}
+    </section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Automation runtime</h2><span class="hint">lit node = executing now · amber = gate waiting on a human</span></div>
+    ${wfRow('ok','W1 · Receptionist','312 calls today',[['done','language-id'],['done','clinic-call-agent'],['active','booking-capture'],['queued','call-summary']],'3 calls live · Mrs Lin mid-booking (中文)')}
+    ${wfRow('ok','W2 · Inbox triage','41 emails',[['done','email-triage'],['active','reply-drafter'],['gate','ahpra-checker'],['queued','task']],'2 acks awaiting G2 · 1 complaint → Wally')}
+    ${wfRow('warn','W3 · Ads optimise','21 accounts',[['done','ads-sync'],['done','optimiser'],['gate','Tier C approve'],['queued','execute']],'Yarra budget shift held behind a named human')}
+    ${wfRow('warn','W4 · SEO','14/15 synced',[['done','seo-sync'],['active','seo-diagnose'],['queued','opportunity-writer']],'Diagnosing "dentist blackburn 4→9"')}
+    ${wfRow('ok','Website Factory','3 builds',[['done','prd-generator'],['done','site-composer'],['active','slop-critic'],['gate','H3 kill-review']],'Smile To Go · 3 concepts composing')}
+    ${wfRow('gray','ad-copy-writer loop','v2.1 blocked',[['done','ad-copy-writer'],['block','skill-evaluator']],'v2.1 promotion blocked (88 vs 92) — held on v2.0')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Tuning · W2 Inbox triage</h2><span class="hint">editing a draft — shadow-tested before live</span></div>
+    <div class="banner b-info" style="margin-bottom:11px"><span>Editing <b>draft v3.2</b>. Live runs stay on v3.1 while changes shadow-test.</span><span class="bx">2 steps changed</span></div>
+    ${stepRow(1,'email-triage','fast · Haiku',1,'Auto-task at conf ≥0.80 → <span style="color:var(--blue)">proposing ≥0.78</span>',false)}
+    ${stepRow(2,'reply-drafter','edited',2,'Added 2 few-shot examples + tightened SLA line',true)}
+    ${stepRow(3,'ahpra-checker','hard gate',0,'🔒 Locked — a compliance gate can\'t be weakened or removed',false)}
+    ${stepRow(4,'completion-writer','fast · Haiku',1,'"It\'s done" message — cheapest loyalty builder, stays G1',false)}
+    <div class="qi-act" style="border-top:1px solid var(--grid);margin-top:12px;padding-top:12px"><button class="btn btn-pri btn-sm">Send draft to shadow</button><button class="btn btn-gh btn-sm">+ Add step</button><span class="faint" style="font-size:11px;margin-left:auto">versioned · audited · reversible</span></div>
+    </div>
+    <div class="card card-pad"><div class="card-h"><h2>How a change goes live</h2><span class="hint">no edit skips a stage</span></div><div class="stack">
+      ${qi({sev:'info',t:'1 · Draft',who:'you, now',body:'Edit prompts, gates, thresholds, order on a copy. Production keeps running the live version.'})}
+      ${qi({sev:'info',t:'2 · Shadow',who:'1–2 weeks',body:'Runs on real inputs, takes <b>no</b> actions. Would-be output compared to what actually happened.'})}
+      ${qi({sev:'warn',t:'3 · Eval gate',who:'must beat incumbent',body:'skill-evaluator regresses the golden set. Ships only if it scores higher.'})}
+      ${qi({sev:'ok',t:'4 · Promote',who:'a named human',body:'A person flips it live. Audit-logged with rollback to the exact prior version.'})}
+    </div></div></section>`;
+const wfRow = (dot,name,thru,nodes,now) => `<div class="wf-row"><div class="wf-name"><div class="n"><span class="dot dk-${dot==='gray'?'gray':dot}"></span>${name}</div><div class="s mono">${thru}</div></div><div class="wf-chain">${chain(nodes)}</div><div class="wf-now">${now}</div><button class="btn btn-gh btn-sm">Tune</button></div>`;
+const stepRow = (i,name,tag,g,meta,edited) => `<div class="qi ${edited?'info':''}" style="background:${edited?'var(--blue-tint)':'var(--surface)'};margin-bottom:8px"><div class="qi-top"><span class="qt">${i}. ${name}</span><span class="pill p-gray">${tag}</span>${gate(g)}<span class="who">${edited?'<button class="btn btn-gh btn-sm">View diff</button>':'<button class="btn btn-gh btn-sm">Edit</button>'}</span></div><div class="qi-body">${meta}</div></div>`;
+
+P.integrations = () => ph('Integrations','Every service is an MCP connector — capped tools, credentials in the vault',`<button class="btn btn-pri">+ Add connector</button>`)
+  + `<section class="tiles">
+      ${tile('Connectors connected','20','/21','2 degraded · 1 disconnected','flat')}
+      ${tile('Oldest data','48','h','BrightLocal · Northcote','flat')}
+      ${tile('Ads API budget today','62','%','operation budgeter','flat')}
+      ${tile('OAuth expiring ≤7d','1','','Meta page token','down')}
+    </section>`
+  + `<section class="banner b-info"><span>Every integration is an <b>MCP connector</b>: it holds the credential in the secret store and exposes a <b>capped tool surface</b> — skills call the tools (<span class="mono">ads.mutate</span> refuses over-cap in code) and never see a raw key.</span><span class="bx">tool layer only</span></section>`
+  + `<section class="card card-pad"><div class="card-h"><h2>Connectors</h2><span class="hint">21 across 6 groups · Sydney region</span></div><div class="tw"><table class="t dense">
+      <tr><th>Connector · auth</th><th>Exposes</th><th>What it does</th><th>Sync</th><th>Status</th></tr>
+      ${conGroup('Money & billing',[['Xero','OAuth2','xero.status · xero.invoice','Accounting · webhooks fire the factory','09:12','ok'],['Stripe','API key + webhook','stripe.read · /hooks/stripe','Deposits + subscriptions','08:31','ok']])}
+      ${conGroup('Ads, SEO & analytics',[['Google Ads · MCC','OAuth2','ads.query · ads.mutate','21 accounts · offline-conv upload','06:00','ok'],['GA4 / Search Console','OAuth2','ga4.report · gsc.query','Traffic + attribution','nightly','ok'],['Google Business Profile','OAuth2','gbp.read · gbp.post','Rankings, reviews, posts','nightly','ok'],['BrightLocal','API key','rank.pull','Local rank + citations','Northcote stale 48h','warn']])}
+      ${conGroup('Comms & social',[['Gmail · support@','OAuth2 + Pub/Sub','gmail.read · gmail.draft','Inbound triage push','09:40','ok'],['Slack','OAuth · bot','slack.notify','Internal routing + digests','live','ok'],['Meta Graph · Pages','OAuth · page tokens','social.post','FB/IG posting — blocks social module','needs connect','crit'],['Twilio','API key · SIP','voice.* · sms.send','Telephony + SMS for the fleet','1 line outage','warn']])}
+      ${conGroup('Web, meetings & platform',[['Cloudflare','API token','dns.* · pages.deploy','Client DNS/SSL + static CDN','✓','ok'],['Fathom','webhook','/hooks/fathom','Meeting transcripts → W5','Fri','ok'],['Anthropic · Claude','API key','model tiers · Batches','The intelligence layer','telemetry','ok']])}
+    </table></div></section>`;
+const conGroup = (cat,rows) => `<tr><td colspan="5" class="sec-lbl" style="padding:12px 11px 6px">${cat}</td></tr>`+
+  rows.map(([n,a,t,d,s,st])=>`<tr><td class="main-cell" style="white-space:nowrap"><span class="dot dk-${st==='ok'?'ok':st==='warn'?'warn':'crit'}"></span> ${n}<div class="sub-cell">${a}</div></td><td class="mono" style="font-size:10.5px">${t}</td><td class="faint" style="font-size:11.5px">${d}</td><td class="faint" style="font-size:11px;white-space:nowrap">${s}</td><td><span class="pill ${st==='ok'?'p-ok':st==='warn'?'p-warn':'p-crit'}">${st==='ok'?'live':st==='warn'?'degraded':'disconnected'}</span></td></tr>`).join('');
+
+P.audit = () => ph('Audit Log','Append-only · every action human or AI · who / what / why / rollback',`<button class="btn btn-gh">Filter ▾</button><button class="btn btn-gh">Export CSV</button>`)
+  + `<section class="card card-pad"><div class="tw"><table class="t dense">
+      <tr><th>Time</th><th>Actor</th><th>Action</th><th>Client</th><th>Why</th><th>Gate</th><th></th></tr>
+      ${auditRow('09:31','clinic-call-agent v4.2','Recall booking confirmed, SMS sent','Hearts','caller request · 0.91',0,'run #88160')}
+      ${auditRow('09:12','email-triage v3.1','<b style="color:var(--crit)">Complaint routed to Wally — no AI ack</b>','Hearts','keywords: billing, leaving',3,'quarantined')}
+      ${auditRow('09:02','cms-edit-assistant v2.3','Publish v215 — FAQ hours','Yarra Hills','inbox · safe lane',1,'↺')}
+      ${auditRow('08:58','clinic-call-agent v4.2','Emergency script · P1 SMS','Yarra Hills','"severe swelling"',0,'recording kept')}
+      ${auditRow('08:47','WC Wally','<b>Approved</b> Tier C budget −28%/+31%','Yarra Hills','CPL remediation',2,'↺ snap')}
+      ${auditRow('06:00','ads sync','GAQL pull · 21 accounts · 1 edit reconciled','portfolio','cron 06:00',0,'complete')}
+      ${auditRow('05:30','seo sync','BrightLocal · 14/15 · Northcote suppressed','portfolio','cron 05:30',0,'partial — honest')}
+      ${auditRow('Sun','skill-evaluator v1.6','61 skills · 60 pass · ad-copy-writer v2.1 blocked','—','golden sets',0,'report')}
+    </table></div>
+    <div class="faint" style="font-size:11px;margin-top:10px">Showing 8 of 1,204 today · every row links its skill run (inputs hash, output, knowledge versions) · ↺ restores the exact prior state</div>
+    </section>`;
+const auditRow = (t,actor,action,client,why,g,extra) => `<tr><td class="mono" style="font-size:11px">${t}</td><td><span class="pill p-gray">${actor}</span></td><td>${action}</td><td class="faint" style="font-size:11.5px">${client}</td><td class="faint" style="font-size:11px">${why}</td><td>${gate(g)}</td><td class="faint" style="font-size:11px">${extra}</td></tr>`;
+
+P.skills = () => ph('Knowledge & Skills','~61 skills · precision from the ledger gates autonomy',`<button class="btn btn-gh">Run evals</button>`)
+  + `<section class="tiles">
+      ${tile('Skills registered','61','','58 active · 3 draft','flat')}
+      ${tile('Runs · 30d','8,412','','cost $214 · $0.025/run','flat')}
+      ${tile('Golden-set evals passing','60','/61','nightly + pre-promotion','up')}
+      ${tile('Graduation candidates','2','','precision streaks met','up')}
+    </section>`
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Skills</h2><span class="hint">a human flips G2→G1, informed by the number</span><span class="more">All 61 →</span></div><div class="tw"><table class="t dense">
+      <tr><th>Skill</th><th>Gate</th><th class="num">Precision</th><th class="num">Runs</th><th>Eval</th><th></th></tr>
+      <tr class="hl"><td class="main-cell">email-triage<div class="sub-cell">fast · Haiku</div></td><td>${gate(1)}</td><td class="num up"><b>97.2%</b></td><td class="num">1,841</td><td><span class="pill p-ok">pass</span></td><td class="up" style="font-size:11px;font-weight:650">streak 6wk ✓</td></tr>
+      <tr class="hl"><td class="main-cell">review-responder<div class="sub-cell">Hearts only</div></td><td>${gate(2)}</td><td class="num up"><b>96.0%</b></td><td class="num">38</td><td><span class="pill p-ok">pass</span></td><td><button class="btn btn-pri btn-sm">Graduate→G1</button></td></tr>
+      <tr><td class="main-cell">clinic-call-agent<div class="sub-cell">voice · realtime</div></td><td>${gate(0)}</td><td class="num">95.0%</td><td class="num">3,120</td><td><span class="pill p-ok">pass</span></td><td class="faint" style="font-size:11px">QA sampled</td></tr>
+      <tr><td class="main-cell">ahpra-checker<div class="sub-cell">hard gate · never graduates</div></td><td>${gate(0)}</td><td class="num">99.1%</td><td class="num">612</td><td><span class="pill p-ok">pass</span></td><td class="faint" style="font-size:11px">blocking</td></tr>
+      <tr class="hlw"><td class="main-cell">ad-copy-writer<div class="sub-cell">v2.1 blocked Sun</div></td><td>${gate(2)}</td><td class="num">89.7%</td><td class="num">96</td><td><span class="pill p-warn">v2.1 blocked</span></td><td><button class="btn btn-gh btn-sm">Eval diff</button></td></tr>
+    </table></div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Knowledge base</h2><span class="hint">versioned IP · pinned per run</span></div><div class="tw"><table class="t dense">
+      <tr><td class="main-cell">AHPRA rules</td><td class="mono">v1.8</td><td class="faint">12 Jun</td><td><button class="btn btn-gh btn-sm">diff</button></td></tr>
+      <tr><td class="main-cell">SEO playbook</td><td class="mono">v2.3</td><td class="faint">28 May</td><td><button class="btn btn-gh btn-sm">diff</button></td></tr>
+      <tr><td class="main-cell">20-80 philosophy</td><td class="mono">v3.0</td><td class="faint">14 Apr</td><td><button class="btn btn-gh btn-sm">diff</button></td></tr>
+      <tr><td class="main-cell">Design directions</td><td class="mono">v1.2</td><td class="faint">20 Jun</td><td><button class="btn btn-gh btn-sm">diff</button></td></tr>
+    </table></div>
+    <div class="banner b-ok" style="margin-top:12px"><span>Precision ledger this week: <b>31 corrections captured</b> → golden sets; 2 promoted to few-shot examples.</span></div>
+    </div></section>`;
+
+P.settings = () => ph('Settings','Autonomy dials · roles · notification routing',``)
+  + `<section class="split"><div class="card card-pad"><div class="card-h"><h2>Autonomy defaults</h2><span class="hint">per skill group · per-client overrides tracked</span></div><div class="tw"><table class="t dense">
+      <tr><th>Group</th><th>Default</th><th>Overrides</th></tr>
+      <tr><td>Communication</td><td>${gate(1)}</td><td class="faint" style="font-size:11.5px">Preston → G2 (at-risk)</td></tr>
+      <tr><td>Voice / fleet</td><td>${gate(0)}</td><td class="faint" style="font-size:11.5px">QA-sampled weekly</td></tr>
+      <tr><td>Ads mutations</td><td>${gate(2)}</td><td class="faint" style="font-size:11.5px">Hearts, Trowse → ${gate(1)}</td></tr>
+      <tr><td>CMS publishes</td><td>${gate(2)}</td><td class="faint" style="font-size:11.5px">safe lane → instant</td></tr>
+      <tr><td>Complaints · cancellations</td><td>${gate(3)}</td><td class="faint" style="font-size:11.5px"><b>no overrides possible</b></td></tr>
+      <tr><td>Spend · budgets · launches</td><td>${gate(3)}</td><td class="faint" style="font-size:11.5px">named human only</td></tr>
+    </table></div>
+    <div class="banner b-info" style="margin-top:12px"><span>G2→G1 requires a measured precision streak; a human flips it. At-risk clients auto-suspend G1.</span></div>
+    </div>
+    <div class="colstack"><div class="card card-pad"><div class="card-h"><h2>Roles</h2></div><div class="tw"><table class="t dense">
+      <tr><td>${av('WC')} Wally Chiang</td><td class="faint" style="font-size:11.5px">Owner · G3 approver</td></tr>
+      <tr><td>${av('HK')} Hamza</td><td class="faint" style="font-size:11.5px">SEO/SEM · Ads Tier C · H5</td></tr>
+      <tr><td>${av('IS')} Ish</td><td class="faint" style="font-size:11.5px">Web · factory H2–H4 · CMS</td></tr>
+      <tr><td>${av('QG')} Qing Guo</td><td class="faint" style="font-size:11.5px">Clinical reviewer · 中文</td></tr>
+    </table></div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Notification routing</h2><span class="hint">per-person · digests for the rest</span></div><div class="tw"><table class="t dense">
+      <tr><th>Event</th><th>Route</th></tr>
+      <tr><td>P1 · outage / emergency / complaint</td><td class="faint">SMS + Slack → Wally</td></tr>
+      <tr><td>Approvals waiting &gt; 4h</td><td class="faint">Slack, by domain</td></tr>
+      <tr><td>Everything else</td><td class="faint">evening digest</td></tr>
+    </table></div></div>
+    <div class="card card-pad"><div class="card-h"><h2>Appearance</h2></div><div style="display:flex;gap:8px;align-items:center"><button class="btn btn-soft btn-sm" data-set-theme="light">● Light</button><button class="btn btn-gh btn-sm" data-set-theme="dark">○ Dark</button><span class="faint" style="font-size:11px;margin-left:auto">both themes token-level</span></div></div>
+    </div></section>`;
+
+/* ---------- intake wizard ---------- */
+P.intake = () => ph('Intake Wizard','Client onboarding · appears right after first login · Factory Stage 2 · SPEC-INTAKE',
+    `<span class="pill p-teal">client portal view</span>`)
+  + `<div class="wz" id="wz"></div>`;
+
+const WZ = { step:0, type:'dental' };
+const TYPES = [['dental','General / Dental','D4W · Cliniko'],['bodywork','Bodyworker','Nookal · Cliniko'],['specialist','Specialist','referral-based']];
+const STEP_LBLS = ['Welcome','Practice','Difference','Who you serve','Web today','Authority','Assets','Review'];
+
+const fTxt = (l,h,val,pre) => `<div class="fld"><label>${l}${pre?'<span class="prefill">✓ from research — confirm</span>':''}</label>${h?`<div class="fh">${h}</div>`:''}<input type="text" value="${val||''}" placeholder="${val?'':'Type your answer…'}"></div>`;
+const fArea = (l,h,val,pbId) => `<div class="fld"><label>${l}</label>${h?`<div class="fh">${h}</div>`:''}<textarea ${pbId?`data-pb="${pbId}"`:''} placeholder="Type your answer…">${val||''}</textarea>${pbId?`<div class="pushback" id="pb-${pbId}"><b>Most practices say that.</b> What do patients actually say when they recommend you to a friend? One specific sentence beats ten generic ones.</div>`:''}</div>`;
+const fChips = (l,h,opts) => `<div class="fld"><label>${l}</label>${h?`<div class="fh">${h}</div>`:''}<div class="chips">${opts.map((o,i)=>`<span class="chip${i<2?' on':''}">${o}</span>`).join('')}</div></div>`;
+const fSel = (l,h,opts) => `<div class="fld"><label>${l}</label>${h?`<div class="fh">${h}</div>`:''}<select>${opts.map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+const slot = (icon,name,sub,done) => `<div class="slot ${done?'done':''}"><div class="si">${done?'✓':icon}</div><div><div class="sn">${name}</div><div class="ss">${sub}</div></div><div class="sa">${done?'<span class="pill p-ok">validated</span>':'<button class="btn btn-gh btn-sm">Upload</button>'}</div></div>`;
+
+function stepBody(i,type){
+  const T = {dental:'dentistry', bodywork:'bodywork', specialist:'specialist practice'}[type];
+  const treatEg = {dental:'e.g. Invisalign, Pola whitening, implants', bodywork:'e.g. lower back pain, frozen shoulder, headaches', specialist:'e.g. the procedures you\'re known for'}[type];
+  switch(i){
+    case 0: return { title:`Welcome — let's build your website the 20-80 way.`, lead:`This takes about 20 minutes, and you can stop and come back anytime — we save as you go. The questions about <b>what makes you different</b> matter most; that's where a great site is won. Everything else, we've mostly pre-filled from researching your practice already.`,
+      body:`<div class="ahpra ok"><span>◆</span><span>A strategist reviews your answers personally before anything is built — the machine collects and sharpens, a human always sets the direction.</span></div>
+        <div class="fld"><label>First, which best describes your practice?</label><div class="fh">This tailors the questions and the compliance guidance.</div>
+        <div class="wz-type">${TYPES.map(([k,n,s])=>`<button data-wztype="${k}" class="${WZ.type===k?'on':''}">${n}<small>${s}</small></button>`).join('')}</div></div>` };
+    case 1: return { title:'Your practice', lead:`We pulled this from your website and Google Business Profile — just confirm or fix anything.`,
+      body: fTxt('Registered business name','',(type==='specialist'?'Blackburn Specialist Centre':'Hearts Dental Pty Ltd'),true)
+        + fTxt('Practice address','',(type==='specialist'?'Suite 4, 120 Whitehorse Rd, Blackburn VIC':'312 High St, Preston VIC 3072'),true)
+        + `<div class="grid2">${fTxt('Phone','','(03) 9xxx xxxx',true)}${fTxt('AHPRA ID','internal only — never shown on the site','',false)}</div>`
+        + fTxt('Opening hours','entered once — propagates to your site, footer, schema, Google, and phone AI','Mon–Fri 9–5, Sat 9–1',true) };
+    case 2: return { title:'What makes you different', lead:`The single most important part. A visitor should know what makes you different within 10 seconds of landing — before they scroll.`,
+      body: fArea('How do you differentiate from competitors?','Why should a patient pick you over the practice down the road?','',(WZ.type?'diff':'diff'))
+        + fChips('Golden triangle — pick your 2 real strengths','Quality, speed, affordable — most practices honestly offer two.',['Quality','Speed','Affordable'])
+        + fArea('Treatments you want to be known for',`The ones you\'re good at, enjoy, and that pay well. ${treatEg}.`,'')
+        + fArea('What issues are you facing right now?','This shapes what the new site needs to fix.','') };
+    case 3: return { title:'Who you serve', lead:`This sets the tone, the targeting, and your local SEO spine.`,
+      body: fTxt('Who is your ideal patient?','',(''))
+        + `<div class="grid2">${fTxt('Average lifetime value per patient','helps us frame your ROI in real dollars','$')}${fTxt('Current capacity','how many can you take on vs now','')}</div>`
+        + fArea('How would patients find you online?','Keywords or phrases they\'d search, and any landmarks near you (schools, shopping centres) — this becomes your money-keyword list.','')
+        + fSel('Preferred health funds','trust signals + schema',['Select all that apply…','Bupa','HCF','Medibank','nib','Multiple'])
+        + (type!=='specialist' ? fTxt('HiCaps provider number','8-digit number on the side of your HiCaps terminal','') : '') };
+    case 4: return { title:'Your web presence today', lead:`We've pre-filled what we could see — confirm and add the taste details we can't guess.`,
+      body: fSel('What\'s the main purpose of the new site?','sets the information architecture',['Get more new-patient enquiries','Look more premium / rebrand','Rank better locally','Replace an outdated site'])
+        + fArea('Websites you like — and why','Be specific: it\'s not the sites, it\'s the *why* that decodes your taste into design direction.','','sites')
+        + `<div class="grid2">${fSel('Patient management software','booking-CTA wiring',(type==='specialist'?['Genie','Gentu','Other','None']:['Cliniko','Nookal','Dental4Windows','Praktika','Other']))}${fSel('Uses online booking?',' ',['Yes','No','Want to add it'])}</div>`
+        + `<div class="grid2">${fTxt('Social accounts','we\'ll link them','instagram.com/…',true)}${fTxt('Current site maintainer','',(type==='specialist'?'in-house':'Emergent'),true)}</div>` };
+    case 5: return { title:'Authority & community', lead:`Credibility signals — the things that make patients and referrers trust you.`,
+      body: `<div class="ahpra ${type==='specialist'?'warn':'warn'}"><span>⚖</span><span>${
+          type==='specialist'
+          ? '<b>Note on testimonials:</b> testimonials from <b>referring GPs and peers</b> are business-to-business and generally permitted — we\'ll feature them. <b>Patient</b> testimonials remain AHPRA-prohibited.'
+          : '<b>Note on testimonials:</b> AHPRA <b>prohibits patient testimonials</b> on health-practice sites. Instead we\'ll surface your Google reviews compliantly and show outcomes as data, not claims — nothing here will get you a warning.'
+        }</span></div>`
+        + fArea('Groups, affiliates, charities or community involvement','With links where possible — these become authority and trust blocks.','')
+        + (type==='specialist' ? fArea('Published papers or articles','authority signals we can feature','') + fArea('Referring GPs who\'d provide a testimonial','B2B / peer — permitted','') : '') };
+    case 6: return { title:'Assets & logins', lead:`Upload what you have — <b>none of this blocks you from finishing.</b> Anything missing, we'll chase in a friendly sequence.`,
+      body: slot('▣','Logo','vector preferred (.ai / .eps / .svg) so it stays crisp',true)
+        + slot('◧','Practice & team photos','real photos beat stock everywhere — shoot offered week 3–4',false)
+        + slot('⌘','Domain control','EPP code or registrar login — goes straight to the secure vault, never shown',false)
+        + slot('◎','Analytics / Ads access','so we can baseline before launch',true)
+        + `<div class="ahpra ok" style="margin-top:14px"><span>🔒</span><span>Your domain stays registered in <b>your</b> name and you can export everything if you ever leave — no lock-in, ever.</span></div>` };
+    case 7: return { title:'Review & submit', lead:`Here's what you told us. Edit anything, then submit — your first concepts land in 48 hours.`,
+      body: `<div class="rev">
+          ${revRow('Practice type', TYPES.find(t=>t[0]===WZ.type)[1])}
+          ${revRow('What makes you different', '“The only clinic in Preston with in-house IV sedation + a Mandarin-speaking hygienist.”')}
+          ${revRow('Strengths', 'Quality · Speed')}
+          ${revRow('Known for', treatEg.replace('e.g. ',''))}
+          ${revRow('Found via', '“emergency dentist preston”, near Preston Market')}
+          ${revRow('Assets', '2 of 4 provided — photos & domain to follow')}
+        </div>
+        <div class="ahpra ok" style="margin-top:16px"><span>◆</span><span><b>What happens next:</b> a strategist reviews your differentiators today, research is already done, and <b>three design concepts go live for you in 48 hours</b> — you'll get an email.</span></div>` };
+  }
+}
+const revRow = (l,v) => `<div class="rev-row"><span class="rl">${l}</span><span class="rv">${v}</span><span class="re">Edit</span></div>`;
+
+function renderWizard(){
+  const el = document.getElementById('wz'); if(!el) return;
+  const s = WZ.step, last = STEP_LBLS.length-1;
+  const rail = STEP_LBLS.map((_,i)=>`<div class="wz-node ${i<s?'done':i===s?'cur':''}"><span class="b" data-wzgoto="${i}">${i<s?'✓':i+1}</span>${i<last?'<span class="ln"></span>':''}</div>`).join('');
+  const sb = stepBody(s, WZ.type);
+  el.innerHTML = `<div class="wz-rail">${rail}</div><div class="wz-step-lbl">Step ${s+1} of ${STEP_LBLS.length} · ${STEP_LBLS[s]}</div>
+    <div class="wz-card"><h2>${sb.title}</h2><div class="lead">${sb.lead}</div>${sb.body}
+    <div class="wz-foot">
+      ${s>0?'<button class="btn btn-gh" data-wz="back">← Back</button>':''}
+      <span class="wz-save"><span class="d"></span>Saved just now</span>
+      <span class="wz-count">Step ${s+1} of ${STEP_LBLS.length}</span>
+      ${s<last?`<button class="btn btn-pri" data-wz="next">${s===0?'Start →':'Next →'}</button>`:'<button class="btn btn-pri" data-wz="next">Submit questionnaire</button>'}
+    </div></div>`;
+}
+
+/* ---------- render + interactions ---------- */
+function drawSpk(svg){
+  const pts=svg.dataset.pts.split(',').map(Number), w=+svg.getAttribute('width'), h=+svg.getAttribute('height'), pad=3;
+  const min=Math.min(...pts), max=Math.max(...pts), sx=w/(pts.length-1);
+  const sy=v=>max===min?h/2:pad+(h-2*pad)*(1-(v-min)/(max-min));
+  const d=pts.map((v,i)=>(i?'L':'M')+(i*sx).toFixed(1)+' '+sy(v).toFixed(1)).join(' ');
+  const col=svg.dataset.color==='ok'?'var(--ok)':'var(--accent)', ns='http://www.w3.org/2000/svg';
+  const area=document.createElementNS(ns,'path'); area.setAttribute('d',d+` L${w} ${h} L0 ${h} Z`); area.setAttribute('fill',col); area.setAttribute('opacity','.10');
+  const pl=document.createElementNS(ns,'path'); pl.setAttribute('d',d); pl.setAttribute('fill','none'); pl.setAttribute('stroke',col); pl.setAttribute('stroke-width','2'); pl.setAttribute('stroke-linecap','round'); pl.setAttribute('stroke-linejoin','round');
+  const lx=(pts.length-1)*sx, ly=sy(pts[pts.length-1]);
+  const dot=document.createElementNS(ns,'circle'); dot.setAttribute('cx',lx.toFixed(1)); dot.setAttribute('cy',ly.toFixed(1)); dot.setAttribute('r','3'); dot.setAttribute('fill',col); dot.setAttribute('stroke','var(--surface)'); dot.setAttribute('stroke-width','2');
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`); svg.style.overflow='visible'; svg.append(area,pl,dot);
+}
+function animate(){
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    document.querySelectorAll('[data-bar] > i, .track > i').forEach(el=>{ el.style.width=el.dataset.w+'%'; });
+  }));
+}
+function render(id){
+  if(!P[id]) id='today';
+  const view=document.getElementById('view');
+  view.innerHTML=P[id]();
+  document.getElementById('ptitle').textContent=TITLES[id]||'Today';
+  document.querySelectorAll('.nav-i').forEach(n=>n.classList.toggle('on',n.dataset.page===id));
+  if(id==='intake'){ WZ.step=0; renderWizard(); }
+  view.querySelectorAll('.spk').forEach(drawSpk);
+  animate();
+  window.scrollTo(0,0);
+}
+document.addEventListener('click',e=>{
+  const nav=e.target.closest('[data-page]'); if(nav){ location.hash=nav.dataset.page; return; }
+  const go=e.target.closest('[data-go]'); if(go){ location.hash=go.dataset.go; return; }
+  const st=e.target.closest('[data-set-theme]'); if(st){ document.documentElement.setAttribute('data-theme',st.dataset.setTheme); return; }
+  const ty=e.target.closest('[data-wztype]'); if(ty){ WZ.type=ty.dataset.wztype; renderWizard(); return; }
+  const goto=e.target.closest('[data-wzgoto]'); if(goto){ const i=+goto.dataset.wzgoto; if(i<=WZ.step){ WZ.step=i; renderWizard(); } return; }
+  const wz=e.target.closest('[data-wz]'); if(wz){
+    if(wz.dataset.wz==='next') WZ.step=Math.min(STEP_LBLS.length-1, WZ.step+1);
+    else if(wz.dataset.wz==='back') WZ.step=Math.max(0, WZ.step-1);
+    renderWizard(); window.scrollTo({top:0,behavior:'smooth'}); return;
+  }
+  const chip=e.target.closest('.chip'); if(chip){ chip.classList.toggle('on'); return; }
+});
+document.addEventListener('input',e=>{
+  const ta=e.target.closest('[data-pb]'); if(!ta) return;
+  const pb=document.getElementById('pb-'+ta.dataset.pb); if(!pb) return;
+  const n=ta.value.trim().length; pb.classList.toggle('show', n>0 && n<45);
+});
+document.getElementById('theme').addEventListener('click',()=>{
+  const root=document.documentElement, dark=matchMedia('(prefers-color-scheme: dark)').matches;
+  const cur=root.getAttribute('data-theme')||(dark?'dark':'light');
+  root.setAttribute('data-theme',cur==='dark'?'light':'dark');
+});
+window.addEventListener('hashchange',()=>render(location.hash.slice(1)));
+render(location.hash.slice(1)||'today');
+</script>
