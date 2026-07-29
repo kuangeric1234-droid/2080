@@ -238,7 +238,11 @@ export async function seed(client: pg.Client) {
      JSON.stringify({
        kind: 'email.send',
        client_id: clientId['hearts'],
-       data: { to: 'karen@heartsdental.com.au', subject: 'Re: Bio + pricing update' },
+       data: {
+         to: 'karen@heartsdental.com.au',
+         subject: 'Re: Bio + pricing update',
+         body: 'Hi Karen — got both requests. Pricing update is underway; could you send Dr Sharma’s new bio and headshot when ready?\n\n— The 20-80 team',
+       },
      }),
      daysAgo(-1, 8)],
   )
