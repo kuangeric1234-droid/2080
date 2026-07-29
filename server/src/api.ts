@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { type Context, Hono } from 'hono'
 import type pg from 'pg'
 import type { ModelClient } from './skills/model.ts'
 import { approve, reject } from './skills/gates.ts'
@@ -9,7 +9,7 @@ import { processInboundEmail, zeroLossAudit } from './inbox/pipeline.ts'
 import { onTaskCompleted } from './inbox/completion.ts'
 import { ack as ackNotify, listForUser, routingView, updatePrefs } from './notify.ts'
 import { deleteCookie, getCookie } from 'hono/cookie'
-import { createSession, issueCookie, type Principal, requireAuth, revokeSession, SESSION_COOKIE, verifyPassword } from './auth.ts'
+import { can, createSession, issueCookie, type Principal, requireAuth, revokeSession, SESSION_COOKIE, verifyPassword } from './auth.ts'
 import {
   MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
 } from './inbox/connectors.ts'
@@ -103,10 +103,10 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
   })
 
   app.post('/api/match-queue/:id/resolve', async (c) => {
-    const { clientId, actor } = await c.req.json<{ clientId: string; actor: string }>()
-    if (!clientId || !actor) return c.json({ error: 'clientId and actor are required' }, 400)
+    const { clientId } = await c.req.json<{ clientId: string }>()
+    if (!clientId) return c.json({ error: 'clientId is required' }, 400)
     try {
-      const result = await resolveMatch(db, c.req.param('id'), clientId, actor)
+      const result = await resolveMatch(db, c.req.param('id'), clientId, c.get('principal').handle)
       // held inbox mail is attached to its client's timeline by resolveMatch
       await db.query(
         `UPDATE inbox_messages SET state = 'filed', disposition = 'resolved_by_human'
@@ -169,10 +169,10 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
   })
 
   app.post('/api/flags/:id/resolve', async (c) => {
-    const { actor, why } = await c.req.json<{ actor: string; why: string }>()
-    if (!actor || !why) return c.json({ error: 'actor and why are required' }, 400)
+    const { why } = await c.req.json<{ why: string }>()
+    if (!why) return c.json({ error: 'why is required' }, 400)
     try {
-      await resolveFlag(db, c.req.param('id'), actor, why)
+      await resolveFlag(db, c.req.param('id'), c.get('principal').handle, why)
       return c.json({ ok: true })
     } catch (err) {
       return c.json({ error: (err as Error).message }, 409)
@@ -180,10 +180,10 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
   })
 
   app.post('/api/flags/:id/snooze', async (c) => {
-    const { actor, why } = await c.req.json<{ actor: string; why: string }>()
-    if (!actor || !why) return c.json({ error: 'actor and why are required' }, 400)
+    const { why } = await c.req.json<{ why: string }>()
+    if (!why) return c.json({ error: 'why is required' }, 400)
     try {
-      await snoozeFlag(db, c.req.param('id'), actor, why)
+      await snoozeFlag(db, c.req.param('id'), c.get('principal').handle, why)
       return c.json({ ok: true })
     } catch (err) {
       return c.json({ error: (err as Error).message }, 409)
@@ -206,11 +206,20 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
     return c.json({ items: rows })
   })
 
+  /* G3 gate items (complaints, spend, high-risk) are owner-only (SPEC-SECURITY §2). */
+  async function guardG3(c: Context<{ Variables: { principal: Principal } }>, gateItemId: string): Promise<Response | null> {
+    const { rows } = await db.query(`SELECT gate FROM gate_items WHERE id = $1`, [gateItemId])
+    if (rows[0]?.gate === 'G3' && !can(c.get('principal').role, 'g3.approve')) {
+      return c.json({ error: 'G3 actions are restricted to the agency owner' }, 403)
+    }
+    return null
+  }
+
   app.post('/api/gate-items/:id/approve', async (c) => {
-    const { actor } = await c.req.json<{ actor: string }>()
-    if (!actor) return c.json({ error: 'actor is required' }, 400)
+    const denied = await guardG3(c, c.req.param('id'))
+    if (denied) return denied
     try {
-      const decision = await approve(db, c.req.param('id'), actor)
+      const decision = await approve(db, c.req.param('id'), c.get('principal').handle)
       return c.json(decision)
     } catch (err) {
       return c.json({ error: (err as Error).message }, 409)
@@ -218,10 +227,12 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
   })
 
   app.post('/api/gate-items/:id/reject', async (c) => {
-    const { actor, reason } = await c.req.json<{ actor: string; reason: string }>()
-    if (!actor || !reason) return c.json({ error: 'actor and reason are required' }, 400)
+    const { reason } = await c.req.json<{ reason: string }>()
+    if (!reason) return c.json({ error: 'reason is required' }, 400)
+    const denied = await guardG3(c, c.req.param('id'))
+    if (denied) return denied
     try {
-      const decision = await reject(db, c.req.param('id'), actor, reason)
+      const decision = await reject(db, c.req.param('id'), c.get('principal').handle, reason)
       return c.json(decision)
     } catch (err) {
       return c.json({ error: (err as Error).message }, 409)
@@ -237,10 +248,8 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
   })
 
   app.post('/api/notifications/:id/ack', async (c) => {
-    const { actor } = await c.req.json<{ actor: string }>()
-    if (!actor) return c.json({ error: 'actor is required' }, 400)
     try {
-      return c.json(await ackNotify(db, c.req.param('id'), actor))
+      return c.json(await ackNotify(db, c.req.param('id'), c.get('principal').handle))
     } catch (err) {
       return c.json({ error: (err as Error).message }, 409)
     }

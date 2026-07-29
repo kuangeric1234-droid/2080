@@ -4,6 +4,18 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## SEC.3 · Authorization + actor-from-session (SPEC-SECURITY §2) — 2026-07-08
+
+**Context:** closes the hole SEC.1 left open — routes still trusted a client-supplied `actor` in the request body, so anyone authenticated could write audit rows under someone else's name. SEC.3 makes the audit actor the **session principal** and enforces the §2 permission matrix. (Built before SEC.2/2FA because it's the security-critical correctness fix; 2FA is additive.)
+
+**Built:** (1) **Migration 0006** — `users.handle` (WC/HK/IS/QG), the stable audit identity. (2) **`auth.ts`** — `Principal.handle` (now returned by `validateSession`); the §2 **capability matrix** (`CAPABILITIES` per role) with `can(role, cap)` and a `requireCapability(cap)` middleware. (3) **`api.ts`** — every mutation route (`flags/:id/resolve|snooze`, `gate-items/:id/approve|reject`, `notifications/:id/ack`, `match-queue/:id/resolve`) now takes `actor = c.get('principal').handle` and **no longer reads `actor` from the body**; `guardG3` makes **G3 gate items owner-only** (approve + reject) per the matrix. (4) **Seed** — the four users get handles.
+
+**Evidence:** server **65/65** — 3 new in `authz.test.ts`: the capability matrix matches the spec (owner has g3.approve, seo/clinical don't; seo has g2.approve, clinical doesn't; settings.write owner-only) · **the audit actor comes from the session, not the body** (a resolve whose body claims `actor: "IMPOSTER"` records `actor_id: "WC"` from Wally's session) · **a G3 gate item is owner-only** (Qing/clinical → 403, Wally/owner → not 403). App **17/17** unchanged — the UI still sends a body `actor`, now harmlessly ignored (the server is the authority). Both typecheck; app lint/build green.
+
+**Files:** `server/migrations/0006_authz.sql`, `server/test/authz.test.ts` (new) · `server/src/{auth.ts, api.ts, db/seed.ts}` (edits).
+
+**Decisions:** (1) Actor identity = a per-user **handle** from the session, keeping audit rows readable (`WC`) and stable while making them unforgeable. (2) SEC.3 enforces the load-bearing **owner-only G3** rule + kills body-actor trust; the finer "G2 by own domain" (specialist limited to Ads/SEO, web to CMS) is deferred until a skill→domain map exists — noted, not silently skipped. (3) `requireCapability` is wired for reuse; the Settings/autonomy-dials/billing routes will attach it when they land. (4) Per-**row** tenant scoping (practice A can't read practice B) is the next step, **SEC.4**, with its CI cross-client leak suite.
+
 ## SEC.1 · Auth foundation (SPEC-SECURITY §1) — 2026-07-08
 
 **Context:** first step of the security track from `BUILD-EXECUTION-PLAN.md` (the 8-agent whole-platform synthesis). Security is the true critical path: there was **no real auth** — `actor` was whatever the request body claimed and no route was session-scoped. SEC.1 closes the front door; SEC.2 (2FA), SEC.3 (RBAC + actor-from-principal), SEC.4 (tenant isolation) build on it.

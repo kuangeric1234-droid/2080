@@ -16,6 +16,7 @@ export interface Principal {
   sessionId: string
   userId: string
   role: string
+  handle: string // audit actor identity (WC/HK/IS/QG)
   workspaceId: string
   name: string
 }
@@ -55,7 +56,7 @@ export async function validateSession(db: pg.Client | pg.Pool, token: string | u
   if (!token) return null
   const { rows } = await db.query(
     `SELECT s.id, s.user_id, s.idle_expires_at, s.absolute_expires_at, s.revoked_at,
-            u.role, u.workspace_id, u.name
+            u.role, u.handle, u.workspace_id, u.name
      FROM sessions s JOIN users u ON u.id = s.user_id
      WHERE s.token_hash = $1`,
     [tokenHash(token)],
@@ -65,7 +66,7 @@ export async function validateSession(db: pg.Client | pg.Pool, token: string | u
   const now = new Date()
   if (now > new Date(s.absolute_expires_at) || now > new Date(s.idle_expires_at)) return null
   await db.query(`UPDATE sessions SET idle_expires_at = $2 WHERE id = $1`, [s.id, new Date(now.getTime() + IDLE_MS)])
-  return { sessionId: s.id, userId: s.user_id, role: s.role, workspaceId: s.workspace_id, name: s.name }
+  return { sessionId: s.id, userId: s.user_id, role: s.role, handle: s.handle, workspaceId: s.workspace_id, name: s.name }
 }
 
 export async function revokeSession(db: pg.Client | pg.Pool, token: string | undefined): Promise<void> {
@@ -85,6 +86,29 @@ export function requireAuth(db: pg.Client | pg.Pool) {
     const principal = await validateSession(db, getCookie(c, SESSION_COOKIE))
     if (!principal) return c.json({ error: 'authentication required' }, 401)
     c.set('principal', principal)
+    await next()
+  }
+}
+
+/* ── Authorization (SEC.3 · SPEC-SECURITY §2 permission matrix) ─────────── */
+export type Capability = 'g3.approve' | 'g2.approve' | 'settings.write' | 'billing.write' | 'client.write'
+
+const CAPABILITIES: Record<string, Set<Capability>> = {
+  owner: new Set(['g3.approve', 'g2.approve', 'settings.write', 'billing.write', 'client.write']),
+  seo: new Set(['g2.approve', 'client.write']),
+  web: new Set(['g2.approve', 'client.write']),
+  coordinator: new Set(['g2.approve', 'client.write']),
+  clinical: new Set(['client.write']), // reviewer: no approvals
+}
+
+export function can(role: string, cap: Capability): boolean {
+  return CAPABILITIES[role]?.has(cap) ?? false
+}
+
+/** Hono middleware: 403 unless the session principal holds `cap`. */
+export function requireCapability(cap: Capability) {
+  return async (c: Context<{ Variables: { principal: Principal } }>, next: Next) => {
+    if (!can(c.get('principal').role, cap)) return c.json({ error: `requires: ${cap}` }, 403)
     await next()
   }
 }

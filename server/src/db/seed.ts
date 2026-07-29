@@ -314,17 +314,17 @@ export async function seed(client: pg.Client) {
   /* ── agency users + sample notifications (§13 3.1) ────────────────────── */
   // dev password for every seeded agency user (SEC.1); rotate before real use.
   const devHash = hashPassword('demo2080')
-  const users: Array<[string, string, string, number, number, string[], string]> = [
-    ['usr_wally', 'Wally Chiang', 'owner', 21, 7, [], 'wally@2080.dental'],
-    ['usr_hamza', 'Hamza', 'seo', 22, 7, [], 'hamza@2080.dental'],
-    ['usr_ish', 'Ish', 'web', 21, 8, [], 'ish@2080.dental'],
-    ['usr_qing', 'Qing Guo', 'clinical', 20, 9, ['sales'], 'qing@2080.dental'], // clinical reviewer mutes sales
+  const users: Array<[string, string, string, string, number, number, string[], string]> = [
+    ['usr_wally', 'WC', 'Wally Chiang', 'owner', 21, 7, [], 'wally@2080.dental'],
+    ['usr_hamza', 'HK', 'Hamza', 'seo', 22, 7, [], 'hamza@2080.dental'],
+    ['usr_ish', 'IS', 'Ish', 'web', 21, 8, [], 'ish@2080.dental'],
+    ['usr_qing', 'QG', 'Qing Guo', 'clinical', 20, 9, ['sales'], 'qing@2080.dental'], // clinical reviewer mutes sales
   ]
-  for (const [uid, name, role, qs, qe, muted, email] of users) {
+  for (const [uid, handle, name, role, qs, qe, muted, email] of users) {
     await client.query(
-      `INSERT INTO users (id, workspace_id, name, role, quiet_start, quiet_end, muted_classes, email, password_hash)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-      [uid, WORKSPACE_ID, name, role, qs, qe, muted, email, devHash],
+      `INSERT INTO users (id, workspace_id, handle, name, role, quiet_start, quiet_end, muted_classes, email, password_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+      [uid, WORKSPACE_ID, handle, name, role, qs, qe, muted, email, devHash],
     )
   }
 
