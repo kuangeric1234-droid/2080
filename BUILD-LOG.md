@@ -4,6 +4,16 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## Clients CRM (§10) — 2026-07-30
+
+**Built:** the portfolio backbone — filled the placeholder Clients tab with a real CRM over the seeded data. (1) **API** — enriched `GET /api/clients` (health, lifecycle, practice type, 30-day enquiries, ad-cost, open-flag count, site-health status; worst-health-first; still carries slug+name so the audit filter keeps working) + **`GET /api/clients/:slug`** (full record: client, contacts, 12 recent timeline events, open flags, open tasks, latest SEO audit, site health, 30-day KPIs + enquiry series). (2) **App** — `ClientsPage`: a portfolio table (click a row) → a client detail view (header with health, KPI tiles incl. a return-per-$1 estimate, recent-activity timeline, open flags, contacts, and a Site & SEO summary that reuses the SEO/Site-Health signals).
+
+**Evidence:** server clients 3/3 + audit 2/2 (the enriched shape keeps the audit filter green) — targeted run; app **23/23** (2 `ClientsPage`: portfolio renders worst-health-first; clicking loads the record). Typecheck/lint/build green. **Verified live:** the six practices list worst-first (Smile To Go 48/at-risk/down → Trowse 91/up); Hearts detail shows 148 enquiries, $2,852 spend, real contacts + timeline (Karen's email, Mrs Lin's 中文 call), 1 flag, SEO 76/C, site up.
+
+**Files:** `app/src/app/ClientsPage{,.test}.tsx` (new), `server/test/clients.test.ts` (new) · `server/src/api.ts`, `app/src/app/routes.tsx` (edits).
+
+**Decisions:** (1) Ships the two most valuable surfaces (portfolio list + record) drawn entirely from real seeded data — no new external deps. (2) Detail queries run sequentially on the connection (not `Promise.all`) to avoid the single-`pg.Client` "already executing" hazard in tests. (3) The client detail deliberately reuses the SEO-audit + Site-Health signals — the record is where the monitor surfaces converge (§10 "one record, ten surfaces").
+
 ## Site Health (§13 3.6) — 2026-07-30
 
 **Built:** real uptime + SSL monitoring, same "real network, no paid API" pattern as the SEO auditor. (1) **`server/src/sitehealth/probe.ts`** — `classify()` (deterministic status: 5xx/unreachable → down; 4xx/slow/SSL<14d/canary-fail → degraded; SSL<30d → soft flag) + `probe()` (uptime & latency via fetch, SSL expiry via a TLS cert peek, both best-effort) + `runCheck()` (persists; prober injectable for tests). (2) **Migration 0008** `site_health`. (3) **API** — `GET /api/site-health` (worst-first) + `POST /api/site-health/:id/check` (live re-probe). (4) **Seed** — 5 demo sites across up/degraded/down. (5) **App** — `SiteHealthPage`: status tiles + a fleet table (status pill, latency, SSL days-left, canary, flags) with a live **Re-check** button.

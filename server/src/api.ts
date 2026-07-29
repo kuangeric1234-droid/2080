@@ -121,9 +121,61 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
     }
   })
 
+  /* Clients CRM (§10): the portfolio backbone, enriched from real seeded data.
+     Keeps the {clients:[{slug,name,...}]} shape the audit filter relies on. */
   app.get('/api/clients', async (c) => {
-    const { rows } = await db.query(`SELECT id, slug, name, lifecycle FROM clients ORDER BY name`)
+    const { rows } = await db.query(
+      `SELECT c.id, c.slug, c.name, c.lifecycle, c.practice_type, c.health_score, c.languages,
+              COALESCE(enq.n, 0)::int AS enquiries_30d,
+              ads.cost_cents::int AS ads_cost_cents,
+              COALESCE(fl.open_flags, 0)::int AS open_flags,
+              sh.status AS site_status
+       FROM clients c
+       LEFT JOIN (SELECT client_id, sum(value) n FROM metrics_daily
+                  WHERE source = 'forms' AND metric = 'enquiries' AND date > CURRENT_DATE - 30
+                  GROUP BY client_id) enq ON enq.client_id = c.id
+       LEFT JOIN (SELECT client_id, sum(value) FILTER (WHERE metric = 'cost_cents') AS cost_cents
+                  FROM metrics_daily WHERE source = 'ads' AND date > CURRENT_DATE - 30
+                  GROUP BY client_id) ads ON ads.client_id = c.id
+       LEFT JOIN (SELECT client_id, count(*) open_flags FROM flags WHERE state = 'open' GROUP BY client_id) fl ON fl.client_id = c.id
+       LEFT JOIN site_health sh ON sh.client_id = c.id
+       WHERE c.archived_at IS NULL
+       ORDER BY c.health_score ASC NULLS LAST, c.name`,
+    )
     return c.json({ clients: rows })
+  })
+
+  app.get('/api/clients/:slug', async (c) => {
+    const { rows: crows } = await db.query(
+      `SELECT id, slug, name, practice_type, lifecycle, health_score, languages, timezone, guarantee_started_at, created_at
+       FROM clients WHERE slug = $1`, [c.req.param('slug')])
+    if (crows.length === 0) return c.json({ error: 'not found' }, 404)
+    const client = crows[0]
+    const cid = client.id
+
+    const contacts = (await db.query(
+      `SELECT name, email, phone, role, is_vip FROM contacts WHERE client_id = $1 ORDER BY is_vip DESC, name`, [cid])).rows
+    const timeline = (await db.query(
+      `SELECT type, occurred_at, title, body, source FROM timeline_events WHERE client_id = $1 ORDER BY occurred_at DESC LIMIT 12`, [cid])).rows
+    const flags = (await db.query(
+      `SELECT id, severity, title, workflow, opened_at FROM flags WHERE client_id = $1 AND state = 'open' ORDER BY opened_at DESC`, [cid])).rows
+    const tasks = (await db.query(
+      `SELECT id, title, assignee, status, due_at, sla_state FROM tasks WHERE client_id = $1 AND status = 'open' ORDER BY due_at NULLS LAST LIMIT 10`, [cid])).rows
+    const seo = (await db.query(
+      `SELECT id, url, score, grade, created_at FROM seo_audits WHERE client_id = $1 ORDER BY created_at DESC LIMIT 1`, [cid])).rows[0] ?? null
+    const site = (await db.query(
+      `SELECT url, status, latency_ms, ssl_days_left, form_canary, flags FROM site_health WHERE client_id = $1 LIMIT 1`, [cid])).rows[0] ?? null
+    const kpis = (await db.query(
+      `SELECT COALESCE(sum(value) FILTER (WHERE source='forms' AND metric='enquiries'),0)::int AS enquiries,
+              COALESCE(sum(value) FILTER (WHERE source='ads' AND metric='cost_cents'),0)::int AS ads_cost_cents,
+              COALESCE(sum(value) FILTER (WHERE source='ads' AND metric='conversions'),0)::int AS conversions
+       FROM metrics_daily WHERE client_id = $1 AND date > CURRENT_DATE - 30`, [cid])).rows[0]
+    const series = (await db.query(
+      `SELECT date, sum(value)::float AS v FROM metrics_daily
+       WHERE client_id = $1 AND source='forms' AND metric='enquiries' AND date > CURRENT_DATE - 30
+       GROUP BY date ORDER BY date`, [cid])).rows.map((r) => r.v)
+
+    return c.json({ client, contacts, timeline, flags, tasks, seo, site, kpis, series })
   })
 
   /* Audit viewer (§13 1.7): filter by client, actor, action family.
