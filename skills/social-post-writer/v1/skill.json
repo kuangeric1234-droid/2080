@@ -1,0 +1,11 @@
+{
+  "name": "social-post-writer",
+  "version": "v1",
+  "description": "Drafts one Facebook / Instagram / GBP post for a health practice, grounded in the profile, AHPRA-firewalled. G2 — human approves every post. Fills the social gap (open q #9).",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "social.post",
+  "expires_hours": 72,
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `social`. Needs a golden set of real 20-80 practice posts + an AHPRA violation test suite before it can enter shadow mode. Depends on the Meta Graph connector (currently disconnected) for FB/IG."
+}

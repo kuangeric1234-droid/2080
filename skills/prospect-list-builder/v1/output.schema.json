@@ -1,0 +1,83 @@
+{
+  "type": "object",
+  "properties": {
+    "prospects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "score": { "type": "string", "enum": ["Hot", "Warm", "Cold", "Skip"] },
+          "segment": { "type": "string" },
+          "why_prospect": { "type": "string" },
+          "buying_signal": { "type": "string" },
+          "contact": {
+            "type": "object",
+            "properties": {
+              "channel": { "type": "string", "enum": ["email", "phone", "web_form"] },
+              "value": { "type": "string" },
+              "source_url": { "type": "string" }
+            },
+            "required": ["channel", "value", "source_url"],
+            "additionalProperties": false
+          },
+          "qualifications": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "criterion": { "type": "string" },
+                "verdict": { "type": "string", "enum": ["pass", "fail", "unknown"] },
+                "source_field": { "type": "string" },
+                "source_url": { "type": "string" }
+              },
+              "required": ["criterion", "verdict", "source_field", "source_url"],
+              "additionalProperties": false
+            }
+          },
+          "confidence": { "type": "string", "enum": ["High", "Medium", "Low"] },
+          "verified_date": { "type": "string" }
+        },
+        "required": ["name", "score", "segment", "why_prospect", "buying_signal", "contact", "qualifications", "confidence", "verified_date"],
+        "additionalProperties": false
+      }
+    },
+    "top_targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "rationale": { "type": "string" }
+        },
+        "required": ["name", "rationale"],
+        "additionalProperties": false
+      }
+    },
+    "excluded": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "reason": { "type": "string" }
+        },
+        "required": ["name", "reason"],
+        "additionalProperties": false
+      }
+    },
+    "search_params": {
+      "type": "object",
+      "properties": {
+        "icp_segment": { "type": "string" },
+        "target_count": { "type": "number" },
+        "returned_count": { "type": "number" },
+        "generated_date": { "type": "string" }
+      },
+      "required": ["icp_segment", "target_count", "returned_count", "generated_date"],
+      "additionalProperties": false
+    }
+  },
+  "required": ["prospects", "top_targets", "excluded", "search_params"],
+  "additionalProperties": false
+}

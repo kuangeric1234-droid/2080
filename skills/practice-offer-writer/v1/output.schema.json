@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "offer_name": { "type": "string" },
+    "included": { "type": "array", "items": { "type": "string" } },
+    "eligibility": { "type": "string" },
+    "value_framing": { "type": "string" },
+    "validity": { "type": "string" },
+    "cta": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["book", "call", "enquire"] },
+        "label": { "type": "string" }
+      },
+      "required": ["type", "label"],
+      "additionalProperties": false
+    },
+    "compliance_flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "concern": { "type": "string" },
+          "needs": { "type": "string", "enum": ["wally_review", "legal_review", "none"] }
+        },
+        "required": ["concern", "needs"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["offer_name", "included", "eligibility", "value_framing", "validity", "cta", "compliance_flags"],
+  "additionalProperties": false
+}

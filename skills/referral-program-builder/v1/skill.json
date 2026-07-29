@@ -1,0 +1,10 @@
+{
+  "name": "referral-program-builder",
+  "version": "v1",
+  "description": "Designs a patient word-of-mouth or specialist-GP referral program, privacy- and AHPRA-appropriate. G2 — human approves; inducement risks flagged.",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `referrals`. Needs AHPRA inducement-rule grounding + Privacy Act review + examples of real practice referral programs before shadow mode. Pairs with reputation-pack-builder / review-requester."
+}

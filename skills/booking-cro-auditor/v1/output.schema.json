@@ -1,0 +1,27 @@
+{
+  "type": "object",
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string",
+            "enum": ["value_prop", "primary_cta", "friction", "local_trust", "mobile_speed"]
+          },
+          "issue": { "type": "string" },
+          "fix": { "type": "string" },
+          "impact": { "type": "string", "enum": ["high", "medium", "low"] },
+          "ahpra_note": { "type": ["string", "null"] },
+          "money_page_risk": { "type": "boolean" }
+        },
+        "required": ["dimension", "issue", "fix", "impact", "money_page_risk"],
+        "additionalProperties": false
+      }
+    },
+    "summary": { "type": "string" }
+  },
+  "required": ["findings", "summary"],
+  "additionalProperties": false
+}

@@ -1,0 +1,10 @@
+{
+  "name": "marketing-idea-generator",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Generates ranked marketing strategy ideas grounded in 20-80's product profile. G0 — advisory only, no spend, no send.",
+  "gate": "G0",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `marketing-ideas`. Agency-internal GTM tool — no client AHPRA gate. Needs a golden set of real 20-80 GTM briefs with expected idea categories before it can enter shadow mode."
+}

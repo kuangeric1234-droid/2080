@@ -1,0 +1,10 @@
+{
+  "name": "pricing-packager",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Drafts a value-metric + good-better-best tiers proposal for a 20-80 offering or the ~$30k training program, grounded in 20-80's offering records. G2 — a named human owns any price change.",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `pricing`. Agency-internal (no client AHPRA gate). Needs a golden set of real 20-80 offering + training-program packaging proposals before it can enter shadow mode."
+}

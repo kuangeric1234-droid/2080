@@ -1,0 +1,10 @@
+{
+  "name": "sales-collateral-writer",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Drafts one deck outline / one-pager / objection doc / demo script for selling the platform, grounded in 20-80's positioning and proof points. G2 — a human reviews before use.",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `sales-enablement`. Agency-internal (20-80's own sales), so no client AHPRA suite applies. Needs a golden set of real 20-80 sales assets (decks, one-pagers, objection docs, demo scripts) before it can enter shadow mode."
+}

@@ -1,0 +1,24 @@
+{
+  "type": "object",
+  "properties": {
+    "message": { "type": "string" },
+    "segments": { "type": "integer", "minimum": 1 },
+    "opt_out_line": { "type": "string" },
+    "language": { "type": "string", "enum": ["en", "zh"] },
+    "consent_ok": { "type": "boolean" },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": { "type": "string" },
+          "source_field": { "type": "string" }
+        },
+        "required": ["claim", "source_field"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["message", "segments", "opt_out_line", "language", "consent_ok", "claims"],
+  "additionalProperties": false
+}

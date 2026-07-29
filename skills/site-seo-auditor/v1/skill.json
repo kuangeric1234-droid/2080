@@ -1,0 +1,10 @@
+{
+  "name": "site-seo-auditor",
+  "version": "v1",
+  "description": "Audits a practice website's technical and on-page SEO from crawl data; AHPRA-safe, profile-grounded findings. G1 advisory — never edits; money-page fixes routed to agency review.",
+  "gate": "G1",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `seo-audit`. Needs a golden set of scored real practice-site crawls + an AHPRA violation test suite (no testimonial/guarantee/urgency copy in recommended tags) + seo-guard integration before shadow mode."
+}

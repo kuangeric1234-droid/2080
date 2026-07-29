@@ -1,0 +1,10 @@
+{
+  "name": "prospect-list-builder",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Turns an ICP plus raw candidate records into a scored, evidence-backed prospect list for the sales engine, grounded in provided source fields. G1 — advisory, a human owns the list.",
+  "gate": "G1",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `prospecting` (framework mined; B2B-SaaS copy and tactics discarded). Agency-internal, so no client AHPRA suite is required. Needs a golden set of real 20-80 ICP-fit prospect lists — scored and verified by the sales lead — before it can enter shadow mode."
+}

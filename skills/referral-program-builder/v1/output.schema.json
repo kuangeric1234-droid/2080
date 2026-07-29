@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "properties": {
+    "program_type": { "type": "string", "enum": ["patient_word_of_mouth", "specialist_gp", "both"] },
+    "mechanic": { "type": "string" },
+    "incentive": { "type": "string" },
+    "channels": { "type": "array", "items": { "type": "string" } },
+    "automation": { "type": "array", "items": { "type": "string" } },
+    "compliance_flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "concern": { "type": "string" },
+          "needs": { "type": "string", "enum": ["wally_review", "legal_review", "privacy_review", "none"] }
+        },
+        "required": ["concern", "needs"],
+        "additionalProperties": false
+      }
+    },
+    "rollout_steps": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["program_type", "mechanic", "incentive", "channels", "automation", "compliance_flags", "rollout_steps"],
+  "additionalProperties": false
+}

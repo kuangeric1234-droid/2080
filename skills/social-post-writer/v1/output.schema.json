@@ -1,0 +1,33 @@
+{
+  "type": "object",
+  "properties": {
+    "headline": { "type": "string" },
+    "body": { "type": "string" },
+    "cta": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["book", "call", "directions", "learn_more", "message"] },
+        "label": { "type": "string" }
+      },
+      "required": ["type", "label"],
+      "additionalProperties": false
+    },
+    "hashtags": { "type": "array", "items": { "type": "string" } },
+    "language": { "type": "string", "enum": ["en", "zh"] },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": { "type": "string" },
+          "source_field": { "type": "string" }
+        },
+        "required": ["claim", "source_field"],
+        "additionalProperties": false
+      }
+    },
+    "image_brief": { "type": "string" }
+  },
+  "required": ["headline", "body", "cta", "hashtags", "language", "claims", "image_brief"],
+  "additionalProperties": false
+}

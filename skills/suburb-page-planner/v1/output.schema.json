@@ -1,0 +1,81 @@
+{
+  "type": "object",
+  "properties": {
+    "hub": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "url": { "type": "string" }
+      },
+      "required": ["title", "url"],
+      "additionalProperties": false
+    },
+    "pages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "suburb": { "type": "string" },
+          "url": { "type": "string" },
+          "title": { "type": "string" },
+          "meta_description": { "type": "string" },
+          "unique_angle": { "type": "string" },
+          "sections": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "heading": { "type": "string" },
+                "intent": { "type": "string" }
+              },
+              "required": ["heading", "intent"],
+              "additionalProperties": false
+            }
+          },
+          "word_floor_met": { "type": "boolean" },
+          "cta": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["book", "call", "directions"] },
+              "label": { "type": "string" }
+            },
+            "required": ["type", "label"],
+            "additionalProperties": false
+          },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "claim": { "type": "string" },
+                "source_field": { "type": "string" }
+              },
+              "required": ["claim", "source_field"],
+              "additionalProperties": false
+            }
+          },
+          "ahpra_flags": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["suburb", "url", "title", "meta_description", "unique_angle", "sections", "word_floor_met", "cta", "claims", "ahpra_flags"],
+        "additionalProperties": false
+      }
+    },
+    "dropped_suburbs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "suburb": { "type": "string" },
+          "reason": { "type": "string" }
+        },
+        "required": ["suburb", "reason"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["hub", "pages", "dropped_suburbs"],
+  "additionalProperties": false
+}

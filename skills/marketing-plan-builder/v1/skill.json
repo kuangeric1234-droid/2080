@@ -1,0 +1,10 @@
+{
+  "name": "marketing-plan-builder",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Builds a comprehensive AARRR-structured 12-month marketing plan for 20-80 or a campaign, grounded in the intake record. G1 — advisory, a human owns the plan.",
+  "gate": "G1",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `marketing-plan` (SaaS framework mined, its B2B copy/tactics discarded). Needs a golden set of real 20-80 GTM plans scored against the AARRR + grounding rubric before it can enter shadow mode. Agency-internal, so no AHPRA suite required."
+}

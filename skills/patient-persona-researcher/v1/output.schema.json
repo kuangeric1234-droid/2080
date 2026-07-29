@@ -1,0 +1,30 @@
+{
+  "type": "object",
+  "properties": {
+    "personas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": { "type": "string" },
+          "trigger": { "type": "string" },
+          "prior_attempts": { "type": "string" },
+          "desired_outcome": { "type": "string" },
+          "anxieties": { "type": "array", "items": { "type": "string" } },
+          "verbatim_phrases": { "type": "array", "items": { "type": "string" } },
+          "source_refs": {
+            "type": "array",
+            "items": { "type": "string", "enum": ["review", "intake", "enquiry", "competitor"] }
+          }
+        },
+        "required": ["label", "trigger", "desired_outcome", "anxieties", "verbatim_phrases", "source_refs"],
+        "additionalProperties": false
+      }
+    },
+    "voice_of_patient": { "type": "array", "items": { "type": "string" } },
+    "content_angles": { "type": "array", "items": { "type": "string" } },
+    "intake_gaps": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["personas", "voice_of_patient", "content_angles", "intake_gaps"],
+  "additionalProperties": false
+}

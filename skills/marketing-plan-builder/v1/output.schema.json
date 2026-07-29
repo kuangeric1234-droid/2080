@@ -1,0 +1,112 @@
+{
+  "type": "object",
+  "properties": {
+    "executive_summary": {
+      "type": "object",
+      "properties": {
+        "big_bets": { "type": "array", "items": { "type": "string" } },
+        "priorities_90day": { "type": "array", "items": { "type": "string" } },
+        "outcome_12month": { "type": "string" }
+      },
+      "required": ["big_bets", "priorities_90day", "outcome_12month"],
+      "additionalProperties": false
+    },
+    "strategic_frame": {
+      "type": "object",
+      "properties": {
+        "category_claim": { "type": "string" },
+        "icp": { "type": "string" },
+        "voice": { "type": "string" }
+      },
+      "required": ["category_claim", "icp", "voice"],
+      "additionalProperties": false
+    },
+    "current_state": {
+      "type": "object",
+      "properties": {
+        "stage": { "type": "string" },
+        "working": { "type": "array", "items": { "type": "string" } },
+        "stuck": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["stage", "working", "stuck"],
+      "additionalProperties": false
+    },
+    "aarrr": {
+      "type": "object",
+      "properties": {
+        "acquisition": { "$ref": "#/$defs/stage" },
+        "activation": { "$ref": "#/$defs/stage" },
+        "retention": { "$ref": "#/$defs/stage" },
+        "referral": { "$ref": "#/$defs/stage" },
+        "revenue": { "$ref": "#/$defs/stage" }
+      },
+      "required": ["acquisition", "activation", "retention", "referral", "revenue"],
+      "additionalProperties": false
+    },
+    "roadmap_90day": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "week_range": { "type": "string" },
+          "action": { "type": "string" },
+          "aarrr_stage": { "type": "string", "enum": ["acquisition", "activation", "retention", "referral", "revenue"] },
+          "owner": { "type": "string" }
+        },
+        "required": ["week_range", "action", "aarrr_stage", "owner"],
+        "additionalProperties": false
+      }
+    },
+    "outlook_12month": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "quarter": { "type": "string" },
+          "milestone": { "type": "string" },
+          "unlock": { "type": "string" }
+        },
+        "required": ["quarter", "milestone", "unlock"],
+        "additionalProperties": false
+      }
+    },
+    "open_decisions": { "type": "array", "items": { "type": "string" } },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": { "type": "string" },
+          "source": { "type": "string" }
+        },
+        "required": ["claim", "source"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["executive_summary", "strategic_frame", "current_state", "aarrr", "roadmap_90day", "outlook_12month", "open_decisions", "claims"],
+  "additionalProperties": false,
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "properties": {
+        "summary": { "type": "string" },
+        "moves": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "move": { "type": "string" },
+              "horizon": { "type": "string", "enum": ["90day", "12month", "skip"] },
+              "source": { "type": "string" }
+            },
+            "required": ["move", "horizon", "source"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["summary", "moves"],
+      "additionalProperties": false
+    }
+  }
+}

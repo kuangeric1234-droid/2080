@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "properties": {
+    "subject": { "type": "string" },
+    "body": { "type": "string" },
+    "cta": { "type": "string" },
+    "touch": { "type": "string", "enum": ["first", "followup"] },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": { "type": "string" },
+          "source_field": { "type": "string" }
+        },
+        "required": ["claim", "source_field"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["subject", "body", "cta", "touch", "claims"],
+  "additionalProperties": false
+}

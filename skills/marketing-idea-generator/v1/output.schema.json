@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "properties": {
+    "ideas": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "category": {
+            "type": "string",
+            "enum": [
+              "content_seo",
+              "competitor",
+              "free_tools",
+              "paid_ads",
+              "social_community",
+              "email",
+              "partnerships",
+              "events",
+              "pr_media",
+              "launches",
+              "product_led",
+              "unconventional",
+              "platforms",
+              "developer",
+              "referrals"
+            ]
+          },
+          "why_it_fits": { "type": "string" },
+          "first_steps": { "type": "array", "items": { "type": "string" } },
+          "expected_outcome": { "type": "string" },
+          "resources": {
+            "type": "object",
+            "properties": {
+              "time": { "type": "string" },
+              "budget": { "type": "string" },
+              "skills": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["time", "budget", "skills"],
+            "additionalProperties": false
+          },
+          "source_field": { "type": "string" }
+        },
+        "required": ["name", "category", "why_it_fits", "first_steps", "expected_outcome", "resources", "source_field"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["ideas"],
+  "additionalProperties": false
+}

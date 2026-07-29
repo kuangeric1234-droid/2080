@@ -1,0 +1,10 @@
+{
+  "name": "suburb-page-planner",
+  "version": "v1",
+  "description": "Plans one suburb landing page per served suburb for a health practice, grounded in the profile, AHPRA-firewalled, with a hard no-thin-content floor. G2 — a human approves the plan.",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `programmatic-seo`. Needs a golden set of real 20-80 practice suburb-page plans + an AHPRA violation test suite (testimonials, guarantees, s133 inducements, urgency/scarcity) before it can enter shadow mode."
+}

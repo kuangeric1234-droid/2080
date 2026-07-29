@@ -1,0 +1,46 @@
+{
+  "type": "object",
+  "properties": {
+    "value_metric": {
+      "type": "object",
+      "properties": {
+        "metric": { "type": "string" },
+        "reason": { "type": "string" }
+      },
+      "required": ["metric", "reason"],
+      "additionalProperties": false
+    },
+    "tiers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "rank": { "type": "string", "enum": ["good", "better", "best", "flat"] },
+          "recommended": { "type": "boolean" },
+          "price": { "type": "string" },
+          "who_for": { "type": "string" },
+          "includes": { "type": "array", "items": { "type": "string" } },
+          "limits": { "type": "string" }
+        },
+        "required": ["name", "rank", "recommended", "price", "who_for", "includes", "limits"],
+        "additionalProperties": false
+      }
+    },
+    "price_rationale": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "figure": { "type": "string" },
+          "source_field": { "type": "string" }
+        },
+        "required": ["figure", "source_field"],
+        "additionalProperties": false
+      }
+    },
+    "open_questions": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["value_metric", "tiers", "price_rationale", "open_questions"],
+  "additionalProperties": false
+}

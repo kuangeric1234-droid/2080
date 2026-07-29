@@ -1,0 +1,10 @@
+{
+  "name": "marketing-council",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Simulates a board of legendary marketers to pressure-test one 20-80 marketing decision and surface the disagreements. Advisory only, changes nothing — G0.",
+  "gate": "G0",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `marketing-council`. Agency-internal, so no client AHPRA suite is required. Needs a golden set of real 20-80 GTM questions with graded reference councils (correct seating, a genuine dissenter, grounded framework-based takes, no fabricated quotes) before it can enter shadow mode."
+}

@@ -1,0 +1,10 @@
+{
+  "name": "positioning-writer",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Drafts foundational positioning/differentiation context for 20-80 and its training product, grounded in provided inputs. G1 — advisory, a human owns the doc.",
+  "gate": "G1",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `product-marketing` (mined for framework; SaaS copy discarded). Agency-internal, so no client AHPRA suite is required. Needs a golden set of real 20-80 positioning briefs (approved by the founders) before it can enter shadow mode."
+}

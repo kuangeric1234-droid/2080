@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "properties": {
+    "positioning_statement": { "type": "string" },
+    "category": { "type": "string" },
+    "target_buyer": { "type": "string" },
+    "differentiators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": { "type": "string" },
+          "source_field": { "type": "string" }
+        },
+        "required": ["claim", "source_field"],
+        "additionalProperties": false
+      }
+    },
+    "competitive_frame": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "kind": { "type": "string", "enum": ["direct", "secondary", "indirect"] },
+          "falls_short": { "type": "string" }
+        },
+        "required": ["name", "kind", "falls_short"],
+        "additionalProperties": false
+      }
+    },
+    "objections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "objection": { "type": "string" },
+          "response": { "type": "string" }
+        },
+        "required": ["objection", "response"],
+        "additionalProperties": false
+      }
+    },
+    "proof_points": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": { "type": "string" },
+          "source_field": { "type": "string" }
+        },
+        "required": ["claim", "source_field"],
+        "additionalProperties": false
+      }
+    },
+    "voice": { "type": "string" },
+    "open_questions": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "required": ["positioning_statement", "category", "target_buyer", "differentiators", "competitive_frame", "objections", "proof_points", "voice", "open_questions"],
+  "additionalProperties": false
+}

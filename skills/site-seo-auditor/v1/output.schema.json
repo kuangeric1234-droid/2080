@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "area": {
+            "type": "string",
+            "enum": ["crawlability", "indexation", "speed_cwv", "mobile", "on_page", "local_seo"]
+          },
+          "issue": { "type": "string" },
+          "evidence": { "type": "string" },
+          "fix": { "type": "string" },
+          "impact": { "type": "string", "enum": ["high", "medium", "low"] },
+          "ahpra_note": { "type": ["string", "null"] },
+          "money_page_risk": { "type": "boolean" }
+        },
+        "required": ["area", "issue", "evidence", "fix", "impact", "money_page_risk"],
+        "additionalProperties": false
+      }
+    },
+    "summary": { "type": "string" }
+  },
+  "required": ["findings", "summary"],
+  "additionalProperties": false
+}

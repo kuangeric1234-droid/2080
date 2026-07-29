@@ -1,0 +1,10 @@
+{
+  "name": "content-calendar-planner",
+  "version": "v1",
+  "description": "Plans a seasonal, bilingual (EN + 中文) content calendar for one health practice, grounded in the profile, AHPRA-firewalled; feeds the Calendar / Content Studio. G2 — a human approves the plan.",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `content-strategy` (its pillars/clusters + buyer-stage framework mined; the B2B-SaaS tactics discarded). Needs a golden set of real 20-80 practice calendars + an AHPRA violation test suite before it can enter shadow mode."
+}

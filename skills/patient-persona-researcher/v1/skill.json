@@ -1,0 +1,10 @@
+{
+  "name": "patient-persona-researcher",
+  "version": "v1",
+  "description": "Synthesises reviews / intake / enquiries into grounded patient personas + voice-of-patient language. Research only, no action. Feeds PRD, content, ad angles.",
+  "gate": "G0",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `customer-research`. Needs a golden set of hand-built personas from real practice review corpora before shadow mode; verify no-PII rule in evals."
+}

@@ -1,0 +1,11 @@
+{
+  "name": "practice-sms-writer",
+  "version": "v1",
+  "description": "Drafts one consent-first patient SMS (reminder / recall / update) for a health practice, grounded in the profile and consent record, AHPRA- and opt-out-firewalled. G2 — a human approves every send.",
+  "gate": "G2",
+  "model_tier": "fast",
+  "action": "sms.send",
+  "expires_hours": 24,
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `sms`. Needs a golden set of real 20-80 practice SMS (reminder / recall / update, incl. opted-out and transactional-only cases) + an AHPRA violation test suite and a consent/opt-out test suite before it can enter shadow mode. Depends on the SMS connector for delivery."
+}

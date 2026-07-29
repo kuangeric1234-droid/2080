@@ -1,0 +1,58 @@
+{
+  "type": "object",
+  "properties": {
+    "pillars": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "rationale": { "type": "string" }
+        },
+        "required": ["name", "rationale"],
+        "additionalProperties": false
+      }
+    },
+    "calendar": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string" },
+          "topic": { "type": "string" },
+          "content_type": { "type": "string", "enum": ["education", "community", "service-awareness", "seasonal"] },
+          "channel": { "type": "string", "enum": ["facebook", "instagram", "gbp", "blog", "newsletter"] },
+          "language": { "type": "string", "enum": ["en", "zh"] },
+          "brief": { "type": "string" },
+          "season_or_event": { "type": "string" },
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "claim": { "type": "string" },
+                "source_field": { "type": "string" }
+              },
+              "required": ["claim", "source_field"],
+              "additionalProperties": false
+            }
+          },
+          "ahpra_flag": {
+            "type": "object",
+            "properties": {
+              "risk": { "type": "string", "enum": ["none", "s133_inducement", "review"] },
+              "note": { "type": "string" }
+            },
+            "required": ["risk", "note"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["date", "topic", "content_type", "channel", "language", "brief", "season_or_event", "claims", "ahpra_flag"],
+        "additionalProperties": false
+      }
+    },
+    "notes": { "type": "array", "items": { "type": "string" } }
+  },
+  "required": ["pillars", "calendar", "notes"],
+  "additionalProperties": false
+}

@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "properties": {
+    "asset": { "type": "string", "enum": ["deck", "one_pager", "objection_doc", "demo_script"] },
+    "title": { "type": "string" },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": { "type": "string" },
+          "body": { "type": "string" },
+          "notes": { "type": "string" }
+        },
+        "required": ["heading", "body"],
+        "additionalProperties": false
+      }
+    },
+    "objection_responses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "objection": { "type": "string" },
+          "real_concern": { "type": "string" },
+          "response": { "type": "string" },
+          "proof_point": { "type": "string" }
+        },
+        "required": ["objection", "real_concern", "response", "proof_point"],
+        "additionalProperties": false
+      }
+    },
+    "cta": { "type": "string" },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": { "type": "string" },
+          "source": { "type": "string" }
+        },
+        "required": ["claim", "source"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["asset", "title", "sections", "cta", "claims"],
+  "additionalProperties": false
+}

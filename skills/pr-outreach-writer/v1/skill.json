@@ -1,0 +1,11 @@
+{
+  "name": "pr-outreach-writer",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Drafts one journalist / podcast / newsletter pitch grounded in 20-80's press kit and story facts. G2 — a human approves every pitch before it is sent.",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "none",
+  "expires_hours": 72,
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `public-relations` (framework mined, B2B-SaaS copy discarded). Agency-internal, so no client AHPRA suite. Needs a golden set of real 20-80 pitches scored against the quality bar (on-beat, <150 words, clear ask, banned words absent) before it can enter shadow mode."
+}

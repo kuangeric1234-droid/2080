@@ -1,0 +1,10 @@
+{
+  "name": "practice-offer-writer",
+  "version": "v1",
+  "description": "Designs an AHPRA-compliant practice promotion (the offer itself), stripped of scarcity/guarantee/testimonial tactics. G2 — human approves; prohibited-inducement risks flagged for legal.",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `offers` — heavy compliance reframe. Needs AHPRA/National-Law s133 rules corpus (open q #13) + a violation test suite + lawyer review before shadow mode."
+}

@@ -1,0 +1,11 @@
+{
+  "name": "cold-outreach-writer",
+  "version": "v1",
+  "description": "Agency-internal — for 20-80's own GTM, not client health sites. Drafts one B2B cold outreach email (or follow-up) to a prospective practice, grounded in the prospect record and 20-80's offer, spam/consent-aware. G2 — human approves every send.",
+  "gate": "G2",
+  "model_tier": "top",
+  "action": "email.send",
+  "expires_hours": 72,
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `cold-email`. Agency-internal (no client AHPRA suite needed). Needs a golden set of real 20-80 outreach threads (first-touch + follow-up, with graded reply quality) before it can enter shadow mode."
+}

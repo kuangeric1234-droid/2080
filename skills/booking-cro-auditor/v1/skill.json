@@ -1,0 +1,10 @@
+{
+  "name": "booking-cro-auditor",
+  "version": "v1",
+  "description": "Audits a practice page for booking/enquiry conversion; AHPRA-safe, block-library-bound recommendations. G1 advisory — never edits; money-page fixes routed to agency review.",
+  "gate": "G1",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `cro`. Needs a golden set of scored real practice pages + block-library grounding + seo-guard integration before shadow mode."
+}

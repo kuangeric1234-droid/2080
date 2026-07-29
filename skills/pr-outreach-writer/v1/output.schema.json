@@ -1,0 +1,25 @@
+{
+  "type": "object",
+  "properties": {
+    "subject": { "type": "string" },
+    "body": { "type": "string" },
+    "mode": { "type": "string", "enum": ["reactive", "proactive", "inbound"] },
+    "ask": { "type": "string", "enum": ["interview", "exclusive", "embargo", "quote", "contribute"] },
+    "word_count": { "type": "integer" },
+    "claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "claim": { "type": "string" },
+          "source_field": { "type": "string" }
+        },
+        "required": ["claim", "source_field"],
+        "additionalProperties": false
+      }
+    },
+    "beat_match": { "type": "string" }
+  },
+  "required": ["subject", "body", "mode", "ask", "word_count", "claims", "beat_match"],
+  "additionalProperties": false
+}

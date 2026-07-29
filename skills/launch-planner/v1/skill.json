@@ -1,0 +1,10 @@
+{
+  "name": "launch-planner",
+  "version": "v1",
+  "description": "Plans a phased launch for a 20-80 product / feature / announcement — ORB channel mix and a dated checklist, grounded in the release facts. Agency-internal — for 20-80's own GTM, not client health sites. G1 — advisory, the team reviews.",
+  "gate": "G1",
+  "model_tier": "top",
+  "action": "none",
+  "lifecycle_state": "draft",
+  "lifecycle_note": "Adapted from coreyhaines31/marketingskills `launch`. Needs a golden set of real 20-80 launch plans (varied kinds — product, feature, announcement) before it can enter shadow mode. Agency-internal, so no AHPRA suite required."
+}
