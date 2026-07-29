@@ -7,6 +7,7 @@ import { resolveMatch } from './matcher.ts'
 import { rankFlags, resolveFlag, snoozeFlag, todayTiles } from './flags.ts'
 import { processInboundEmail, zeroLossAudit } from './inbox/pipeline.ts'
 import { onTaskCompleted } from './inbox/completion.ts'
+import { ack as ackNotify, listForUser, routingView, updatePrefs } from './notify.ts'
 import {
   MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
 } from './inbox/connectors.ts'
@@ -196,6 +197,35 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
       return c.json(decision)
     } catch (err) {
       return c.json({ error: (err as Error).message }, 409)
+    }
+  })
+
+  /* Notifications (§13 3.1): the notification center + per-user routing.
+     Emission (route/escalate) is internal — called by the pipeline/gates and
+     the cron escalator; these are the read/act + preferences surfaces. */
+  app.get('/api/notifications', async (c) => {
+    const user = c.req.query('user') ?? 'usr_wally'
+    return c.json(await listForUser(db, user))
+  })
+
+  app.post('/api/notifications/:id/ack', async (c) => {
+    const { actor } = await c.req.json<{ actor: string }>()
+    if (!actor) return c.json({ error: 'actor is required' }, 400)
+    try {
+      return c.json(await ackNotify(db, c.req.param('id'), actor))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 409)
+    }
+  })
+
+  app.get('/api/notifications/routing', async (c) => c.json(await routingView(db)))
+
+  app.put('/api/users/:id/prefs', async (c) => {
+    const prefs = await c.req.json<{ quiet_start?: number; quiet_end?: number; muted_classes?: string[] }>()
+    try {
+      return c.json(await updatePrefs(db, c.req.param('id'), prefs))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 404)
     }
   })
 

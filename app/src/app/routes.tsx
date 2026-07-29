@@ -4,6 +4,7 @@ import { GatesPage } from './GatesPage'
 import { AuditPage } from './AuditPage'
 import { InboxPage } from './InboxPage'
 import { TodayPage } from './TodayPage'
+import { NotificationsPage } from './NotificationsPage'
 import { PagePlaceholder } from './PagePlaceholder'
 import { NAV_ITEMS } from './nav'
 
@@ -25,6 +26,8 @@ export function AppRoutes() {
             element={BUILT[item.id] ? BUILT[item.id]() : <PagePlaceholder item={item} />}
           />
         ))}
+        {/* off-rail: reached via the topbar bell (step 3.1) */}
+        <Route path="notifications" element={<NotificationsPage />} />
         {/* dev preview until the Today approval queue lands (step 1.6) */}
         <Route path="gates" element={<GatesPage />} />
         <Route path="*" element={<Navigate to="/today" replace />} />

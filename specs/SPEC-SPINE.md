@@ -70,5 +70,5 @@ pg-boss queues named `source.action` (`gmail.process`, `ads.pull`, `run.page`) �
 - [ ] Migrations for §2 + entity_maps + gate_items + sync_status. **Test:** every table rejects rows missing workspace_id; timeline is append-only (UPDATE revoked at DB role level).
 - [ ] Matcher per §3. **Test:** 30-event golden set ≥95% correct; shared-domain case queues instead of guessing; queue choice creates a mapping that auto-matches next time.
 - [ ] Gate framework per §4. **Test:** approve executes the frozen payload byte-identical; input-drift invalidates; graduation streak counts and resets on edit.
-- [ ] Notification router per §5. **Test:** red bypasses quiet hours; coalescing collapses 5 same-key events to 1; unacked red escalates.
+- [x] Notification router per §5 (built at §13 3.1). **Test:** red bypasses quiet hours; coalescing collapses 5 same-key events to 1; unacked red escalates. ✓
 - [ ] Audit viewer. **Test:** every action in the other tests appears with actor, why, and rollback pointer where applicable.

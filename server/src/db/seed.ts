@@ -27,7 +27,7 @@ export async function seed(client: pg.Client) {
   const tables = [
     'entity_maps', 'notifications', 'audit_log', 'gate_items', 'precision_ledger',
     'skill_runs', 'sync_status', 'metrics_daily', 'deals', 'tasks', 'flags',
-    'requests', 'timeline_events', 'contacts', 'clients', 'workspaces',
+    'requests', 'timeline_events', 'contacts', 'clients', 'users', 'workspaces',
   ]
   await client.query(`TRUNCATE ${tables.join(', ')} CASCADE`)
 
@@ -307,6 +307,37 @@ export async function seed(client: pg.Client) {
       `INSERT INTO inbox_messages (id, workspace_id, message_id, thread_id, from_email, to_email, subject, body_text, received_at, state, disposition, request_ids, match_queue_id)
        VALUES ($1, $2, $3, $4, $5, 'support@2080.dental', $6, $7, $8, $9, $10, $11, $12)`,
       [id('in'), WORKSPACE_ID, msgId, threadId, from, subject, body, at, state, disposition, requestIds, mqId],
+    )
+  }
+
+  /* ── agency users + sample notifications (§13 3.1) ────────────────────── */
+  const users: Array<[string, string, string, number, number, string[]]> = [
+    ['usr_wally', 'Wally Chiang', 'owner', 21, 7, []],
+    ['usr_hamza', 'Hamza', 'seo', 22, 7, []],
+    ['usr_ish', 'Ish', 'web', 21, 8, []],
+    ['usr_qing', 'Qing Guo', 'clinical', 20, 9, ['sales']], // clinical reviewer mutes sales
+  ]
+  for (const [uid, name, role, qs, qe, muted] of users) {
+    await client.query(
+      `INSERT INTO users (id, workspace_id, name, role, quiet_start, quiet_end, muted_classes)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [uid, WORKSPACE_ID, name, role, qs, qe, muted],
+    )
+  }
+
+  const notifs: Array<[string, string, string, string, string, string | null, string[], number]> = [
+    // user, class, severity, title, body, clientSlug, channels_sent, minutesAgo
+    ['usr_wally', 'receptionist', 'red', 'Emergency script read — Yarra Hills', 'P1 SMS sent to the practice.', 'yarra-hills', ['slack_dm', 'sms', 'push'], 3],
+    ['usr_wally', 'gate', 'red', 'Ack draft waiting — Hearts Dental', 'email-triage drafted an acknowledgement; approve to send.', 'hearts', ['slack_dm', 'in_app'], 8],
+    ['usr_ish', 'monitor', 'red', 'Form-canary failed — Hearts Dental', 'Third consecutive fail; task #4183 raised.', 'hearts', ['slack_channel', 'in_app'], 15],
+    ['usr_wally', 'monitor', 'amber', 'CPL red 5 days — Yarra Hills', 'Cost per enquiry above target; ads-optimiser has a proposal.', 'yarra-hills', ['in_app', 'digest'], 40],
+    ['usr_hamza', 'monitor', 'amber', 'Ranking drop — dentist blackburn 4→9', 'seo-diagnose is running against the CMS deploy log.', null, ['in_app', 'digest'], 120],
+  ]
+  for (const [uid, cls, sev, title, body, slug, channels, mins] of notifs) {
+    await client.query(
+      `INSERT INTO notifications (id, workspace_id, user_id, event_class, severity, client_id, title, body, channels_sent, created_at)
+       VALUES ($1, $2, $3, $4, $5, (SELECT id FROM clients WHERE slug = $6), $7, $8, $9, $10)`,
+      [id('ntf'), WORKSPACE_ID, uid, cls, sev, slug, title, body, JSON.stringify(channels), new Date(Date.now() - mins * 60_000)],
     )
   }
 }

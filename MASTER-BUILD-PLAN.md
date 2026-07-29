@@ -432,7 +432,7 @@ Composition over generation · specificity by construction (every claim traces t
 - **Stage DoD:** Mrs Lin E2E on a real phone · simulator suite green on 2 practice configs · emergency drill passes in both languages · blind listen test ≤60% detection · fleet health bar (§8) holds 4 consecutive weeks before selling.
 
 ### Stage 3 — Monitors (ship WITH notification routing, not before)
-- [ ] 3.1 Notification center + per-user routing/digests.
+- [x] 3.1 Notification center + per-user routing/digests. **Done 2026-07-08** — router (SPEC-SPINE §5 matrix, quiet hours w/ red-bypass, 10-min coalescing, 30-min escalation), notification center + routing/digests UI (topbar bell), per-user prefs; server 7 tests (incl. the §5 DoD), app 2 tests.
 - [ ] 3.2 **Ads (W3) — build to `specs/SPEC-ADS.md`:** MCC connection, GAQL daily pull, benchmark engine + gates, ads-optimiser queue, mutation pipeline (validateOnly → execute → snapshot → audit), change-watch. Plus SPEC-ADS §7: 3.2a ads-auditor + audit card · 3.2b keyword-recommender + search-term triage + coverage map · 3.2c measurement-first gate + health strip · 3.2d connector hardening (version pinning, operation budgeter, lag windows, change-history reconciler, offline-upload pipeline). **Test:** Yarra Hills E2E; cap-exceed refused by code; seeded broken account → auditor finds ≥10/12 known issues; recs missing any of the 6 components fail CI.
 - [ ] 3.3 Offline conversion upload from fleet outcomes. **Test:** rescued-call booking appears in Ads as conversion.
 - [ ] 3.4 **SEO (W4):** BrightLocal sync, diff engine, 2-day rule, seo-diagnose, opportunity cards. **Test:** "dentist blackburn 4→9" scenario produces diagnosis citing CMS deploy log.

@@ -47,7 +47,7 @@ export function AppShell() {
   const [clock, setClock] = useState(nowInMelbourne)
 
   const path = location.pathname.replace(/^\//, '')
-  const OFF_RAIL_TITLES: Record<string, string> = { gates: 'Gate items' }
+  const OFF_RAIL_TITLES: Record<string, string> = { gates: 'Gate items', notifications: 'Notifications' }
   const title = navItemById(path)?.label ?? OFF_RAIL_TITLES[path] ?? 'Today'
 
   useEffect(() => {
@@ -141,6 +141,15 @@ export function AppShell() {
           </div>
           <div className="ml-auto flex items-center gap-3">
             <span className="num text-[12.5px] text-ink-muted">{clock}</span>
+            <NavLink
+              to="/notifications"
+              title="Notifications"
+              aria-label="Notifications"
+              className="relative flex size-8 items-center justify-center rounded-lg border border-line bg-surface text-[15px] text-ink-muted hover:border-teal hover:text-ink"
+            >
+              <span aria-hidden>&#128276;</span>
+              <span className="absolute top-1 right-1 size-[7px] rounded-full bg-crit ring-2 ring-surface" />
+            </NavLink>
             <Button
               variant="outline"
               size="icon"
