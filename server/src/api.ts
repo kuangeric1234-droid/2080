@@ -10,6 +10,7 @@ import { onTaskCompleted } from './inbox/completion.ts'
 import { ack as ackNotify, listForUser, routingView, updatePrefs } from './notify.ts'
 import { deleteCookie, getCookie } from 'hono/cookie'
 import { can, createSession, issueCookie, type Principal, requireAuth, revokeSession, SESSION_COOKIE, verifyPassword } from './auth.ts'
+import { runAudit } from './seo/audit.ts'
 import {
   MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
 } from './inbox/connectors.ts'
@@ -293,6 +294,41 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
       gateItemId: outcome.gateItemId,
       executed: outcome.executed,
     }, outcome.error ? 422 : 200)
+  })
+
+  /* SEO site audit (SPEC-SEO §4.2): analyse a live URL → scored on-page/technical
+     report. Deterministic (real HTML, no external API); seo-diagnose narrates later. */
+  app.post('/api/seo/audit', async (c) => {
+    const { url, clientSlug } = await c.req.json<{ url: string; clientSlug?: string }>()
+    if (!url || !/\./.test(url)) return c.json({ error: 'a website URL is required' }, 400)
+    let clientId: string | null = null
+    if (clientSlug) {
+      const { rows } = await db.query(`SELECT id FROM clients WHERE slug = $1`, [clientSlug])
+      clientId = rows[0]?.id ?? null
+    }
+    const result = await runAudit(db, { url, clientId, requestedBy: c.get('principal').handle })
+    return c.json(result)
+  })
+
+  app.get('/api/seo/audits', async (c) => {
+    const { rows } = await db.query(
+      `SELECT a.id, a.url, a.final_url, a.status, a.score, a.grade, a.created_at, a.requested_by,
+              cl.slug AS client_slug, cl.name AS client_name
+       FROM seo_audits a LEFT JOIN clients cl ON cl.id = a.client_id
+       ORDER BY a.created_at DESC LIMIT 50`,
+    )
+    return c.json({ audits: rows })
+  })
+
+  app.get('/api/seo/audit/:id', async (c) => {
+    const { rows } = await db.query(
+      `SELECT a.id, a.url, a.final_url, a.status, a.score, a.grade, a.report, a.created_at,
+              cl.name AS client_name
+       FROM seo_audits a LEFT JOIN clients cl ON cl.id = a.client_id WHERE a.id = $1`,
+      [c.req.param('id')],
+    )
+    if (rows.length === 0) return c.json({ error: 'not found' }, 404)
+    return c.json(rows[0])
   })
 
   return app

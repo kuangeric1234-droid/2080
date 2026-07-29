@@ -3,6 +3,7 @@ import path from 'node:path'
 import pg from 'pg'
 import { monotonicFactory } from 'ulid'
 import { hashPassword } from '../auth.ts'
+import { analyze } from '../seo/analyze.ts'
 
 const ulid = monotonicFactory()
 const id = (prefix: string) => `${prefix}_${ulid()}`
@@ -26,7 +27,7 @@ const wave = (base: number, amp: number, day: number, phase = 0) =>
 /** Truncates everything and reseeds the demo portfolio (§13 1.2 DoD). */
 export async function seed(client: pg.Client) {
   const tables = [
-    'sessions', 'entity_maps', 'notifications', 'audit_log', 'gate_items', 'precision_ledger',
+    'sessions', 'seo_audits', 'entity_maps', 'notifications', 'audit_log', 'gate_items', 'precision_ledger',
     'skill_runs', 'sync_status', 'metrics_daily', 'deals', 'tasks', 'flags',
     'requests', 'timeline_events', 'contacts', 'clients', 'users', 'workspaces',
   ]
@@ -347,6 +348,34 @@ export async function seed(client: pg.Client) {
       [id('ntf'), WORKSPACE_ID, uid, cls, sev, slug, title, body, JSON.stringify(channels), new Date(Date.now() - mins * 60_000)],
     )
   }
+
+  /* ── one example SEO audit (real analysis of a sample page) ───────────── */
+  const sampleHtml = `<!doctype html><html lang="en"><head>
+    <title>Hearts Dental — Family &amp; Cosmetic Dentist in Preston</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="canonical" href="https://heartsdental.com.au/">
+  </head><body>
+    <h1>Gentle family and cosmetic dentistry in Preston</h1>
+    <h2>Caring for Preston families since 2004</h2>
+    <p>Hearts Dental is a family-owned practice on High Street in Preston, offering check-ups,
+    hygiene, cosmetic dentistry and emergency care. Our team speaks English and Mandarin, and
+    we welcome nervous patients. We are a preferred provider for Bupa and HCF and offer HiCaps
+    on-the-spot claiming. Same-day emergency appointments are usually available.</p>
+    <h2>Our services</h2>
+    <p>General and preventive dentistry, teeth whitening, Invisalign clear aligners, implants
+    and children's dentistry. Book online or call the practice.</p>
+    <img src="/team.jpg" alt="The dentists at Hearts Dental in Preston">
+    <img src="/surgery.jpg">
+    <a href="/services">Services</a> <a href="/contact">Contact</a>
+    <a href="https://www.google.com/maps">Find us</a>
+  </body></html>`
+  const sampleReport = analyze('https://heartsdental.com.au', sampleHtml,
+    { status: 200, finalUrl: 'https://heartsdental.com.au/', https: true })
+  await client.query(
+    `INSERT INTO seo_audits (id, workspace_id, client_id, url, final_url, status, score, grade, report, requested_by, created_at)
+     VALUES ($1, $2, $3, 'https://heartsdental.com.au', 'https://heartsdental.com.au/', 200, $4, $5, $6, 'HK', $7)`,
+    [id('seo'), WORKSPACE_ID, clientId['hearts'], sampleReport.score, sampleReport.grade, JSON.stringify(sampleReport), daysAgo(1, 10)],
+  )
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])

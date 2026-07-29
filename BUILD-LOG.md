@@ -4,6 +4,18 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## SEO site auditor (SPEC-SEO §4.2) — 2026-07-08
+
+**Context:** asked for working SEO — "analyse a website, the report it creates." The rank-monitoring half of W4/§13 3.4 (BrightLocal/GSC/GBP) is credential-blocked, but the **on-page + technical audit is buildable now** (reads the real HTML, no external API), so built that slice — the evidence layer `seo-diagnose` will narrate once the model key lands.
+
+**Built:** (1) **`server/src/seo/analyze.ts`** — a deterministic engine: parses the page (node-html-parser) and scores five categories 0–100 + a grade — Indexation & crawlability (HTTP status, HTTPS, canonical, noindex), Content & on-page (title/meta length, single H1, headings, word-count w/ the 20-80 <250-word thin rule), Structured data & social (JSON-LD, Open Graph), Images (alt-text coverage), Technical & mobile (viewport, lang, page weight, links). (2) **`audit.ts`** — fetches the URL (follows redirects, 12s timeout, UA), analyses, persists, writes an `seo.audit` audit-log row. (3) **Migration 0007** `seo_audits`. (4) **API** — `POST /api/seo/audit` + `GET /api/seo/audits` + `GET /api/seo/audit/:id` (gated; actor from session per SEC.3). (5) **Seed** — one example audit from real analysis of a sample Hearts page. (6) **App** — `SeoPage`: an "Analyse a website" input → scored report (grade, category bars, findings by severity) + a recent-audits list you can reopen.
+
+**Evidence:** server **72/72** — 4 analyzer units (well-optimised page ≥85 no criticals · broken page flags noindex/viewport/h1/title as critical, grade F · missing-meta + thin as warnings · counts images missing alt) + 3 API/DB (stubbed fetch: stores + lists + `requested_by`/audit actor = WC from session · blank url 400 · unauth 401). App **19/19** (2 SeoPage: runs an audit and renders the report; opens a past audit). Typecheck/lint/build green. **Verified LIVE against the running stack:** analysed `2080solutions.com.au` → **88/100 (B)**, 1,232 words, flagged an 88-char title + missing OG + 4 images missing alt; seeded Hearts example 76/C.
+
+**Files:** `server/src/seo/{analyze,audit}.ts`, `server/migrations/0007_seo.sql`, `server/test/{analyze,seo}.test.ts`, `app/src/app/SeoPage{,.test}.tsx` (new) · `server/src/{api.ts, db/seed.ts}`, `server/package.json` (+node-html-parser), `app/src/app/routes.tsx` (edits).
+
+**Decisions:** (1) The mechanical audit is **real and API-free** — it's the deterministic evidence layer; the `seo-diagnose`/`site-seo-auditor` LLM skill (narrative + prioritisation) layers on once the Anthropic key lands. (2) This is **not** §13 3.4 complete — rank monitoring (drops/opportunities over time, the 2-day rule, recovery tracker) needs BrightLocal/GSC/GBP and stays blocked; this is the on-demand-audit slice, aligned to SPEC-SEO §4.2 and the `site-seo-auditor` skill contract. (3) Audits are workspace-scoped and actor-attributed (SEC.1/SEC.3).
+
 ## SEC.3 · Authorization + actor-from-session (SPEC-SECURITY §2) — 2026-07-08
 
 **Context:** closes the hole SEC.1 left open — routes still trusted a client-supplied `actor` in the request body, so anyone authenticated could write audit rows under someone else's name. SEC.3 makes the audit actor the **session principal** and enforces the §2 permission matrix. (Built before SEC.2/2FA because it's the security-critical correctness fix; 2FA is additive.)

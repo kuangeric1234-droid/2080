@@ -5,6 +5,7 @@ import { AuditPage } from './AuditPage'
 import { InboxPage } from './InboxPage'
 import { TodayPage } from './TodayPage'
 import { NotificationsPage } from './NotificationsPage'
+import { SeoPage } from './SeoPage'
 import { PagePlaceholder } from './PagePlaceholder'
 import { NAV_ITEMS } from './nav'
 
@@ -12,6 +13,7 @@ const BUILT: Record<string, () => React.ReactElement> = {
   today: () => <TodayPage />,
   inbox: () => <InboxPage />,
   audit: () => <AuditPage />,
+  seo: () => <SeoPage />,
 }
 
 export function AppRoutes() {
