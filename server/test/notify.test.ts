@@ -9,6 +9,7 @@ import { seed } from '../src/db/seed.ts'
 import { ack, escalate, listForUser, MATRIX, route, routingView, updatePrefs } from '../src/notify.ts'
 import { buildApp } from '../src/api.ts'
 import { MockModelClient } from '../src/skills/model.ts'
+import { authed } from './helpers.ts'
 
 const PORT = 5507
 let server: EmbeddedPostgres
@@ -130,16 +131,17 @@ describe('notification center + routing view', () => {
 
   it('serves the feed and ack over HTTP', async () => {
     const app = buildApp(db, new MockModelClient(() => ({})))
-    const res = await app.request('/api/notifications?user=usr_ish')
+    const req = await authed(app)
+    const res = await req('/api/notifications?user=usr_ish')
     expect(res.status).toBe(200)
     const body = (await res.json()) as { notifications: Array<{ id: string; read_at: string | null }>; unread: number }
     expect(body.unread).toBeGreaterThan(0)
     const target = body.notifications.find((n) => n.read_at === null)!
-    const acked = await app.request(`/api/notifications/${target.id}/ack`, {
+    const acked = await req(`/api/notifications/${target.id}/ack`, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ actor: 'IS' }),
     })
     expect(acked.status).toBe(200)
-    const dbl = await app.request(`/api/notifications/${target.id}/ack`, {
+    const dbl = await req(`/api/notifications/${target.id}/ack`, {
       method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ actor: 'IS' }),
     })
     expect(dbl.status).toBe(409)

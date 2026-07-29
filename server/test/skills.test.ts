@@ -12,6 +12,7 @@ import { MockModelClient, costCents } from '../src/skills/model.ts'
 import { runSkill } from '../src/skills/runner.ts'
 import { approve, reject, graduationStreak, inputHash } from '../src/skills/gates.ts'
 import { buildApp } from '../src/api.ts'
+import { authed } from './helpers.ts'
 
 const PORT = 5498
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures/skills')
@@ -232,7 +233,8 @@ describe('gate framework (SPEC-SPINE §4)', () => {
 describe('api', () => {
   it('lists pending gate items with client context and approves via HTTP', async () => {
     const app = buildApp(db, helloMock)
-    const runRes = await app.request('/api/skills/hello-world/run', {
+    const req = await authed(app)
+    const runRes = await req('/api/skills/hello-world/run', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ clientSlug: 'hearts', trigger: 'api-test' }),
@@ -240,14 +242,14 @@ describe('api', () => {
     expect(runRes.status).toBe(200)
     const { gateItemId } = (await runRes.json()) as { gateItemId: string }
 
-    const listRes = await app.request('/api/gate-items?state=pending')
+    const listRes = await req('/api/gate-items?state=pending')
     const { items } = (await listRes.json()) as { items: Array<Record<string, string>> }
     const item = items.find((i) => i.id === gateItemId)
     expect(item).toBeDefined()
     expect(item?.client_slug).toBe('hearts')
     expect(item?.skill).toBe('hello-world')
 
-    const approveRes = await app.request(`/api/gate-items/${gateItemId}/approve`, {
+    const approveRes = await req(`/api/gate-items/${gateItemId}/approve`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ actor: 'WC' }),
@@ -257,7 +259,7 @@ describe('api', () => {
     expect(decision.outcome).toBe('executed')
 
     // double-approve conflicts
-    const again = await app.request(`/api/gate-items/${gateItemId}/approve`, {
+    const again = await req(`/api/gate-items/${gateItemId}/approve`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ actor: 'WC' }),

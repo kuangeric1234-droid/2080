@@ -163,6 +163,16 @@ export function AppShell() {
             <div className="flex size-8 items-center justify-center rounded-full bg-gradient-to-br from-info to-[#274e86] text-[11.5px] font-[650] text-white">
               WC
             </div>
+            <button
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' })
+                window.location.assign('/')
+              }}
+              className="text-[11px] text-ink-faint hover:text-ink"
+              title="Sign out"
+            >
+              Sign out
+            </button>
           </div>
         </header>
         <main className="flex w-full max-w-[1380px] flex-col gap-4 px-6 pt-5 pb-11">

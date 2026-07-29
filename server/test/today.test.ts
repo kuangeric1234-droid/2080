@@ -9,6 +9,7 @@ import { seed } from '../src/db/seed.ts'
 import { rankFlags, resolveFlag, snoozeFlag, todayTiles } from '../src/flags.ts'
 import { buildApp } from '../src/api.ts'
 import { MockModelClient } from '../src/skills/model.ts'
+import { authed } from './helpers.ts'
 
 const PORT = 5501
 let server: EmbeddedPostgres
@@ -119,20 +120,21 @@ describe('today tiles', () => {
 describe('today api', () => {
   it('serves tiles + ranked flags + queue count; flag actions work over HTTP', async () => {
     const app = buildApp(db, new MockModelClient(() => ({})))
-    const res = await app.request('/api/today')
+    const req = await authed(app)
+    const res = await req('/api/today')
     expect(res.status).toBe(200)
     const body = (await res.json()) as { tiles: unknown[]; flags: Array<{ id: string }>; pendingGateItems: number }
     expect(body.tiles).toHaveLength(4)
     expect(body.pendingGateItems).toBeGreaterThanOrEqual(1) // seeded ack-writer item
 
     const flagId = body.flags[0].id
-    const act = await app.request(`/api/flags/${flagId}/resolve`, {
+    const act = await req(`/api/flags/${flagId}/resolve`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ actor: 'WC', why: 'handled in the ads change loop' }),
     })
     expect(act.status).toBe(200)
-    const again = await app.request(`/api/flags/${flagId}/resolve`, {
+    const again = await req(`/api/flags/${flagId}/resolve`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ actor: 'WC', why: 'again' }),

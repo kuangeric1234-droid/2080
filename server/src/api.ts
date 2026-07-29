@@ -8,6 +8,8 @@ import { rankFlags, resolveFlag, snoozeFlag, todayTiles } from './flags.ts'
 import { processInboundEmail, zeroLossAudit } from './inbox/pipeline.ts'
 import { onTaskCompleted } from './inbox/completion.ts'
 import { ack as ackNotify, listForUser, routingView, updatePrefs } from './notify.ts'
+import { deleteCookie, getCookie } from 'hono/cookie'
+import { createSession, issueCookie, type Principal, requireAuth, revokeSession, SESSION_COOKIE, verifyPassword } from './auth.ts'
 import {
   MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
 } from './inbox/connectors.ts'
@@ -15,7 +17,7 @@ import {
 /** The platform API. Small on purpose — routes land with the §13 step that
     needs them. */
 export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors?: InboxConnectors) {
-  const app = new Hono()
+  const app = new Hono<{ Variables: { principal: Principal } }>()
   const inboxConnectors: InboxConnectors =
     connectors ?? { mail: new MockMailSender(), tasks: new MockActiveCollab() }
   /* Live is safe while the mail/task connectors are mocks. The moment real
@@ -46,6 +48,32 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
       return c.json({ error: (err as Error).message }, 422)
     }
   })
+
+  /* ── Auth (SEC.1 · SPEC-SECURITY §1) ────────────────────────────────────
+     login + logout are public and registered here BEFORE the gate; everything
+     under /api/* below requires a valid session cookie. /hooks/* use HMAC
+     (SEC.6), and /api/health stays public (registered at the top). */
+  app.post('/api/auth/login', async (c) => {
+    const { email, password } = await c.req.json<{ email: string; password: string }>()
+    const { rows } = await db.query(
+      `SELECT id, name, role, workspace_id, password_hash FROM users WHERE email = $1`, [email])
+    const u = rows[0]
+    if (!u || !verifyPassword(password, u.password_hash)) {
+      return c.json({ error: 'invalid email or password' }, 401)
+    }
+    issueCookie(c, await createSession(db, u))
+    return c.json({ user: { id: u.id, name: u.name, role: u.role } })
+  })
+
+  app.post('/api/auth/logout', async (c) => {
+    await revokeSession(db, getCookie(c, SESSION_COOKIE))
+    deleteCookie(c, SESSION_COOKIE, { path: '/' })
+    return c.json({ ok: true })
+  })
+
+  app.use('/api/*', requireAuth(db))
+
+  app.get('/api/auth/me', (c) => c.json({ user: c.get('principal') }))
 
   app.get('/api/inbox', async (c) => {
     const { rows: messages } = await db.query(

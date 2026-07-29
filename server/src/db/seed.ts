@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import pg from 'pg'
 import { monotonicFactory } from 'ulid'
+import { hashPassword } from '../auth.ts'
 
 const ulid = monotonicFactory()
 const id = (prefix: string) => `${prefix}_${ulid()}`
@@ -25,7 +26,7 @@ const wave = (base: number, amp: number, day: number, phase = 0) =>
 /** Truncates everything and reseeds the demo portfolio (§13 1.2 DoD). */
 export async function seed(client: pg.Client) {
   const tables = [
-    'entity_maps', 'notifications', 'audit_log', 'gate_items', 'precision_ledger',
+    'sessions', 'entity_maps', 'notifications', 'audit_log', 'gate_items', 'precision_ledger',
     'skill_runs', 'sync_status', 'metrics_daily', 'deals', 'tasks', 'flags',
     'requests', 'timeline_events', 'contacts', 'clients', 'users', 'workspaces',
   ]
@@ -311,17 +312,19 @@ export async function seed(client: pg.Client) {
   }
 
   /* ── agency users + sample notifications (§13 3.1) ────────────────────── */
-  const users: Array<[string, string, string, number, number, string[]]> = [
-    ['usr_wally', 'Wally Chiang', 'owner', 21, 7, []],
-    ['usr_hamza', 'Hamza', 'seo', 22, 7, []],
-    ['usr_ish', 'Ish', 'web', 21, 8, []],
-    ['usr_qing', 'Qing Guo', 'clinical', 20, 9, ['sales']], // clinical reviewer mutes sales
+  // dev password for every seeded agency user (SEC.1); rotate before real use.
+  const devHash = hashPassword('demo2080')
+  const users: Array<[string, string, string, number, number, string[], string]> = [
+    ['usr_wally', 'Wally Chiang', 'owner', 21, 7, [], 'wally@2080.dental'],
+    ['usr_hamza', 'Hamza', 'seo', 22, 7, [], 'hamza@2080.dental'],
+    ['usr_ish', 'Ish', 'web', 21, 8, [], 'ish@2080.dental'],
+    ['usr_qing', 'Qing Guo', 'clinical', 20, 9, ['sales'], 'qing@2080.dental'], // clinical reviewer mutes sales
   ]
-  for (const [uid, name, role, qs, qe, muted] of users) {
+  for (const [uid, name, role, qs, qe, muted, email] of users) {
     await client.query(
-      `INSERT INTO users (id, workspace_id, name, role, quiet_start, quiet_end, muted_classes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [uid, WORKSPACE_ID, name, role, qs, qe, muted],
+      `INSERT INTO users (id, workspace_id, name, role, quiet_start, quiet_end, muted_classes, email, password_hash)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [uid, WORKSPACE_ID, name, role, qs, qe, muted, email, devHash],
     )
   }
 

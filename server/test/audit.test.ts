@@ -15,6 +15,7 @@ import { resolveFlag } from '../src/flags.ts'
 import { resolveMatch, ingestEvent } from '../src/matcher.ts'
 import { rankFlags } from '../src/flags.ts'
 import { buildApp } from '../src/api.ts'
+import { authed } from './helpers.ts'
 
 const PORT = 5502
 let server: EmbeddedPostgres
@@ -79,7 +80,8 @@ describe('audit viewer (§13 1.7)', () => {
     await resolveMatch(db, held.queueId, trowseId, 'QG') // match.resolve
 
     const app = buildApp(db, model)
-    const all = (await (await app.request('/api/audit')).json()) as {
+    const req = await authed(app)
+    const all = (await (await req('/api/audit')).json()) as {
       entries: Array<{ action: string; actor_id: string; why: string; client_slug: string | null }>
       actors: string[]
       actions: string[]
@@ -95,17 +97,17 @@ describe('audit viewer (§13 1.7)', () => {
     }
 
     // client filter
-    const hearts = (await (await app.request('/api/audit?client=hearts')).json()) as typeof all
+    const hearts = (await (await req('/api/audit?client=hearts')).json()) as typeof all
     expect(hearts.entries.length).toBeGreaterThan(0)
     for (const e of hearts.entries) expect(e.client_slug).toBe('hearts')
 
     // actor filter
-    const qg = (await (await app.request('/api/audit?actor=QG')).json()) as typeof all
+    const qg = (await (await req('/api/audit?actor=QG')).json()) as typeof all
     expect(qg.entries.length).toBeGreaterThan(0)
     for (const e of qg.entries) expect(e.actor_id).toBe('QG')
 
     // action-family filter (workflow lens): all gate decisions
-    const gates = (await (await app.request('/api/audit?action=gate.')).json()) as typeof all
+    const gates = (await (await req('/api/audit?action=gate.')).json()) as typeof all
     expect(gates.entries.length).toBeGreaterThan(0)
     for (const e of gates.entries) expect(e.action.startsWith('gate.')).toBe(true)
 
