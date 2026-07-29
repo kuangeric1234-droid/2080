@@ -4,6 +4,7 @@ import pg from 'pg'
 import { monotonicFactory } from 'ulid'
 import { hashPassword } from '../auth.ts'
 import { analyze } from '../seo/analyze.ts'
+import { classify } from '../sitehealth/probe.ts'
 
 const ulid = monotonicFactory()
 const id = (prefix: string) => `${prefix}_${ulid()}`
@@ -27,7 +28,7 @@ const wave = (base: number, amp: number, day: number, phase = 0) =>
 /** Truncates everything and reseeds the demo portfolio (§13 1.2 DoD). */
 export async function seed(client: pg.Client) {
   const tables = [
-    'sessions', 'seo_audits', 'entity_maps', 'notifications', 'audit_log', 'gate_items', 'precision_ledger',
+    'sessions', 'seo_audits', 'site_health', 'entity_maps', 'notifications', 'audit_log', 'gate_items', 'precision_ledger',
     'skill_runs', 'sync_status', 'metrics_daily', 'deals', 'tasks', 'flags',
     'requests', 'timeline_events', 'contacts', 'clients', 'users', 'workspaces',
   ]
@@ -376,6 +377,23 @@ export async function seed(client: pg.Client) {
      VALUES ($1, $2, $3, 'https://heartsdental.com.au', 'https://heartsdental.com.au/', 200, $4, $5, $6, 'HK', $7)`,
     [id('seo'), WORKSPACE_ID, clientId['hearts'], sampleReport.score, sampleReport.grade, JSON.stringify(sampleReport), daysAgo(1, 10)],
   )
+
+  /* ── site health for the demo sites (§13 3.6) ─────────────────────────── */
+  const sites: Array<[string, string, number, number, number, 'ok' | 'fail' | 'unknown']> = [
+    ['hearts', 'https://heartsdental.com.au', 200, 420, 240, 'ok'],
+    ['yarra-hills', 'https://yarrahills.com.au', 200, 610, 11, 'ok'],       // SSL expiring
+    ['smile-council', 'https://smilecouncil.com.au', 200, 540, 90, 'fail'], // form-canary fail
+    ['trowse', 'https://trowsedental.com.au', 200, 380, 140, 'ok'],
+    ['smile-to-go', 'https://smiletogo.com.au', 503, 820, 60, 'ok'],        // down (5xx)
+  ]
+  for (const [slug, url, http, lat, ssl, canary] of sites) {
+    const { status, flags } = classify({ httpStatus: http, latencyMs: lat, sslDaysLeft: ssl, sslExpiresAt: null }, canary)
+    await client.query(
+      `INSERT INTO site_health (id, workspace_id, client_id, url, status, http_status, latency_ms, ssl_days_left, form_canary, flags, checked_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10, now())`,
+      [id('sh'), WORKSPACE_ID, clientId[slug], url, status, http, lat, ssl, canary, JSON.stringify(flags)],
+    )
+  }
 }
 
 const isMain = process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])

@@ -11,6 +11,7 @@ import { ack as ackNotify, listForUser, routingView, updatePrefs } from './notif
 import { deleteCookie, getCookie } from 'hono/cookie'
 import { can, createSession, issueCookie, type Principal, requireAuth, revokeSession, SESSION_COOKIE, verifyPassword } from './auth.ts'
 import { runAudit } from './seo/audit.ts'
+import { runCheck } from './sitehealth/probe.ts'
 import {
   MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
 } from './inbox/connectors.ts'
@@ -329,6 +330,23 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
     )
     if (rows.length === 0) return c.json({ error: 'not found' }, 404)
     return c.json(rows[0])
+  })
+
+  /* Site Health (§13 3.6): uptime + SSL, worst-first. Re-check probes live. */
+  app.get('/api/site-health', async (c) => {
+    const { rows } = await db.query(
+      `SELECT s.id, s.url, s.status, s.http_status, s.latency_ms, s.ssl_days_left, s.form_canary, s.flags, s.checked_at,
+              cl.slug AS client_slug, cl.name AS client_name
+       FROM site_health s LEFT JOIN clients cl ON cl.id = s.client_id
+       ORDER BY CASE s.status WHEN 'down' THEN 0 WHEN 'degraded' THEN 1 WHEN 'up' THEN 2 ELSE 3 END, cl.name`,
+    )
+    return c.json({ sites: rows })
+  })
+
+  app.post('/api/site-health/:id/check', async (c) => {
+    const { rows } = await db.query(`SELECT id, url, form_canary FROM site_health WHERE id = $1`, [c.req.param('id')])
+    if (rows.length === 0) return c.json({ error: 'not found' }, 404)
+    return c.json(await runCheck(db, rows[0]))
   })
 
   return app

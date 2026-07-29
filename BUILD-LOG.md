@@ -4,6 +4,16 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## Site Health (§13 3.6) — 2026-07-30
+
+**Built:** real uptime + SSL monitoring, same "real network, no paid API" pattern as the SEO auditor. (1) **`server/src/sitehealth/probe.ts`** — `classify()` (deterministic status: 5xx/unreachable → down; 4xx/slow/SSL<14d/canary-fail → degraded; SSL<30d → soft flag) + `probe()` (uptime & latency via fetch, SSL expiry via a TLS cert peek, both best-effort) + `runCheck()` (persists; prober injectable for tests). (2) **Migration 0008** `site_health`. (3) **API** — `GET /api/site-health` (worst-first) + `POST /api/site-health/:id/check` (live re-probe). (4) **Seed** — 5 demo sites across up/degraded/down. (5) **App** — `SiteHealthPage`: status tiles + a fleet table (status pill, latency, SSL days-left, canary, flags) with a live **Re-check** button.
+
+**Evidence:** server **78/78** (4 `classify` units + `runCheck` persist via injected prober + API list/auth-gate) — clean run after clearing the Windows orphaned-`postgres.exe` flake (6 files had `afterAll` timeouts on a contended run; logic was never at fault, 78/78 on a clean run). App **21/21** (2 `SiteHealthPage`). Typecheck/lint/build green. **Verified live:** seeded fleet renders worst-first (Smile To Go down/5xx, Smile Council + Yarra Hills degraded, Hearts + Trowse up) through the running stack and the Vite proxy.
+
+**Files:** `server/src/sitehealth/probe.ts`, `server/migrations/0008_site_health.sql`, `server/test/sitehealth.test.ts`, `app/src/app/SiteHealthPage{,.test}.tsx` (new) · `server/src/{api.ts, db/seed.ts}`, `app/src/app/routes.tsx` (edits).
+
+**Decisions:** (1) Uptime + SSL are **real live probes**; **form-canary is a stored/mocked signal** until Stage-5 CMS forms exist to POST a test lead through — stated on the page. (2) Not §13 3.6 complete — domain-expiry (WHOIS) and the real form-canary are deferred; this is the uptime/SSL slice, buildable now. (3) Dev-DB note: a hard process-kill left a stale `postmaster.pid`; wiping `.pgdata` and re-initialising is the clean recovery (dev data is gitignored + reseeded).
+
 ## SEO site auditor (SPEC-SEO §4.2) — 2026-07-08
 
 **Context:** asked for working SEO — "analyse a website, the report it creates." The rank-monitoring half of W4/§13 3.4 (BrightLocal/GSC/GBP) is credential-blocked, but the **on-page + technical audit is buildable now** (reads the real HTML, no external API), so built that slice — the evidence layer `seo-diagnose` will narrate once the model key lands.
