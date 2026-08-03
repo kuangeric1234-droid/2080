@@ -2,12 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { NAV, navItemById } from './nav'
+import { NAV, OFF_RAIL_TITLES, navItemById } from './nav'
 import { useTheme } from './useTheme'
-
-/* Demo values until skill_runs exist (§13 step 1.3). */
-const AUTOMATED_PCT = 94
-const AUTOMATED_TOTAL = '8,140'
 
 function railBadge(count: number, tone: 'crit' | 'warn') {
   return (
@@ -47,8 +43,7 @@ export function AppShell() {
   const [clock, setClock] = useState(nowInMelbourne)
 
   const path = location.pathname.replace(/^\//, '')
-  const OFF_RAIL_TITLES: Record<string, string> = { gates: 'Gate items', notifications: 'Notifications' }
-  const title = navItemById(path)?.label ?? OFF_RAIL_TITLES[path] ?? 'Today'
+  const title = navItemById(path)?.label ?? OFF_RAIL_TITLES[path] ?? 'Online Presence Review'
 
   useEffect(() => {
     const tick = setInterval(() => setClock(nowInMelbourne()), 30_000)
@@ -113,15 +108,6 @@ export function AppShell() {
             </div>
           ))}
         </nav>
-        <div className="mt-auto border-t border-line px-2.5 pt-3 pb-0.5">
-          <div className="text-[10px] font-bold tracking-[0.08em] text-ink-faint uppercase">
-            Automated this week
-          </div>
-          <div className="num mt-0.5 font-display text-[19px] font-bold">
-            {AUTOMATED_PCT}
-            <small className="text-[11.5px] font-medium text-ink-muted">% of {AUTOMATED_TOTAL}</small>
-          </div>
-        </div>
       </aside>
 
       <div className="flex min-w-0 flex-col">
@@ -131,8 +117,8 @@ export function AppShell() {
             <input
               ref={searchRef}
               type="search"
-              placeholder="Search clients, flags, runs…"
-              aria-label="Search clients, flags, runs"
+              placeholder="Search reviews, clients, domains…"
+              aria-label="Search reviews, clients, domains"
               className="w-full bg-transparent text-[12.5px] text-ink outline-none placeholder:text-ink-faint"
             />
             <kbd className="rounded-[5px] border border-line bg-surface px-1.5 font-mono text-[10px] text-ink-faint">

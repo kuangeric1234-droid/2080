@@ -29,19 +29,25 @@ describe('app shell', () => {
     }
   })
 
-  it('redirects / to /today, which renders the Today page', () => {
+  it('carries exactly one rail item — the collapsed shell', () => {
     renderShell()
-    expect(
-      screen.getByRole('heading', { level: 1, name: /Good (morning|afternoon|evening)\./ }),
-    ).toBeInTheDocument()
+    const nav = screen.getByRole('navigation', { name: 'Primary' })
+    expect(within(nav).getAllByRole('link')).toHaveLength(1)
+    expect(NAV_ITEMS[0].id).toBe('review')
   })
 
-  it('navigating a rail item swaps the page and topbar title', async () => {
-    const user = userEvent.setup()
+  it('redirects / to /review and titles the topbar', () => {
     renderShell()
-    await user.click(screen.getByRole('link', { name: /Reports/ }))
-    expect(screen.getByRole('heading', { level: 1, name: 'Reports' })).toBeInTheDocument()
-    expect(screen.getByText(/step 4\.3 of the build plan/)).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1, name: /Online Presence Review/ })).toBeInTheDocument()
+  })
+
+  it('keeps parked-but-built modules reachable off-rail', () => {
+    renderShell('/clients')
+    const nav = screen.getByRole('navigation', { name: 'Primary' })
+    // reachable by URL...
+    expect(within(nav).queryByRole('link', { name: /Clients/ })).not.toBeInTheDocument()
+    // ...and titled from the off-rail map, not the fallback
+    expect(screen.getAllByText('Clients').length).toBeGreaterThan(0)
   })
 
   it('theme toggle flips data-theme on <html> and persists', async () => {
@@ -58,7 +64,7 @@ describe('app shell', () => {
   it('pressing / focuses the search input', async () => {
     const user = userEvent.setup()
     renderShell()
-    const search = screen.getByRole('searchbox', { name: /Search clients/ })
+    const search = screen.getByRole('searchbox', { name: /Search reviews/ })
     expect(search).not.toHaveFocus()
     await user.keyboard('/')
     expect(search).toHaveFocus()

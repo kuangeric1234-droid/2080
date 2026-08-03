@@ -18,7 +18,7 @@ Visual design docs (reference, not source of truth — this file wins on conflic
 
 ## 0 · How to use this document
 
-1. **Build in the order of §13.** Each step has a checkbox, a definition of done (DoD), and a test plan. A step is done when its tests pass — not when the code exists.
+1. **Build the current module in §13.2, one module per week.** Each step has a checkbox, a definition of done (DoD), and a test plan. A step is done when its tests pass — not when the code exists. §13.5 keeps the original staged plan as reference detail; read the stage that matches the module, don't work through it top-to-bottom.
 1a. **Depth-spec discipline (this file is deliberately breadth; depth lives in `specs/`).** No stage starts until its depth spec exists: the skill methodologies at practitioner grade, the connector realities (API versions, quotas, data lag, auth failure modes), field-level data contracts, failure modes, UI deltas, and eval design. **`specs/SPEC-ADS.md` is the exemplar.** **All specs now exist ✓** — SPEC-SPINE (schema/matcher/gates/audit/notifications) · SPEC-INBOX · SPEC-SECURITY (auth/roles/APPs/NDB) · SPEC-VOICE · SPEC-ADS · SPEC-SEO · SPEC-SALES · SPEC-REPORTS · SPEC-CMS · SPEC-FACTORY · **SPEC-INTAKE (onboarding questionnaire & intake wizard — the client-facing surface of Factory Stage 2, built from 20-80's three real Initial Engagement Questionnaires)**. Before building each stage, run its **validation session** with the craft owner (Hamza: ADS+SEO · Wally: SALES+REPORTS+VOICE scripts · Ish: INBOX taxonomy+CMS) — the session confirms the spec's assumptions AND collects the golden sets. Stage mapping: SPINE + INBOX + SECURITY (stages 0–1) · VOICE (2) · ADS + SEO (3) · SALES + REPORTS (4) · FACTORY (5 — **the overnight autonomous build: AI generates the site while everyone sleeps, deploys to a demo server, humans wake up to review; brand kits are client-facing dashboard deliverables**) · CMS (**5.0 core BEFORE the first AI-generated site** — the CMS content model is the factory's output format — then stage 6 editing surfaces).
 
 **Scale framing (so nobody under-builds this):** the platform is a multi-system SaaS — an ops dashboard, a client portal, a voice product, an autonomous website-generation service with overnight job orchestration, a CMS/publishing platform, a CRM/sales engine, and a billing system, sharing one client record and one gate architecture. It is NOT "a dashboard with features." Size decisions accordingly. Writing each spec = mining the team's actual expertise (Hamza for Ads/SEO, Wally for sales/strategy, Ish for web) — the spec session doubles as the golden-set collection session.
@@ -410,7 +410,73 @@ Composition over generation · specificity by construction (every claim traces t
 
 ---
 
-## 13 · Build order (the guideline — work top to bottom)
+## 13 · Build order — one module per week
+
+**Changed 2026-08-03.** The staged waterfall below (§13.5) stays as the reference
+detail, but it is no longer how work is picked. The dashboard was collapsed to a
+single live tab and the build now runs **one module per week**: pick the module,
+build it end-to-end against real work, ship it, then un-park the next one from
+`backlog/PARKED-MODULES.md`. A module is only "done" when Wally has used it to do
+a real piece of client work — not when its screen renders.
+
+Why the change: 21 rail tabs were live, 15 of them placeholders, and 22 of 23
+skills were `draft` with no golden set. Surface was outrunning substance. A
+one-module rail forces each week's work to be finished rather than started.
+
+### 13.1 Shipped
+
+Spine (auth, authz, audit log, notification routing, skill runner + G0–G3 gates,
+entity matcher, Inbox W2, Today, Clients CRM, SEO audit evidence layer, Site
+Health). Detail preserved in §13.5 Stages 1 and 3. Six of these screens are now
+off-rail — reachable by URL, absent from the navigation, tests still running.
+
+### 13.2 Current module — 1 · Online Presence Review
+
+The free SEO audit 20-80 offers today, industrialised. Request arrives from the
+Jotform on 2080solutions.com; the platform collects evidence, proposes findings
+from the house snippet bank, Wally accepts/edits/scores, and it exports as the
+same `.docx` the practice already receives.
+
+The report is **not** LLM prose. `new/1. Online Presence Review/` holds ~70
+canonical paragraphs across 8 categories, most in matched positive/negative
+pairs. Those paragraphs are the IP. Deterministic checks produce signals →
+signals trigger snippets → a model only fills variables, makes the genuinely
+subjective calls from screenshots, and writes the closing summary. Every finding
+must name the signal that triggered it, or it does not appear.
+
+Data sources are free/self-hosted only (decided 2026-08-03): own crawler,
+Playwright, TLS/DNS. That fully automates Website (Technical) and Website
+(Usability), semi-automates Website (Business) and Social Media, and leaves
+Visibility (SEO), Visibility (SEM), Reputation and Competition as guided manual
+entry with the snippet bank still doing the writing. Paid SERP/Places APIs are
+the upgrade path, behind a provider interface so adding one is an adapter.
+
+- [x] 1.0 Collapse the shell to one rail item; park 20 tabs + 18 unreferenced draft skills into `backlog/`. **DoD:** app typechecks, all tests green, no placeholder pages, no fabricated stats in the chrome.
+- [ ] 1.1 Snippet bank v1 — all ~70 template paragraphs as versioned, addressable records: category, variant, trigger over signals, variables, exemplar links. **DoD:** every paragraph in the source template is represented; a bank-coverage test fails if one is dropped.
+- [ ] 1.2 Schema: `intake_requests`, `reviews`, `review_signals`, `review_findings`, `review_exhibits`. Workspace-scoped, append-only provenance. **DoD:** migration + seed with one real practice review.
+- [ ] 1.3 Signal collectors (free only): multi-page crawl, TLS/DNS/MX, CMS + analytics fingerprint, Playwright usability + timing + screenshots. **DoD:** running the collector on a real practice site yields ≥40 typed signals, each with provenance and timestamp.
+- [ ] 1.4 Rules engine: signals → candidate findings + suggested per-category star scores. **DoD:** no finding can render without a signal reference; golden set of 3 scored real sites.
+- [ ] 1.5 Review workspace: evidence + candidate snippets, accept/reject/edit, star scores, exhibit picker, preview. **DoD:** §12.3 UI checklist in both themes with real data.
+- [ ] 1.6 Jotform webhook → intake → dashboard notification + email to Wally. **DoD:** a test submission appears in the queue and in the inbox within 60s.
+- [ ] 1.7 `.docx` export matching the existing template exactly. **DoD:** exported file opens in Word with the same layout, star ratings and embedded exhibits as `_Online Presence Review Template.docx`.
+
+### 13.3 Module queue
+
+Next modules are pulled from `backlog/PARKED-MODULES.md`. Order is set weekly by
+what the business actually needs, not by this list. Detail for each lives in
+§13.5 and in `specs/`.
+
+### 13.4 Rules that survive the change
+
+Unchanged and non-negotiable: G0–G3 gates on every skill · AHPRA checks are hard
+blocking gates · spend never changes without a named human · `workspace_id` on
+every table · skills call platform tools, never raw credentials · a golden set
+before any skill ships (§12.4) · the UI checklist on every screen (§12.3).
+
+### 13.5 Reference — the original staged plan
+
+Kept for the detail. Read the stage that matches the module being built; do not
+work top-to-bottom through it.
 
 ### Stage 1 — Spine *(everything else writes into this)*
 - [x] 1.1 Repo scaffold: Vite + React 19 + Tailwind 4, token set, Watermelon components vendored & restyled. **DoD:** app shell with rail/topbar in both themes.

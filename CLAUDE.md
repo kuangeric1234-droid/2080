@@ -2,7 +2,8 @@
 
 ## Project context (read first)
 
-- **Source of truth:** `MASTER-BUILD-PLAN.md` (this folder). Build sessions follow §13 top-to-bottom: pick the next unchecked step, build exactly that, test against its Definition of Done, check it off, commit. No random prompting.
+- **Source of truth:** `MASTER-BUILD-PLAN.md` (this folder). Build sessions work **the current module in §13.2**, one module per week: pick the next unchecked step, build exactly that, test against its Definition of Done, check it off, commit. No random prompting. §13.5 is reference detail, not a work queue; the next module comes from `backlog/PARKED-MODULES.md`.
+- **Current module (from 2026-08-03):** 1 · Online Presence Review. The rail carries one tab. The report is driven by the snippet bank extracted from `new/1. Online Presence Review/` — deterministic signals trigger house paragraphs; the model fills variables and writes the summary, it never invents a finding.
 - **Quality gates:** every skill needs a golden set before it ships (§12.4); every screen passes the UI checklist (§12.3) in both themes with real seeded data; design tokens in §3.3 — never ship default library styling.
 - **Architecture rules:** G0–G3 gates on every skill; AHPRA checks are hard blocking gates; spend never changes without a named human; `workspace_id` on every table; skills call platform tools, never raw credentials.
 - **Components:** restyle from `watermellon-registry/` — don't hand-roll what the registry already has.

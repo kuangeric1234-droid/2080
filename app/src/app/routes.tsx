@@ -5,38 +5,34 @@ import { AuditPage } from './AuditPage'
 import { InboxPage } from './InboxPage'
 import { TodayPage } from './TodayPage'
 import { NotificationsPage } from './NotificationsPage'
+import { ReviewPage } from './ReviewPage'
 import { SeoPage } from './SeoPage'
 import { SiteHealthPage } from './SiteHealthPage'
 import { ClientsPage } from './ClientsPage'
-import { PagePlaceholder } from './PagePlaceholder'
-import { NAV_ITEMS } from './nav'
-
-const BUILT: Record<string, () => React.ReactElement> = {
-  today: () => <TodayPage />,
-  inbox: () => <InboxPage />,
-  audit: () => <AuditPage />,
-  seo: () => <SeoPage />,
-  sitehealth: () => <SiteHealthPage />,
-  clients: () => <ClientsPage />,
-}
 
 export function AppRoutes() {
   return (
     <Routes>
       <Route element={<AppShell />}>
-        <Route index element={<Navigate to="/today" replace />} />
-        {NAV_ITEMS.map((item) => (
-          <Route
-            key={item.id}
-            path={item.id}
-            element={BUILT[item.id] ? BUILT[item.id]() : <PagePlaceholder item={item} />}
-          />
-        ))}
-        {/* off-rail: reached via the topbar bell (step 3.1) */}
+        <Route index element={<Navigate to="/review" replace />} />
+
+        {/* the rail */}
+        <Route path="review" element={<ReviewPage />} />
+
+        {/* built but off-rail — parked in backlog/PARKED-MODULES.md, still reachable
+            by URL so the work and its tests stay live */}
+        <Route path="today" element={<TodayPage />} />
+        <Route path="clients" element={<ClientsPage />} />
+        <Route path="inbox" element={<InboxPage />} />
+        <Route path="audit" element={<AuditPage />} />
+        <Route path="seo" element={<SeoPage />} />
+        <Route path="sitehealth" element={<SiteHealthPage />} />
+
+        {/* reached via the topbar bell */}
         <Route path="notifications" element={<NotificationsPage />} />
-        {/* dev preview until the Today approval queue lands (step 1.6) */}
         <Route path="gates" element={<GatesPage />} />
-        <Route path="*" element={<Navigate to="/today" replace />} />
+
+        <Route path="*" element={<Navigate to="/review" replace />} />
       </Route>
     </Routes>
   )
