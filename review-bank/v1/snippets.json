@@ -27,7 +27,9 @@
       "dimension": "Content",
       "variant": "negative",
       "weight": 3,
-      "when": { "all": [{ "signal": "pages.service_pages", "lt": 3 }] },
+      "when": "judgement",
+      "hint_signal": "pages.service_pages",
+      "judgement_prompt": "Does each service have its own page with real content, or are they all listed on one page? The crawl's count is a hint only — practices often use top-level URLs like /dental-implants/ that no URL pattern reliably identifies.",
       "vars": ["website", "service", "suburb"],
       "text": "The {{practice_type}} service content is great, but they deserve to have their own page (and thus need more written). This will ensure your practice rank better when it comes to search engine searches (eg, {{website}} doesn’t show up for searches such as {{service}} {{suburb}})."
     },
@@ -101,7 +103,9 @@
       "dimension": "Personal",
       "variant": "negative",
       "weight": 3,
-      "when": { "all": [{ "signal": "pages.bio_pages", "lt": 1 }] },
+      "when": "judgement",
+      "hint_signal": "pages.bio_pages",
+      "judgement_prompt": "Does each practitioner have their own biography page? URL patterns for these vary too much to trust the crawl's count on its own.",
       "links": ["https://yarrahillschiropractic.com.au/about-us/dr-julie-anne-kelly/"],
       "text": "Each of the doctors needs to have their own biography page. This ensures the patient gets to know their doctors better. On top of that, if the new patient is on the phone with the receptionist, it’s a better opportunity for the receptionist to recommend that associate to the patient after a quick triage. This ensures the principals of the practice doesn’t get too bogged down and creates passive income for the business. For example, https://yarrahillschiropractic.com.au/about-us/dr-julie-anne-kelly/"
     },
@@ -111,7 +115,9 @@
       "dimension": "Content",
       "variant": "negative",
       "weight": 2,
-      "when": { "all": [{ "signal": "pages.conditions_pages", "lt": 1 }] },
+      "when": "judgement",
+      "hint_signal": "pages.conditions_pages",
+      "judgement_prompt": "Does the site speak to patients searching for a problem (toothache, missing teeth) or only to patients who already know the treatment name?",
       "links": ["https://heartsdental.com.au/dental-conditions/"],
       "text": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true. It’s important to make sure the website caters to patients who are searching for solutions to their issues (eg, toothache or missing teeth). See https://heartsdental.com.au/dental-conditions/ for example."
     },

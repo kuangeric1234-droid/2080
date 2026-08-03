@@ -53,6 +53,9 @@ sample away, and would make "why did it say that?" unanswerable.
   - `judgement` — needs a screenshot and a human or vision call ("does this look dated?")
   - `generated` — the model writes it from accepted findings
   - `always` — unconditional (the closing paragraph)
+- **`hint_signal`** attaches a measurement to a `judgement` snippet. It informs
+  the reviewer; it does not decide. Used where a heuristic is real but not
+  trustworthy enough to accuse on — see *Where automation stops*, below.
 - **`conflicts`** are the two halves of one check. Both halves may never ship in
   the same report; a test enforces that each names the other.
 - **`weight`** (1–3) is how hard the finding pushes the category's *suggested*
@@ -78,6 +81,33 @@ needed to change a paragraph. Two guardrails apply:
 73 paragraphs in the source template → 71 snippets. The three worked
 competitor-row examples collapse into the single `comp.row` template, which
 assembles a row from a structured competitor record.
+
+## Where automation stops
+
+Three rules came out of running the collectors against real practice sites, and
+each one exists because the first version got something wrong in a way that
+would have embarrassed 20-80 in front of a client.
+
+**A count you cannot verify is `null`, not `0`.** Page-type counts from a
+nav-only crawl reported "no service pages" on a practice with a dozen. Counts
+now come from the sitemap; with no sitemap the signal is null and the trigger
+simply does not fire. The report says nothing rather than something false.
+
+**URL patterns do not classify page types.** heartsdental.com.au publishes its
+services at `/dental-implants/`, not `/services/dental-implants/`, and no
+pattern catches every convention. `biz.service_pages.missing`,
+`biz.bio_pages.missing` and `biz.conditions_content.missing` are therefore
+`judgement` snippets carrying the measured count as a `hint_signal` — the
+reviewer decides in two seconds with the number in front of them.
+
+**An AHPRA claim needs structural evidence.** The testimonial check matches a
+heading, a component class or a URL — never bare page text, or a blog post
+*about* the AHPRA rule would accuse the practice of breaking it.
+
+The through-line: the cost of a false finding in a client-facing report is far
+higher than the cost of asking Wally a question.
+
+## Coverage today (continued)
 
 Automation, per category: **Website (Technical)** and **Website (Usability)**
 are fully signal-driven. **Website (Business)** and **Social Media** are part

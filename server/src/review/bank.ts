@@ -53,6 +53,10 @@ export interface Snippet {
   row_template?: string[]
   row_suffix?: string
   generation_contract?: string
+  /** A measured signal shown beside a judgement call — informs the reviewer,
+      never decides for them. Used where a heuristic is too unreliable to accuse
+      on its own (page-type classification from URLs). */
+  hint_signal?: string
   judgement_prompt?: string
   manual_prompt?: string
   requires_exhibit?: boolean
