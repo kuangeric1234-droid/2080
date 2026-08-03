@@ -1,0 +1,68 @@
+{
+  "version": "v1",
+  "source": "new/1. Online Presence Review/_Online Presence Review Template.docx",
+  "note": "The eight summary-table rows, in template order. `dimensions` are the words printed in the Comments column of the summary table — they are what the star score is a judgement about, and every snippet declares which one it speaks to.",
+  "categories": [
+    {
+      "key": "website_business",
+      "label": "Website (Business)",
+      "dimensions": ["UVP", "Content", "Personal", "Frequency", "AHPRA", "Original", "Authority"],
+      "automation": "semi",
+      "automation_note": "Crawl finds the structural gaps (no service pages, no bio pages, no blog, public email domain, testimonials present). The taste calls — dated, generic, hiding behind the brand — need screenshots and a human or vision pass."
+    },
+    {
+      "key": "website_technical",
+      "label": "Website (Technical)",
+      "dimensions": ["Performance", "Analytics", "Hosting", "Email"],
+      "automation": "full",
+      "automation_note": "Every snippet in this category triggers off a deterministic signal: TLS, CMS fingerprint, MX vs A record, analytics tags, /wp-admin reachability, host geo, measured load time."
+    },
+    {
+      "key": "website_usability",
+      "label": "Website (Usability)",
+      "dimensions": ["Layout", "Navigation", "Banners", "CTA", "Font", "Mobile Friendly", "Colour", "Link to 3P"],
+      "automation": "full",
+      "automation_note": "Playwright renders the page and reads computed styles, nav item counts, sticky behaviour, link targets, tap-target sizes; axe-core supplies contrast violations."
+    },
+    {
+      "key": "visibility_seo",
+      "label": "Visibility (SEO)",
+      "dimensions": ["SERP Rankings (Practitioner, Profession, Location, Condition & Services)"],
+      "automation": "manual",
+      "automation_note": "On-page optimisation is automatic. Actual SERP positions need a rank provider — until one is connected, positions are entered by hand and the snippet fills from them."
+    },
+    {
+      "key": "visibility_sem",
+      "label": "Visibility (SEM)",
+      "dimensions": ["N/A"],
+      "automation": "manual",
+      "automation_note": "Whether the practice or its competitors are running ads is only visible from a live SERP. Manual entry until a SERP provider is connected."
+    },
+    {
+      "key": "reputation",
+      "label": "Reputation",
+      "dimensions": ["Reviews on Google and other channels"],
+      "automation": "manual",
+      "automation_note": "Review count, rating and negative-review handling need the Places API. Manual entry until then."
+    },
+    {
+      "key": "social_media",
+      "label": "Social Media",
+      "dimensions": ["Fans", "Engagement", "Post Frequency"],
+      "automation": "semi",
+      "automation_note": "The crawl finds which social profiles the site links to. Follower counts and post cadence are hostile to scraping — entered by hand, roughly five minutes."
+    },
+    {
+      "key": "competition",
+      "label": "Competition",
+      "dimensions": ["Quantity", "Strength"],
+      "automation": "manual",
+      "automation_note": "Competitor discovery needs a SERP provider. Once a competitor domain is named, the collectors run the same technical and usability checks against it automatically and fill the row."
+    }
+  ],
+  "scoring": {
+    "scale": 5,
+    "note": "Stars are the reviewer's judgement, not an average. The engine suggests a score from the weighted balance of positive vs negative findings in the category; the reviewer can override any of them, and the override is what ships.",
+    "suggestion_rule": "start at 5, subtract the summed weight of accepted negative findings, add back half the summed weight of accepted positives, clamp 1..5"
+  }
+}

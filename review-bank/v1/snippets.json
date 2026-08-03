@@ -1,0 +1,774 @@
+{
+  "version": "v1",
+  "source": "new/1. Online Presence Review/_Online Presence Review Template.docx",
+  "contract": {
+    "text": "Verbatim house copy. This is 20-80's IP and the reason the report reads the same every time. A model may substitute {{variables}} and nothing else — it must never rewrite, merge, shorten or 'improve' a snippet.",
+    "variant": "positive | negative | neutral — most checks exist as a matched pair so the report can praise as well as criticise.",
+    "when": "Either a trigger object over collected signals, or the string 'manual' (reviewer supplies the facts) or 'judgement' (needs a screenshot and a human/vision call).",
+    "ops": ["eq", "ne", "gt", "gte", "lt", "lte", "exists", "missing", "in", "contains"],
+    "weight": "1–3. How hard this finding pushes the category's suggested star score.",
+    "conflicts": "Snippet ids that must not appear in the same report — the positive/negative halves of one check."
+  },
+
+  "snippets": [
+    {
+      "id": "biz.banner.generic",
+      "category": "website_business",
+      "dimension": "UVP",
+      "variant": "negative",
+      "weight": 2,
+      "when": "judgement",
+      "judgement_prompt": "From the homepage screenshot: is the main banner carrying a specific, timely or promotional message, or is it a generic stock statement?",
+      "text": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages. Consider making the first one impactful with banners that focus on specific promotions or timely activities (eg, Winter promos)."
+    },
+    {
+      "id": "biz.service_pages.missing",
+      "category": "website_business",
+      "dimension": "Content",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "pages.service_pages", "lt": 3 }] },
+      "vars": ["website", "service", "suburb"],
+      "text": "The {{practice_type}} service content is great, but they deserve to have their own page (and thus need more written). This will ensure your practice rank better when it comes to search engine searches (eg, {{website}} doesn’t show up for searches such as {{service}} {{suburb}})."
+    },
+    {
+      "id": "biz.website.dated",
+      "category": "website_business",
+      "dimension": "Original",
+      "variant": "negative",
+      "weight": 3,
+      "when": "judgement",
+      "judgement_prompt": "From the homepage and interior screenshots: does the visual design read as current, or dated? Are the photos stock or real?",
+      "links": ["https://gentletouchortho.com.au/"],
+      "text": "Judging by the photos on the website, the practice is very modern but the website doesn’t seem to reflect that. Unfortunately, the website looks a little dated and lacks the personality (eg, stock photos, no photos of the actual dentists). See https://gentletouchortho.com.au/ for examples how how to use the photos boldly"
+    },
+    {
+      "id": "biz.uvp.generic",
+      "category": "website_business",
+      "dimension": "UVP",
+      "variant": "negative",
+      "weight": 3,
+      "when": "judgement",
+      "judgement_prompt": "Read the 'why choose us' content. Are the reasons tangible and specific (years, languages, payment options, technology) or subjective and universal (professional, caring, gentle)?",
+      "links": ["https://heartsdental.com.au/"],
+      "text": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional and caring. We would advise adding more tangible factors such as ‘number of years experience’, ‘multilingual’, take ‘Amex’ etc and mix it up a little. See https://heartsdental.com.au/ for example."
+    },
+    {
+      "id": "biz.language.opportunity",
+      "category": "website_business",
+      "dimension": "UVP",
+      "variant": "neutral",
+      "weight": 1,
+      "when": "manual",
+      "manual_prompt": "Does the team have a language or cultural advantage worth a dedicated landing page?",
+      "links": ["https://heartsdental.com.au/关于我们/"],
+      "text": "You have language/culture advantage with your team so take advantage of that by creating a Chinese landing page to attract Chinese patients. For example - https://heartsdental.com.au/关于我们/"
+    },
+    {
+      "id": "biz.booking.present",
+      "category": "website_business",
+      "dimension": "Authority",
+      "variant": "positive",
+      "weight": 2,
+      "when": { "all": [{ "signal": "site.booking.present", "eq": true }] },
+      "conflicts": ["biz.booking.absent"],
+      "text": "You have an online booking which is great as new generation patients expect this kind of feature to make their bookings more convenient."
+    },
+    {
+      "id": "biz.booking.absent",
+      "category": "website_business",
+      "dimension": "Authority",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "site.booking.present", "eq": false }] },
+      "conflicts": ["biz.booking.present"],
+      "links": ["https://banyuledental.com.au/book-online/"],
+      "text": "We would highly encourage having ‘Online Booking’ on your own website as that triples the engagement of patients. Statistics show over 41% of bookings are lost because they are done outside of business hours. If your current practice management software doesn’t allow it, consider 3rd party systems like HealthEngine. See https://banyuledental.com.au/book-online/ for example."
+    },
+    {
+      "id": "biz.team_photos.missing",
+      "category": "website_business",
+      "dimension": "Personal",
+      "variant": "negative",
+      "weight": 3,
+      "when": "judgement",
+      "judgement_prompt": "Are there real photographs of the actual practitioners, or only stock imagery and a logo?",
+      "text": "Lack of real photos of the practitioners means you’re hiding behind your ‘brand’ thus effectively competing with corporates who will beat you at their game (cheaper service, high turnaround and big budget on marketing). Statistics show that the staff/team page is the 3rd most visited page coming after the homepage and contact us page, showing patients care about who they see."
+    },
+    {
+      "id": "biz.bio_pages.missing",
+      "category": "website_business",
+      "dimension": "Personal",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "pages.bio_pages", "lt": 1 }] },
+      "links": ["https://yarrahillschiropractic.com.au/about-us/dr-julie-anne-kelly/"],
+      "text": "Each of the doctors needs to have their own biography page. This ensures the patient gets to know their doctors better. On top of that, if the new patient is on the phone with the receptionist, it’s a better opportunity for the receptionist to recommend that associate to the patient after a quick triage. This ensures the principals of the practice doesn’t get too bogged down and creates passive income for the business. For example, https://yarrahillschiropractic.com.au/about-us/dr-julie-anne-kelly/"
+    },
+    {
+      "id": "biz.conditions_content.missing",
+      "category": "website_business",
+      "dimension": "Content",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "pages.conditions_pages", "lt": 1 }] },
+      "links": ["https://heartsdental.com.au/dental-conditions/"],
+      "text": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true. It’s important to make sure the website caters to patients who are searching for solutions to their issues (eg, toothache or missing teeth). See https://heartsdental.com.au/dental-conditions/ for example."
+    },
+    {
+      "id": "biz.blog.absent",
+      "category": "website_business",
+      "dimension": "Frequency",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "blog.present", "eq": false }] },
+      "conflicts": ["biz.blog.abandoned", "biz.blog.active"],
+      "links": ["https://heartsdental.com.au/blog-news/"],
+      "text": "The website seems stagnant. Might benefit from some useful blogs that are educational and attract relevant patient types. Give people reasons to visit your website. We would also recommend making the FAQs and blogs into short videos so it’s easier to consume. See https://heartsdental.com.au/blog-news/ as an example."
+    },
+    {
+      "id": "biz.blog.abandoned",
+      "category": "website_business",
+      "dimension": "Frequency",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "blog.present", "eq": true }, { "signal": "blog.last_post_months", "gte": 12 }] },
+      "conflicts": ["biz.blog.absent", "biz.blog.active"],
+      "text": "Your Blog section seems abandoned, we recommend hiding that feature until you have updated the information as it does not look good for the brand when things are left unmanaged."
+    },
+    {
+      "id": "biz.blog.active",
+      "category": "website_business",
+      "dimension": "Frequency",
+      "variant": "positive",
+      "weight": 2,
+      "when": { "all": [{ "signal": "blog.present", "eq": true }, { "signal": "blog.last_post_months", "lt": 3 }] },
+      "conflicts": ["biz.blog.absent", "biz.blog.abandoned"],
+      "links": ["https://heartsdental.com.au/blog-news/"],
+      "text": "The blogs on the website are also very active which is great, make good use of that effort onto the Facebook page so that more people will read it. We would also recommend making the FAQs and blogs into short videos so it’s easier to consume (see one of our client https://heartsdental.com.au/blog-news/ for examples)"
+    },
+    {
+      "id": "biz.gallery.framing",
+      "category": "website_business",
+      "dimension": "Content",
+      "variant": "negative",
+      "weight": 1,
+      "when": "judgement",
+      "judgement_prompt": "If a before/after gallery exists, are the images cropped to the treatment area only, or do they show the whole face?",
+      "requires_exhibit": true,
+      "text": "The before/after photo gallery is great from a clinical perspective, however it’s important to show images that make sense to the average patient by showing the whole face. Below is a better representation:"
+    },
+    {
+      "id": "biz.ahpra.testimonials",
+      "category": "website_business",
+      "dimension": "AHPRA",
+      "variant": "negative",
+      "weight": 3,
+      "ahpra_blocking": true,
+      "when": { "all": [{ "signal": "content.testimonials_present", "eq": true }] },
+      "text": "Under the AHPRA guideline, you’re not allowed to have reviews/testimonials on your own website as it’s under your control and might mislead consumers."
+    },
+    {
+      "id": "biz.website.stale",
+      "category": "website_business",
+      "dimension": "Original",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "archive.last_major_update_year", "exists": true }] },
+      "vars": ["year", "web archive"],
+      "text": "The website looks like it hasn’t been updated since {{year}}, according to {{web_archive}}. Usually, websites should be refreshed every 2 to 3 years to keep up to standards and business direction. The website is an extension of our personal brand, therefore, the website should evolve with your business."
+    },
+    {
+      "id": "biz.email.public_domain",
+      "category": "website_business",
+      "dimension": "Authority",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "site.contact.email_domain_public", "eq": true }] },
+      "vars": ["public_email", "lookalike_email"],
+      "text": "It’s not professional to use public email domain/address such as {{public_email}}. This also act as a security risk, as anyone can pretend to be you and just create an email similar to yours such as {{lookalike_email}}"
+    },
+
+    {
+      "id": "tech.https.present",
+      "category": "website_technical",
+      "dimension": "Performance",
+      "variant": "positive",
+      "weight": 2,
+      "when": { "all": [{ "signal": "site.https", "eq": true }] },
+      "conflicts": ["tech.https.absent"],
+      "text": "The website is secure with HTTPS which is great."
+    },
+    {
+      "id": "tech.https.absent",
+      "category": "website_technical",
+      "dimension": "Performance",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "site.https", "eq": false }] },
+      "conflicts": ["tech.https.present"],
+      "text": "The website is not using the SSL/HTTPS protocol, which means visitors will be notified by their browser that the information they sent via your website won’t be secure. This is especially important when they fill in their personal details in the contact us form, thus directly deters new patient contacts."
+    },
+    {
+      "id": "tech.cms.static_html",
+      "category": "website_technical",
+      "dimension": "Hosting",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "site.cms", "eq": "static" }] },
+      "conflicts": ["tech.cms.wordpress", "tech.cms.squarespace"],
+      "text": "The website is done in static HTML which will make the website hard to maintain (eg, when you want to create new pages, you need to hard-code it manually multiple times to each of the pages). A better (industry standard) solution is to have a content management system such as Wordpress which provides more features, flexibility & security."
+    },
+    {
+      "id": "tech.cms.squarespace",
+      "category": "website_technical",
+      "dimension": "Hosting",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "site.cms", "in": ["squarespace", "wix"] }] },
+      "conflicts": ["tech.cms.wordpress", "tech.cms.static_html"],
+      "text": "Your site is built on Squarespace which has limited drag and drop functions. We would recommend developing your site on WordPress as it has more features and flexibility with better security to your site."
+    },
+    {
+      "id": "tech.cms.wordpress",
+      "category": "website_technical",
+      "dimension": "Hosting",
+      "variant": "positive",
+      "weight": 2,
+      "when": { "all": [{ "signal": "site.cms", "eq": "wordpress" }] },
+      "conflicts": ["tech.cms.static_html", "tech.cms.squarespace"],
+      "text": "The website utilizes Wordpress, the industry standard platform. Wordpress is favored for its ease of use, extensive features, flexibility, security, and widespread adoption."
+    },
+    {
+      "id": "tech.email.same_server",
+      "category": "website_technical",
+      "dimension": "Email",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "site.email.same_server", "eq": true }] },
+      "conflicts": ["tech.email.separate_server", "tech.email.unknown"],
+      "text": "The email is hosted on the same server as the website which isn’t ideal because if the website goes down, so do the emails, and emails are the lifeblood of a business. Consider hosting it on reliable third-party mail servers like Google Suite."
+    },
+    {
+      "id": "tech.email.separate_server",
+      "category": "website_technical",
+      "dimension": "Email",
+      "variant": "positive",
+      "weight": 2,
+      "when": { "all": [{ "signal": "site.email.same_server", "eq": false }] },
+      "conflicts": ["tech.email.same_server", "tech.email.unknown"],
+      "text": "The website and email are hosted on a separate server which is great as one going offline won’t affect the other. Another alternative is Google Suite which is the industry standard."
+    },
+    {
+      "id": "tech.email.unknown",
+      "category": "website_technical",
+      "dimension": "Email",
+      "variant": "neutral",
+      "weight": 1,
+      "when": { "all": [{ "signal": "site.email.same_server", "missing": true }] },
+      "conflicts": ["tech.email.same_server", "tech.email.separate_server"],
+      "text": "We cannot see properly if your website and email are hosted on separate servers which is the ideal setup, as when one goes offline it won’t affect the other. As a recommendation another alternative is  Google Suite which is the industry standard."
+    },
+    {
+      "id": "tech.analytics.present",
+      "category": "website_technical",
+      "dimension": "Analytics",
+      "variant": "positive",
+      "weight": 2,
+      "when": { "any": [{ "signal": "site.analytics.ga4", "eq": true }, { "signal": "site.analytics.gtm", "eq": true }] },
+      "conflicts": ["tech.analytics.absent"],
+      "text": "You have Google Analytics installed via the current standard. If you give us access to that, we will be able to inform you of user behavior and thus improve website usability and effectiveness."
+    },
+    {
+      "id": "tech.analytics.absent",
+      "category": "website_technical",
+      "dimension": "Analytics",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "site.analytics.ga4", "eq": false }, { "signal": "site.analytics.gtm", "eq": false }] },
+      "conflicts": ["tech.analytics.present"],
+      "text": "The website doesn’t have Google Analytics installed (a bit like an x-ray for websites) which means you’re unable to figure out a lot of the user behaviors and thus have information to make the right decisions for on-going website improvement. We suggest installing it immediately even if you don’t know how to read it yourself, at least data is being collected."
+    },
+    {
+      "id": "tech.wpadmin.default",
+      "category": "website_technical",
+      "dimension": "Hosting",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "site.wp_admin_default", "eq": true }] },
+      "vars": ["domain name"],
+      "text": "Having the default admin login URL as {{domain}}/wp-admin might cause security issues. We suggest changing the URL to something else to make it harder for hackers."
+    },
+    {
+      "id": "tech.hosting.speed",
+      "category": "website_technical",
+      "dimension": "Performance",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "site.load_seconds", "exists": true }] },
+      "vars": ["host_country", "load_seconds"],
+      "requires_exhibit": true,
+      "exhibit_kind": "performance_report",
+      "text": "The website is hosted in {{host_country}} which is good, as it should improve website performance. A website should load within 2 seconds to reduce the chance of losing a patient. Your website took {{load_seconds}} seconds to load which isn’t ideal."
+    },
+
+    {
+      "id": "use.mobile.ok",
+      "category": "website_usability",
+      "dimension": "Mobile Friendly",
+      "variant": "positive",
+      "weight": 2,
+      "when": { "all": [{ "signal": "render.mobile_ok", "eq": true }] },
+      "conflicts": ["use.mobile.absent"],
+      "text": "Your website is mobile friendly which is great."
+    },
+    {
+      "id": "use.mobile.absent",
+      "category": "website_usability",
+      "dimension": "Mobile Friendly",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "all": [{ "signal": "render.mobile_ok", "eq": false }] },
+      "conflicts": ["use.mobile.ok"],
+      "text": "There are a lot of usability/accessibility improvements that can be made. Most importantly, making the website mobile friendly as over 50% of people use smartphones to do their online searches now."
+    },
+    {
+      "id": "use.banner.tall",
+      "category": "website_usability",
+      "dimension": "Banners",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "render.banner_height_ratio", "gt": 0.5 }] },
+      "text": "It’s okay to have a big/bold banner on the homepage, but once the visitor goes to the content pages, it’s important for them to not scroll too much before they get to read the content as the mindset on those pages is very different from the homepage. Consider reducing the height of banners on all pages by half."
+    },
+    {
+      "id": "use.nav.too_many",
+      "category": "website_usability",
+      "dimension": "Navigation",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "render.nav_item_count", "gt": 9 }] },
+      "text": "The navigation has too many items. The usability principle states 7 +/- 2 items is recommended before overwhelming the human brain. Make sure all the navigation items have the same spacing."
+    },
+    {
+      "id": "use.nav.home_item",
+      "category": "website_usability",
+      "dimension": "Navigation",
+      "variant": "negative",
+      "weight": 1,
+      "when": { "all": [{ "signal": "render.nav_has_home", "eq": true }] },
+      "text": "Remove ‘Home’ as most people know that clicking on the top left hand side logo will bring the visitor back to the homepage and this will also help reduce your main menu items."
+    },
+    {
+      "id": "use.team_images.not_linked",
+      "category": "website_usability",
+      "dimension": "CTA",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "render.team_images_linked", "eq": false }] },
+      "text": "People tend to click on the biggest item on the page, thus it’s important for the ‘image’ of the doctors to be clickable to go to their own individual biography page. This will also enhance your doctor's online visibility on google."
+    },
+    {
+      "id": "use.external_links.same_tab",
+      "category": "website_usability",
+      "dimension": "Link to 3P",
+      "variant": "negative",
+      "weight": 1,
+      "when": { "all": [{ "signal": "render.external_links_same_tab", "gt": 0 }] },
+      "text": "Links to 3rd party websites (eg, Facebook, Twitter, footer vendor links, etc) should open to a new tab otherwise visitors will get distracted and not come back to your website to make the necessary inquiry."
+    },
+    {
+      "id": "use.contrast.fail",
+      "category": "website_usability",
+      "dimension": "Colour",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "render.contrast_violations", "gt": 0 }] },
+      "text": "The main navigation has a big accessibility issue for those who are visual/colour impaired as blue text on a blue background is very difficult to read."
+    },
+    {
+      "id": "use.nav.not_sticky",
+      "category": "website_usability",
+      "dimension": "Navigation",
+      "variant": "negative",
+      "weight": 1,
+      "when": { "all": [{ "signal": "render.nav_sticky", "eq": false }] },
+      "text": "The navigation bar should float down as the user scrolls the website so they don’t need to keep coming back to the top of page to move onto other pages."
+    },
+    {
+      "id": "use.font.small",
+      "category": "website_usability",
+      "dimension": "Font",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "render.body_font_px", "lt": 15 }] },
+      "vars": ["font_px"],
+      "text": "The fonts are too small at {{font_px}}px. Recommend increasing it to 16px to cater for the visually impaired or elder population."
+    },
+    {
+      "id": "use.content.readability",
+      "category": "website_usability",
+      "dimension": "Layout",
+      "variant": "negative",
+      "weight": 2,
+      "when": "judgement",
+      "judgement_prompt": "From the interior page screenshots: is body content laid out for reading (columns, short paragraphs, breathing room) or pasted in as an unbroken wall of text?",
+      "text": "Content on the website isn’t easy to consume/read because the text is just copied and pasted into the system without much thought about the layout. A best practice is to ensure no more than 20 words per sentence by using columns."
+    },
+    {
+      "id": "use.cta.not_tappable",
+      "category": "website_usability",
+      "dimension": "CTA",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "any": [{ "signal": "render.tel_links", "eq": 0 }, { "signal": "render.mailto_links", "eq": 0 }] },
+      "text": "All phone numbers, emails, and addresses are critical calls to action and need to be tappable/clickable to increase engagement rate with the visitor."
+    },
+    {
+      "id": "use.captcha.legacy",
+      "category": "website_usability",
+      "dimension": "CTA",
+      "variant": "negative",
+      "weight": 2,
+      "when": { "all": [{ "signal": "render.captcha_legacy", "eq": true }] },
+      "text": "Your website still uses old fashion CAPTCHA to reduce spam on the web forms. This can be very off putting to real people and reduce the likelihood of them actually using the form to contact your practice. Consider using the latest reCAPTCHA by Google which removes this issue."
+    },
+
+    {
+      "id": "seo.rank.present",
+      "category": "visibility_seo",
+      "dimension": "SERP Rankings",
+      "variant": "positive",
+      "weight": 2,
+      "when": "manual",
+      "manual_prompt": "Search '[profession] [suburb]' on Google. What position does the practice hold?",
+      "vars": ["position", "keyword"],
+      "requires_exhibit": true,
+      "exhibit_kind": "serp_screenshot",
+      "text": "The website is currently #{{position}} on page 1 on Google search results for ‘{{keyword}}’ which isn’t bad. We can certainly improve on this with more effective SEO strategies."
+    },
+    {
+      "id": "seo.keywords.secondary",
+      "category": "visibility_seo",
+      "dimension": "SERP Rankings",
+      "variant": "neutral",
+      "weight": 1,
+      "when": "manual",
+      "vars": ["neighbouring suburb"],
+      "text": "We can also start searching for secondary keywords such as ‘{{profession}} {{neighbouring_suburb}},’ to further increase your reach and visibility online."
+    },
+    {
+      "id": "seo.onpage.optimised",
+      "category": "visibility_seo",
+      "dimension": "SERP Rankings",
+      "variant": "positive",
+      "weight": 2,
+      "when": { "all": [{ "signal": "onpage.title_ok", "eq": true }, { "signal": "onpage.meta_ok", "eq": true }] },
+      "conflicts": ["seo.onpage.missing"],
+      "text": "The website has been search engine optimized judging by the specific page title, description and keywords which is good, however,  remember also to include having a presence in the bigger surrounding suburbs."
+    },
+    {
+      "id": "seo.onpage.missing",
+      "category": "visibility_seo",
+      "dimension": "SERP Rankings",
+      "variant": "negative",
+      "weight": 3,
+      "when": { "any": [{ "signal": "onpage.title_ok", "eq": false }, { "signal": "onpage.meta_ok", "eq": false }, { "signal": "onpage.alt_missing", "gt": 5 }] },
+      "conflicts": ["seo.onpage.optimised"],
+      "text": "The website hasn’t been search engine optimized (SEO) judging by the missing or non-specific page title, description, keywords and image alt-tags. This is critical to ensure your website gets found online when people search for it. This includes having a presence in the bigger surrounding suburbs."
+    },
+
+    {
+      "id": "sem.ads.absent",
+      "category": "visibility_sem",
+      "dimension": "N/A",
+      "variant": "negative",
+      "weight": 2,
+      "when": "manual",
+      "manual_prompt": "Is the practice running Google Ads? Check the SERP for sponsored results on their brand and service terms.",
+      "conflicts": ["sem.ads.present_expand", "sem.ads.running"],
+      "vars": ["service", "suburb"],
+      "text": "The website currently doesn’t have Adwords setup (or we are unable to see it) which means there might be a lot of lost opportunities with keywords that you don’t rank well in (eg, {{service}} {{suburb}}). Adwords compliments SEO well because it allows you to control the flow of new patients at the flick of a switch."
+    },
+    {
+      "id": "sem.ads.present_expand",
+      "category": "visibility_sem",
+      "dimension": "N/A",
+      "variant": "neutral",
+      "weight": 1,
+      "when": "manual",
+      "conflicts": ["sem.ads.absent"],
+      "vars": ["suburb", "service"],
+      "text": "The website currently has Adwords setup however, we can look to utilize your reach within {{suburb}} and neighboring suburbs such as {{service}} {{suburb}}. The correct use of Adwords compliments SEO well because it allows you to control the flow of new patients at the flick of a switch."
+    },
+    {
+      "id": "sem.access.request",
+      "category": "visibility_sem",
+      "dimension": "N/A",
+      "variant": "neutral",
+      "weight": 1,
+      "when": "manual",
+      "text": "If we get access to your google adwords we can look into this in more detail to inform you of patient demographics, interests, and behaviors, thus creating more laser focus AdWords campaigns."
+    },
+    {
+      "id": "sem.ads.running",
+      "category": "visibility_sem",
+      "dimension": "N/A",
+      "variant": "positive",
+      "weight": 2,
+      "when": "manual",
+      "conflicts": ["sem.ads.absent"],
+      "text": "You have Google Ads running which is great to capture areas where you don’t dominate. If we get access to your Adwords, we can recommend campaigns that will give you the highest ROI."
+    },
+    {
+      "id": "sem.competitors.advertising",
+      "category": "visibility_sem",
+      "dimension": "N/A",
+      "variant": "negative",
+      "weight": 2,
+      "when": "manual",
+      "requires_exhibit": true,
+      "exhibit_kind": "serp_screenshot",
+      "text": "Your competitors are currently advertising on Google (see below), we can create laser focused Ad campaigns to target high value keywords that will create a positive ROI for your practice."
+    },
+
+    {
+      "id": "rep.reviews.few",
+      "category": "reputation",
+      "dimension": "Reviews",
+      "variant": "neutral",
+      "weight": 1,
+      "when": "manual",
+      "manual_prompt": "How many Google reviews and what average rating?",
+      "conflicts": ["rep.reviews.good_diversify", "rep.reviews.none"],
+      "vars": ["count", "rating"],
+      "links": ["https://youtu.be/4shPb9MmC70"],
+      "text": "The practice only has a small amount of reviews  ({{count}}x {{rating}}* on GMB) which is a good start. It’s important to keep pushing for more reviews as a way for you to social proof yourself. See https://youtu.be/4shPb9MmC70 for advice on how to get more reviews efficiently."
+    },
+    {
+      "id": "rep.reviews.good_diversify",
+      "category": "reputation",
+      "dimension": "Reviews",
+      "variant": "positive",
+      "weight": 2,
+      "when": "manual",
+      "conflicts": ["rep.reviews.few", "rep.reviews.none"],
+      "vars": ["count", "rating"],
+      "links": ["https://www.youtube.com/watch?v=F-k0u0g4swc"],
+      "text": "The practice has a good amount of reviews on Google+ ({{count}}x {{rating}}* on GMB) which is great. Just like an investment portfolio though, it’s important to diversify your online reputation by having reviews on multiple channels such as True Local, Yellow Pages, Yelp etc. See https://www.youtube.com/watch?v=F-k0u0g4swc for reasons and techniques."
+    },
+    {
+      "id": "rep.reviews.negative_unanswered",
+      "category": "reputation",
+      "dimension": "Reviews",
+      "variant": "negative",
+      "weight": 2,
+      "when": "manual",
+      "manual_prompt": "Are there negative reviews, and has the practice replied to them?",
+      "links": ["https://www.youtube.com/watch?v=X8JR9nVPNLw"],
+      "text": "The practice has a few negative reviews which we think is important to reply to, the professional management of negative reviews can reflect positively on the practice. It is also perceived as more genuine than just having only positive reviews. Watch a detailed explanation via the link below https://www.youtube.com/watch?v=X8JR9nVPNLw"
+    },
+    {
+      "id": "rep.reviews.suspected_fake",
+      "category": "reputation",
+      "dimension": "Reviews",
+      "variant": "negative",
+      "weight": 3,
+      "when": "manual",
+      "links": ["https://www.accc.gov.au/business/advertising-promoting-your-business/managing-online-reviews"],
+      "text": "Though you have many positive reviews on Google+ but I can tell some of them are fake. This is technically illegal as stated by ACCC (https://www.accc.gov.au/business/advertising-promoting-your-business/managing-online-reviews)"
+    },
+    {
+      "id": "rep.reviews.none",
+      "category": "reputation",
+      "dimension": "Reviews",
+      "variant": "negative",
+      "weight": 3,
+      "when": "manual",
+      "conflicts": ["rep.reviews.few", "rep.reviews.good_diversify"],
+      "links": ["https://www.youtube.com/watch?v=dTtLodrOKUY"],
+      "text": "You currently don’t have any online reputation whatsoever. This isn’t good because the potential patients won’t be able to judge whether you’re any good from other people. Stats show 88% of consumers would trust online reviews just as much as their friends/family’s recommendation. The purpose is to reduce the risk in engaging your practice and manage public perception of you being fake - see https://www.youtube.com/watch?v=dTtLodrOKUY"
+    },
+
+    {
+      "id": "social.fb.strong",
+      "category": "social_media",
+      "dimension": "Fans",
+      "variant": "positive",
+      "weight": 2,
+      "when": "manual",
+      "manual_prompt": "Facebook fan count, posting frequency and engagement level?",
+      "conflicts": ["social.fb.dormant"],
+      "vars": ["fans"],
+      "text": "Your Facebook page has {{fans}} fans with frequent posts and good amount of engagement which is good. Your posting is a mixture of practice photos, team members, community activities and products which is great."
+    },
+    {
+      "id": "social.fb.embed_opportunity",
+      "category": "social_media",
+      "dimension": "Engagement",
+      "variant": "neutral",
+      "weight": 1,
+      "when": "manual",
+      "links": ["https://gentletouchortho.com.au/"],
+      "text": "You guys seem to be quite active on Facebook, we would recommend that you combine your FB activity into the website to make it not as stagnant. See https://gentletouchortho.com.au/ footer for example."
+    },
+    {
+      "id": "social.ig.strong",
+      "category": "social_media",
+      "dimension": "Fans",
+      "variant": "positive",
+      "weight": 2,
+      "when": "manual",
+      "conflicts": ["social.ig.weak"],
+      "vars": ["followers"],
+      "text": "Your current Instagram has {{followers}} followers frequent posts and good amount of engagement which is good. Your posting is a mixture of practice photos, team members, community activities and products which is great."
+    },
+    {
+      "id": "social.ig.weak",
+      "category": "social_media",
+      "dimension": "Fans",
+      "variant": "negative",
+      "weight": 1,
+      "when": "manual",
+      "conflicts": ["social.ig.strong"],
+      "vars": ["followers", "posts"],
+      "text": "Your current Instagram has {{followers}} followers and have only got {{posts}} generic posts. It’s most likely that you’re not focused on this channel. Our recommendation is that you don’t bother with instagram to keep your resources focused."
+    },
+    {
+      "id": "social.campaigns.none",
+      "category": "social_media",
+      "dimension": "Engagement",
+      "variant": "negative",
+      "weight": 2,
+      "when": "manual",
+      "conflicts": ["social.fb_ads.running"],
+      "text": "You currently don’t run any social media campaigns which is a pity as you have strong fundamentals. Setting up funnels and landing pages (i.e. Facebook video funnels for Teeth Whitening) can ensure you get a constant flow of mid-long term patients who are not ready to engage you right this minute (complementary to Adwords)."
+    },
+    {
+      "id": "social.fb_ads.running",
+      "category": "social_media",
+      "dimension": "Engagement",
+      "variant": "positive",
+      "weight": 2,
+      "when": "manual",
+      "conflicts": ["social.campaigns.none"],
+      "vars": ["main ad topic"],
+      "text": "You currently running several Facebook ads which is great as you have strong fundamentals. We would also recommend setting up funnels and landing pages (i.e. Facebook video funnels for {{main_ad_topic}}) can ensure you get a constant flow of mid-long term patients who are not ready to engage you right this minute (complementary to Adwords). See the difference between Google Ads and Facebook Ads"
+    },
+    {
+      "id": "social.fb.dormant",
+      "category": "social_media",
+      "dimension": "Post Frequency",
+      "variant": "negative",
+      "weight": 3,
+      "when": "manual",
+      "conflicts": ["social.fb.strong"],
+      "links": ["https://www.facebook.com/Smile-Council-Orthodontics-153558141326754/"],
+      "text": "Social media Facebook has no activity whatsoever. If you’re not going to use it properly it’s better to not use it at all because it shows potential patients that you don’t take your online presence seriously. Our suggestion is find a receptionist who is young and keen on social media and empower her/him to take on the responsibilities (see https://www.facebook.com/Smile-Council-Orthodontics-153558141326754/ for an example of a practice that had the same issue, but turned it around from our simple strategy)."
+    },
+    {
+      "id": "social.video.opportunity",
+      "category": "social_media",
+      "dimension": "Engagement",
+      "variant": "neutral",
+      "weight": 1,
+      "when": "manual",
+      "links": ["https://www.facebook.com/watch/?v=563389824329717"],
+      "text": "Consider doing some short educational videos to increase the dental IQ of your patients (as well as attract new higher quality patients via social media). See https://www.facebook.com/watch/?v=563389824329717 for example."
+    },
+
+    {
+      "id": "comp.intro",
+      "category": "competition",
+      "dimension": "Quantity",
+      "variant": "neutral",
+      "weight": 0,
+      "structural": true,
+      "when": { "all": [{ "signal": "manual.competitors.count", "gt": 0 }] },
+      "text": "The primary competitors in the local area are:"
+    },
+    {
+      "id": "comp.row",
+      "category": "competition",
+      "dimension": "Strength",
+      "variant": "neutral",
+      "weight": 0,
+      "repeats_per": "competitor",
+      "when": { "all": [{ "signal": "manual.competitors.count", "gt": 0 }] },
+      "note": "One line per competitor, assembled from the competitor record. Technical and usability facts are collected automatically once the domain is named; the SERP, review and social facts are entered by hand. Fragments are joined with ', ' in this order and empty ones are dropped, exactly as the source template does.",
+      "row_template": [
+        "{{name}}",
+        "{{corporate?Corporate}}",
+        "#{{serp_position}} in Google search",
+        "#{{map_position}} in Google Map search",
+        "{{sem?SEM}}",
+        "{{https?secure:not secure}}",
+        "{{website_quality}} website",
+        "{{content_volume}}",
+        "{{content_note}}",
+        "{{navigation_note}}",
+        "{{personality_note}}",
+        "{{booking?online booking}}",
+        "open {{days_open}} days",
+        "Google: {{review_count}}x {{review_rating}}* reviews",
+        "FB Likes: {{fb_likes}}",
+        "{{fb_activity}}",
+        "{{fb_content}}",
+        "{{fb_engagement}}"
+      ],
+      "row_suffix": " - Threat: {{threat}}/10.",
+      "text": "Chapel Gate Dental - #1 in Google search, #1 in Google Map search, not secure, generic content, old website, lack personality, online booking, open 6 days, Google: 23x 4.7* reviews, FB Likes: 5, not active, mixed posts, no engagement - Threat: 7/10."
+    },
+    {
+      "id": "comp.verdict.open_field",
+      "category": "competition",
+      "dimension": "Strength",
+      "variant": "positive",
+      "weight": 2,
+      "when": "manual",
+      "conflicts": ["comp.verdict.leading", "comp.verdict.behind"],
+      "text": "The good news is that they don’t dominate the local market yet, according to their online presence, social media followers and online reputation which means your practice has a real chance at being the leader if the cards are played right with the right type of guidance."
+    },
+    {
+      "id": "comp.verdict.leading",
+      "category": "competition",
+      "dimension": "Strength",
+      "variant": "positive",
+      "weight": 3,
+      "when": "manual",
+      "conflicts": ["comp.verdict.open_field", "comp.verdict.behind"],
+      "text": "The good news is you’re the leader of the pack currently. However, it's important to keep the lead by improving on areas that you’re weaker in such as social media. Otherwise, if you’re complacent, your competitors can catch up relatively quickly when you’re least expecting."
+    },
+    {
+      "id": "comp.verdict.behind",
+      "category": "competition",
+      "dimension": "Strength",
+      "variant": "negative",
+      "weight": 3,
+      "when": "manual",
+      "conflicts": ["comp.verdict.open_field", "comp.verdict.leading"],
+      "text": "Your practice will be playing catch up to the strong competitors judging by their website, social media and online reputation. It’s critical that you do something about it ASAP to have a chance to remain in the competition otherwise you will continue to bleed new patient numbers as they will most likely go to your competitors than yours."
+    },
+
+    {
+      "id": "summary.opening",
+      "category": "recommendations",
+      "dimension": "Overall",
+      "variant": "neutral",
+      "weight": 0,
+      "generated": true,
+      "when": "generated",
+      "generation_contract": "Written by the model from the accepted findings only. Names the weak categories in the client's own terms, references the competitive position, and points at the one or two moves that matter most. It may not introduce a finding that is not in the accepted set. The example below is the house shape and length to match.",
+      "text": "There are a number of areas of improvement with your online presence, which includes your website, security, usability and sem. You have some strong competition in the area, hence, a revamp on the website is a good idea, in order to expand and/or be on top position. Need to define and showcase your UVP and share your unique philosophy (i.e. using videos) to provide a point of difference against your stronger competitors. With video marketing we can also expand on your consistent activity on Facebook also."
+    },
+    {
+      "id": "summary.closer.optimistic",
+      "category": "recommendations",
+      "dimension": "Overall",
+      "variant": "positive",
+      "weight": 0,
+      "when": "always",
+      "text": "The positive way of seeing this is that there is plenty of room for improvement and with the right guidance and implementation, we will be able to help your practice achieve your goals if you’re willing to step up to the challenge."
+    }
+  ]
+}
