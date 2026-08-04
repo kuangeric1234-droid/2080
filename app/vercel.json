@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://api.2080solutions.com.au/api/:path*"
+      "destination": "https://consult-governor-overnight-cup.trycloudflare.com/api/:path*"
     },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
