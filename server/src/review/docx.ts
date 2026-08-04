@@ -1,9 +1,13 @@
+import { existsSync, readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import {
-  AlignmentType, BorderStyle, Document, HeadingLevel, Packer, Paragraph, ShadingType,
-  Table, TableCell, TableRow, TextRun, WidthType,
+  AlignmentType, BorderStyle, Document, Footer, Header, HeadingLevel, ImageRun, PageNumber,
+  Packer, Paragraph, ShadingType, Table, TableCell, TableRow, TextRun, WidthType,
 } from 'docx'
 import type pg from 'pg'
 import { getReview } from './store.ts'
+import { defaultExhibitDir } from './render.ts'
 import { loadBank } from './bank.ts'
 
 /* The deliverable. Layout, fonts and colours are lifted from
@@ -25,6 +29,37 @@ const HEADER_FILL = 'EAF0F7'
 
 /** Half-points, matching the template's w:sz values. */
 const SZ = { body: 22, small: 20, h1: 32, h2: 26, title: 40 }
+
+const ASSET_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../assets')
+
+/* Page geometry read out of the template's own sectPr: A4 portrait, 1" top and
+   bottom, 1.25" left and right, header and footer 708 twips from the edge. */
+const PAGE = {
+  width: 11900, height: 16840,
+  top: 1440, bottom: 1440, left: 1800, right: 1800,
+  headerDist: 708, footerDist: 708,
+}
+
+/* The letterhead banner carries the company name, ABN, phone, email and street
+   address, which is why the template has no separate address block — the header
+   image is the only place any of them appear. Sized from the template's own
+   wp:extent (6803390 x 723265 EMU = 7.44" x 0.79"), so it spans into the side
+   margins exactly as the original does. */
+const LOGO = { file: path.join(ASSET_DIR, '2080-logo.png'), width: 714, height: 76 }
+
+/* An exhibit must fit the text column and still leave room for words on the
+   page, so it scales down to whichever bound binds first. */
+const EXHIBIT_MAX_W = 560
+const EXHIBIT_MAX_H = 620
+
+interface ExhibitRow {
+  finding_id: string | null
+  kind: string
+  label: string
+  path: string
+  width: number | null
+  height: number | null
+}
 
 function body(text: string, opts: { italics?: boolean; color?: string; size?: number } = {}) {
   return new Paragraph({
@@ -81,6 +116,64 @@ function tableCellText(text: string, opts: { bold?: boolean; size?: number } = {
   })
 }
 
+/* The letterhead. A missing asset must never fail an export — the words are the
+   deliverable and a logo is presentation, so the header degrades to empty. */
+function letterhead(): Header {
+  if (!existsSync(LOGO.file)) return new Header({ children: [new Paragraph({ text: '' })] })
+  return new Header({
+    children: [new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 60 },
+      children: [new ImageRun({
+        type: 'png',
+        data: readFileSync(LOGO.file),
+        transformation: { width: LOGO.width, height: LOGO.height },
+      })],
+    })],
+  })
+}
+
+/** Footer: the template prints the domain and "Page N of M", so this does too. */
+function pageFooter(): Footer {
+  const grey = { font: BODY_FONT, size: SZ.small, color: '8A9CA3' }
+  return new Footer({
+    children: [new Paragraph({
+      alignment: AlignmentType.CENTER,
+      children: [
+        new TextRun({ text: '2080solutions.com.au', ...grey }),
+        new TextRun({ text: '     ', ...grey }),
+        new TextRun({ children: ['Page ', PageNumber.CURRENT, ' of ', PageNumber.TOTAL_PAGES], ...grey }),
+      ],
+    })],
+  })
+}
+
+/* One exhibit: the picture, then its caption. Scaled to whichever of width or
+   height binds first so a tall screenshot cannot run off the page. */
+function exhibit(ex: ExhibitRow, dir: string): Paragraph[] {
+  const abs = path.join(dir, ex.path)
+  if (!existsSync(abs)) return [] // collected on another machine, or cleaned up
+  const w = Number(ex.width) || EXHIBIT_MAX_W
+  const h = Number(ex.height) || Math.round(EXHIBIT_MAX_W * 0.62)
+  const scale = Math.min(1, EXHIBIT_MAX_W / w, EXHIBIT_MAX_H / h)
+  return [
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { before: 160, after: 40 },
+      children: [new ImageRun({
+        type: 'png',
+        data: readFileSync(abs),
+        transformation: { width: Math.round(w * scale), height: Math.round(h * scale) },
+      })],
+    }),
+    new Paragraph({
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 200 },
+      children: [new TextRun({ text: ex.label, font: BODY_FONT, size: SZ.small, italics: true, color: '8A9CA3' })],
+    }),
+  ]
+}
+
 export interface ExportedReview {
   filename: string
   buffer: Buffer
@@ -91,7 +184,7 @@ export async function exportReviewDocx(
   db: pg.Client | pg.Pool,
   workspaceId: string,
   reviewId: string,
-  opts: { date?: Date } = {},
+  opts: { date?: Date; exhibitDir?: string } = {},
 ): Promise<ExportedReview> {
   const data = await getReview(db, workspaceId, reviewId)
   if (!data) throw new Error('review not found')
@@ -166,9 +259,28 @@ export async function exportReviewDocx(
 
   // ── recommendations ──
   const recommendations: Paragraph[] = []
+  /* The template opens Recommendations with a paragraph and closes with the
+     optimistic one. The opening is the model's tailored summary where it wrote
+     one, and the bank's house copy otherwise — without this fallback an
+     accepted `summary.opening` was silently dropped from the document. */
+  const opening = accepted.find((f) => f.snippet_id === 'summary.opening')
   if (review.summary_text) recommendations.push(body(review.summary_text))
+  else if (opening) recommendations.push(body(textOf(opening)))
   const closer = accepted.find((f) => f.snippet_id === 'summary.closer.optimistic')
   if (closer) recommendations.push(body(textOf(closer)))
+
+  /* Exhibits print beside the finding they evidence, which is how the template
+     reads — a GTmetrix report sits under the load-time paragraph, a screenshot
+     under the one about photos — not gathered into a gallery at the back. */
+  const exhibitDir = opts.exhibitDir ?? defaultExhibitDir()
+  const allExhibits = (data.exhibits ?? []) as ExhibitRow[]
+  const byFinding = new Map<string, ExhibitRow[]>()
+  for (const ex of allExhibits) {
+    if (!ex.finding_id) continue
+    const list = byFinding.get(ex.finding_id) ?? []
+    list.push(ex)
+    byFinding.set(ex.finding_id, list)
+  }
 
   // ── one section per category, in the template's order ──
   const sections: Paragraph[] = []
@@ -183,7 +295,20 @@ export async function exportReviewDocx(
       ...mine.filter((f) => f.variant === 'neutral'),
       ...mine.filter((f) => f.variant === 'positive'),
     ]
-    for (const f of ordered) sections.push(bullet(textOf(f)))
+    for (const f of ordered) {
+      sections.push(bullet(textOf(f)))
+      for (const ex of byFinding.get(f.id as string) ?? []) sections.push(...exhibit(ex, exhibitDir))
+    }
+  }
+
+  /* An exhibit nobody attached to a finding still earned its place — the
+     homepage capture is collected for every review. It goes at the back rather
+     than being dropped or guessed into a section it may not belong to. */
+  const loose = allExhibits.filter((ex) => !ex.finding_id)
+  const appendix: Paragraph[] = []
+  if (loose.length > 0) {
+    appendix.push(heading('Evidence:', 2))
+    for (const ex of loose) appendix.push(...exhibit(ex, exhibitDir))
   }
 
   const competitors = data.competitors
@@ -208,7 +333,17 @@ export async function exportReviewDocx(
       },
     },
     sections: [{
-      properties: {},
+      properties: {
+        page: {
+          size: { width: PAGE.width, height: PAGE.height },
+          margin: {
+            top: PAGE.top, bottom: PAGE.bottom, left: PAGE.left, right: PAGE.right,
+            header: PAGE.headerDist, footer: PAGE.footerDist,
+          },
+        },
+      },
+      headers: { default: letterhead() },
+      footers: { default: pageFooter() },
       children: [
         ...children,
         new Paragraph({ text: '', spacing: { after: 120 } }),
@@ -218,14 +353,7 @@ export async function exportReviewDocx(
         ...(recommendations.length ? [heading('Recommendations:', 2), ...recommendations] : []),
         ...sections,
         ...competitorBlock,
-        new Paragraph({
-          spacing: { before: 480 },
-          alignment: AlignmentType.CENTER,
-          children: [new TextRun({
-            text: `Prepared by 20-80 Solutions · ${dateText}`,
-            font: BODY_FONT, size: SZ.small, color: '8A9CA3',
-          })],
-        }),
+        ...appendix,
       ],
     }],
   })

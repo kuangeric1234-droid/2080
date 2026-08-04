@@ -1,6 +1,7 @@
 import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import EmbeddedPostgres from 'embedded-postgres'
 import pg from 'pg'
@@ -59,6 +60,29 @@ function isDocx(buf: Buffer): boolean {
   const zip = buf[0] === 0x50 && buf[1] === 0x4b
   const names = buf.toString('latin1')
   return zip && names.includes('[Content_Types].xml') && names.includes('word/document.xml')
+}
+
+/** Unpack the .docx and return every part name plus the header/footer xml. */
+async function docxParts(buf: Buffer): Promise<{ parts: string[]; header: string; footer: string }> {
+  const { execFileSync } = await import('node:child_process')
+  const { writeFileSync, readFileSync, readdirSync, existsSync } = await import('node:fs')
+  const dir = mkdtempSync(path.join(tmpdir(), 'dxp-'))
+  const file = path.join(dir, 'out.zip')
+  writeFileSync(file, buf)
+  execFileSync('powershell', ['-NoProfile', '-Command',
+    `Expand-Archive -LiteralPath '${file}' -DestinationPath '${dir}\\x' -Force`])
+  const root = path.join(dir, 'x')
+  const walk = (d: string, prefix = ''): string[] =>
+    readdirSync(d, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? walk(path.join(d, e.name), `${prefix}${e.name}/`) : [`${prefix}${e.name}`])
+  const parts = walk(root)
+  const read = (rel: string) =>
+    existsSync(path.join(root, rel)) ? readFileSync(path.join(root, rel), 'utf8') : ''
+  const headerName = parts.find((p) => /^word\/header\d*\.xml$/.test(p)) ?? ''
+  const footerName = parts.find((p) => /^word\/footer\d*\.xml$/.test(p)) ?? ''
+  const out = { parts, header: read(headerName), footer: read(footerName) }
+  rmSync(dir, { recursive: true, force: true })
+  return out
 }
 
 /** Pull the document body text out without a full OOXML parse. */
@@ -162,6 +186,46 @@ describe('exporting the review as .docx', () => {
     const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
     expect(text).toContain('Static HTML. Move to WordPress before anything else.')
     expect(text).not.toContain('will make the website hard to maintain')
+  })
+
+  /* 1.7 DoD: the letterhead carries the ABN, phone and street address, and the
+     template's screenshots sit beside the finding they evidence. */
+  it('ships the letterhead, the page footer and an exhibit attached to its finding', async () => {
+    const full = (await getReview(db, WORKSPACE_ID, reviewId))!
+    /* Must be a finding that actually renders: `recommendations` findings are
+       handled by the summary block, not the category sections. */
+    const target = full.findings.find(
+      (f) => f.state === 'accepted' && f.category === 'website_technical')!
+    await db.query(
+      `INSERT INTO review_exhibits
+         (id, workspace_id, review_id, finding_id, kind, label, path, width, height, position)
+       VALUES ('exh_t1',$1,$2,$3,'screenshot','Homepage as it loads at 1440×900','2080-logo.png',2048,218,0)`,
+      [WORKSPACE_ID, reviewId, target.id],
+    )
+    /* A distinct image, not the logo: docx stores media by content hash, so
+       reusing the logo would dedupe to one part and prove nothing. */
+    const { writeFileSync } = await import('node:fs')
+    const exDir = mkdtempSync(path.join(tmpdir(), 'exh-'))
+    writeFileSync(path.join(exDir, '2080-logo.png'), Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64'))
+
+    const out = await exportReviewDocx(db, WORKSPACE_ID, reviewId, { exhibitDir: exDir })
+    const { parts, header, footer } = await docxParts(out.buffer)
+
+    expect(parts.some((p) => /^word\/header\d*\.xml$/.test(p)), 'no header part').toBe(true)
+    expect(parts.some((p) => /^word\/footer\d*\.xml$/.test(p)), 'no footer part').toBe(true)
+    expect(header).toContain('<w:drawing') // the letterhead image
+    expect(footer).toContain('2080solutions.com.au')
+    expect(footer).toMatch(/PAGE|NUMPAGES/) // page N of M fields
+
+    // logo in the header + the exhibit in the body = at least two images
+    const media = parts.filter((p) => p.startsWith('word/media/'))
+    expect(media.length, `media parts: ${media.join(', ')}`).toBeGreaterThanOrEqual(2)
+
+    const text = await documentText(out.buffer)
+    expect(text).toContain('Homepage as it loads at 1440×900') // the caption
+    await db.query(`DELETE FROM review_exhibits WHERE id = 'exh_t1'`)
   })
 
   it('puts issues before strengths inside a category', async () => {

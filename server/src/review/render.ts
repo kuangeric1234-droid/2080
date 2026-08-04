@@ -145,12 +145,16 @@ export async function collectRenderLayer(url: string, opts: RenderOptions = {}):
       const rel = opts.reviewId ? `${opts.reviewId}/homepage.png` : 'homepage.png'
       const abs = path.join(exhibitDir, rel)
       mkdirSync(path.dirname(abs), { recursive: true })
-      await page.screenshot({ path: abs, fullPage: true })
-      const dims = await page.evaluate(() => ({
-        w: document.documentElement.scrollWidth,
-        h: document.documentElement.scrollHeight,
-      }))
-      exhibits.push({ kind: 'screenshot', label: 'Homepage', path: rel, width: dims.w, height: dims.h })
+      /* Above the fold, not the full page. A full-page capture of a long
+         homepage is 1440x5000+, which scales into an unreadable ribbon in the
+         report; the template's own screenshots are all viewport-shaped. What
+         the visitor sees first is also what the finding is usually about. */
+      await page.screenshot({ path: abs, fullPage: false })
+      exhibits.push({
+        kind: 'screenshot',
+        label: `Homepage as it loads at ${DESKTOP.width}×${DESKTOP.height}`,
+        path: rel, width: DESKTOP.width, height: DESKTOP.height,
+      })
     })
 
     // ── interior page: banner height ──
