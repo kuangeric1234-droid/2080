@@ -332,12 +332,14 @@ describe('review lifecycle', () => {
       fetchImpl: fixtureFetch(NEGLECTED, 'http://stellarsmiles.test'),
       networkProbes: false,
     })
-    expect(out.signals).toBeGreaterThanOrEqual(25)
+    /* 24, not 25: site.load_seconds moved to the render layer in 1.3b, and
+       networkProbes:false skips that layer, so this is fetch signals only. */
+    expect(out.signals).toBeGreaterThanOrEqual(24)
     expect(out.findings).toBeGreaterThan(8)
 
     const full = (await getReview(db, WORKSPACE_ID, reviewId))!
     expect(full.review.status).toBe('draft')
-    expect(full.signals.length).toBeGreaterThanOrEqual(25)
+    expect(full.signals.length).toBeGreaterThanOrEqual(24)
     expect(full.categories).toHaveLength(8)
 
     // every stored finding names the evidence that earned it

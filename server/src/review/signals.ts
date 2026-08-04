@@ -28,7 +28,7 @@ export const SIGNAL_CATALOG: Record<string, { desc: string; layer: 'fetch' | 're
   // ── transport & hosting ──
   'site.https': { desc: 'Final URL is served over HTTPS with a valid certificate', layer: 'fetch' },
   'site.tls_days_left': { desc: 'Days until the TLS certificate expires', layer: 'fetch' },
-  'site.load_seconds': { desc: 'Time to fully download the homepage document', layer: 'fetch' },
+  'site.load_seconds': { desc: 'Real browser load time to the load event', layer: 'render' },
   'site.host.country': { desc: 'Country the origin server resolves to', layer: 'fetch' },
   'site.cms': { desc: 'wordpress | squarespace | wix | shopify | static | unknown', layer: 'fetch' },
   'site.wp_admin_default': { desc: '/wp-admin is reachable at the default path', layer: 'fetch' },

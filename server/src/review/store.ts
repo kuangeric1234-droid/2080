@@ -1,6 +1,7 @@
 import pg from 'pg'
 import { monotonicFactory } from 'ulid'
 import { collectFetchLayer } from './collect.ts'
+import { collectRenderLayer } from './render.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
 import { loadBank, render } from './bank.ts'
 
@@ -113,7 +114,26 @@ export async function collectReview(
     throw err
   }
 
-  for (const s of result.signals) {
+  /* The render layer needs a real browser, so it is skipped wherever the fetch
+     layer's network probes are — fixture-backed tests must not launch Chromium.
+     Its failure is never fatal: a review with fetch signals and no render ones
+     is a smaller report, not a broken one. */
+  let renderResult: Awaited<ReturnType<typeof collectRenderLayer>> =
+    { signals: [], exhibits: [], errors: [] }
+  if (opts.networkProbes !== false) {
+    renderResult = await collectRenderLayer(result.finalUrl, {
+      // Banner height is an interior-page measurement; the homepage is expected
+      // to lead with a big image.
+      interiorUrl: result.pages.find((p) => p.url !== result.finalUrl)?.url,
+      reviewId,
+    })
+  }
+
+  /* Render after fetch: toMap() is last-wins, so where both layers measure the
+     same key the browser's answer is the one that survives. */
+  const allSignals = [...result.signals, ...renderResult.signals]
+
+  for (const s of allSignals) {
     await db.query(
       `INSERT INTO review_signals (id, workspace_id, review_id, target, key, value, source, provenance)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
@@ -121,7 +141,20 @@ export async function collectReview(
     )
   }
 
-  const signals = signalsToMap(result.signals)
+  /* Exhibits are replaced wholesale on re-collect: a screenshot of a page as it
+     looked two crawls ago is worse than none, and the finding it was attached
+     to may no longer fire. */
+  await db.query(`DELETE FROM review_exhibits WHERE review_id = $1`, [reviewId])
+  for (const [i, ex] of renderResult.exhibits.entries()) {
+    await db.query(
+      `INSERT INTO review_exhibits
+         (id, workspace_id, review_id, kind, label, path, width, height, position)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [id('exh'), workspaceId, reviewId, ex.kind, ex.label, ex.path, ex.width, ex.height, i],
+    )
+  }
+
+  const signals = signalsToMap(allSignals)
   const vars = varsFromSignals(signals, result.target)
 
   /* Manual and judgement snippets the reviewer already confirmed stay confirmed
@@ -175,11 +208,12 @@ export async function collectReview(
   )
 
   return {
-    signals: result.signals.length,
+    signals: allSignals.length,
     pages: result.pages.length,
     sitemap: result.sitemap.length,
+    exhibits: renderResult.exhibits.length,
     findings: candidates.length,
-    errors: result.errors,
+    errors: [...result.errors, ...renderResult.errors],
     scores,
   }
 }

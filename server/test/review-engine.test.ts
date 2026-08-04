@@ -62,9 +62,11 @@ describe('fetch-layer collector', () => {
 
   /* Module 1.3 DoD: a real practice site yields enough typed, sourced evidence
      that the report is grounded rather than asserted. */
-  it('produces at least 25 signals, every one carrying provenance', async () => {
+  /* 24, not 25: site.load_seconds moved to the render layer in 1.3b, and this
+     is a fixture-backed fetch-only run — no browser, so no render signals. */
+  it('produces at least 24 signals, every one carrying provenance', async () => {
     const r = await collect(NEGLECTED, 'http://stellarsmiles.test')
-    expect(r.signals.length).toBeGreaterThanOrEqual(25)
+    expect(r.signals.length).toBeGreaterThanOrEqual(24)
     for (const s of r.signals) {
       expect(s.provenance, s.key).toBeTruthy()
       expect(s.provenance.length, s.key).toBeGreaterThan(10)

@@ -76,14 +76,12 @@ export async function collectFetchLayer(input: string, opts: CrawlOptions = {}):
      an http-only practice site is exactly the one that earns the "not using
      SSL" finding, and without this we would fail to collect the sites that
      most need the report. */
-  const t0 = Date.now()
   let home = await get(start, doFetch, timeoutMs)
   let insecureFallback = false
   if (!home && start.startsWith('https://')) {
     home = await get(start.replace(/^https:/, 'http:'), doFetch, timeoutMs)
     insecureFallback = home !== null
   }
-  const loadSeconds = (Date.now() - t0) / 1000
   if (!home) {
     errors.push(`could not fetch ${start} over https or http`)
     return { target, finalUrl: start, signals, pages: [], sitemap: [], errors }
@@ -92,13 +90,15 @@ export async function collectFetchLayer(input: string, opts: CrawlOptions = {}):
   const finalHost = new URL(finalUrl).host
   const secure = finalUrl.startsWith('https:') && !insecureFallback
 
+  /* site.load_seconds is deliberately NOT emitted here. Document-download time
+     flattered sites that transfer fast and then spend seconds rendering, which
+     is the opposite of what a visitor experiences. The render layer measures it
+     properly against the load event (render.ts). */
   signals.push(
     sig('site.https', secure, 'http',
       insecureFallback
         ? `${start} did not answer over https; the site served ${finalUrl} over plain http (HTTP ${home.status})`
         : `GET ${start} resolved to ${finalUrl} (HTTP ${home.status})`),
-    sig('site.load_seconds', Math.round(loadSeconds * 10) / 10, 'http',
-      `Homepage document downloaded in ${loadSeconds.toFixed(1)}s — server response and transfer, not full render`),
   )
 
   const pages: Page[] = [home.page]
