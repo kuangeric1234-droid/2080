@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -247,6 +247,7 @@ function FindingCard({
 
 export function ReviewDetailPage() {
   const { id = '' } = useParams()
+  const [params, setParams] = useSearchParams()
   const [data, setData] = useState<ReviewDetail | null>(null)
   const [bank, setBank] = useState<BankGroup[]>([])
   const [state, setState] = useState<'loading' | 'ready' | 'error' | 'missing'>('loading')
@@ -276,6 +277,16 @@ export function ReviewDetailPage() {
     }
   }, [id])
   useEffect(() => { void load() }, [load])
+
+  /* Arrived from the URL bar: crawl immediately so typing a domain is one
+     action, not two. The flag is consumed on the way in so a refresh — or the
+     back button — does not silently re-crawl the site. */
+  useEffect(() => {
+    if (state !== 'ready' || !data || params.get('collect') !== '1') return
+    setParams({}, { replace: true })
+    if (!data.review.collected_at && busy !== 'collect') void collect()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state, data, params])
 
   const signals = useMemo(
     () => new Map((data?.signals ?? []).map((s) => [s.key, s])),

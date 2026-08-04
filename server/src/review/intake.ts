@@ -87,7 +87,7 @@ export function parseJotform(payload: unknown): ParsedIntake {
   return out
 }
 
-function looksLikeDomain(v: string): boolean {
+export function looksLikeDomain(v: string): boolean {
   if (v.includes('@')) return false
   return /^(https?:\/\/)?([a-z0-9-]+\.)+[a-z]{2,}(\/|$)/i.test(v.trim())
 }
@@ -137,6 +137,8 @@ export async function receiveIntake(
     mail?: MailSender
     notifyEmail?: string
     now?: Date
+    /** Off when a human typed the domain in — they know it arrived. */
+    notify?: boolean
   },
 ): Promise<IntakeResult> {
   const { workspaceId, source, externalId, payload } = opts
@@ -207,16 +209,16 @@ export async function receiveIntake(
     parseError,
   ].filter(Boolean).join('\n')
 
-  const notified = await route(db, {
+  const notified = opts.notify === false ? [] : await route(db, {
     event_class: 'sales',
-    severity: parseError ? 'red' : 'red',
+    severity: 'red',
     title,
     body,
     link: `/review/${reviewId}`,
   }, { now: opts.now })
 
   let emailed = false
-  if (opts.mail && opts.notifyEmail) {
+  if (opts.notify !== false && opts.mail && opts.notifyEmail) {
     try {
       await opts.mail.send({
         to: opts.notifyEmail,
@@ -239,4 +241,73 @@ export async function receiveIntake(
     notified: notified.length,
     emailed,
   }
+}
+
+/* Type a URL and audit it — no enquiry, no form. This is the path for auditing
+   an existing client, a prospect Wally met at a conference, or a competitor,
+   and it is how most reviews will actually start.
+
+   Reuses the same intake record so a hand-typed review is indistinguishable
+   downstream from a Jotform one: same evidence trail, same audit log, same
+   export. Only the notification is skipped — the person who typed it in does
+   not need to be told it arrived. */
+export async function startManualReview(
+  db: pg.Client | pg.Pool,
+  opts: {
+    workspaceId: string
+    url: string
+    practiceName?: string | null
+    contactName?: string | null
+    contactEmail?: string | null
+    actor: string
+  },
+): Promise<IntakeResult & { domain: string }> {
+  const raw = (opts.url ?? '').trim()
+  if (!raw) throw new Error('a website address is required')
+  if (!looksLikeDomain(raw)) {
+    throw new Error(`"${raw}" doesn’t look like a website address — try something like heartsdental.com.au`)
+  }
+  const domain = normaliseDomain(raw)
+
+  /* An open review of the same site is almost always a double-entry rather
+     than a deliberate re-audit, so hand it back instead of splitting the work
+     across two records. A delivered one does not block a fresh audit — six
+     months later, re-auditing is the point. */
+  const { rows: open } = await db.query(
+    `SELECT r.id AS review_id, r.intake_request_id
+       FROM reviews r
+      WHERE r.workspace_id = $1 AND r.domain = $2 AND r.status <> 'delivered'
+      ORDER BY r.requested_at DESC LIMIT 1`,
+    [opts.workspaceId, domain],
+  )
+  if (open.length) {
+    return {
+      intakeRequestId: open[0].intake_request_id,
+      reviewId: open[0].review_id,
+      duplicate: true,
+      domain,
+      parsed: {
+        domain, practiceName: opts.practiceName ?? null, contactName: opts.contactName ?? null,
+        contactEmail: opts.contactEmail ?? null, contactPhone: null,
+      },
+      parseError: null,
+      notified: 0,
+      emailed: false,
+    }
+  }
+
+  const result = await receiveIntake(db, {
+    workspaceId: opts.workspaceId,
+    source: 'manual',
+    externalId: null,
+    notify: false,
+    payload: {
+      enteredBy: opts.actor,
+      website: domain,
+      practiceName: opts.practiceName ?? null,
+      contactName: opts.contactName ?? null,
+      email: opts.contactEmail ?? null,
+    },
+  })
+  return { ...result, domain }
 }

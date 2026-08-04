@@ -12,7 +12,7 @@ import { deleteCookie, getCookie } from 'hono/cookie'
 import { can, createSession, issueCookie, type Principal, requireAuth, revokeSession, SESSION_COOKIE, verifyPassword } from './auth.ts'
 import { runAudit } from './seo/audit.ts'
 import { runCheck } from './sitehealth/probe.ts'
-import { receiveIntake, unwrapJotformBody } from './review/intake.ts'
+import { receiveIntake, startManualReview, unwrapJotformBody } from './review/intake.ts'
 import { exportReviewDocx } from './review/docx.ts'
 import { addManualFinding, collectReview, decideFinding, getReview, listReviews, manualBank, setScores } from './review/store.ts'
 import { WORKSPACE_ID } from './db/seed.ts'
@@ -452,6 +452,26 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
 
   app.get('/api/reviews', async (c) =>
     c.json({ reviews: await listReviews(db, c.get('principal').workspaceId) }))
+
+  /* Audit a URL straight off, without waiting for an enquiry — an existing
+     client, a prospect, a competitor. Same record shape as a Jotform request. */
+  app.post('/api/reviews', async (c) => {
+    const body = await c.req.json<{
+      url: string; practiceName?: string; contactName?: string; contactEmail?: string
+    }>()
+    try {
+      return c.json(await startManualReview(db, {
+        workspaceId: c.get('principal').workspaceId,
+        url: body.url,
+        practiceName: body.practiceName,
+        contactName: body.contactName,
+        contactEmail: body.contactEmail,
+        actor: c.get('principal').handle,
+      }))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 400)
+    }
+  })
 
   app.get('/api/reviews/:id', async (c) => {
     const found = await getReview(db, c.get('principal').workspaceId, c.req.param('id'))

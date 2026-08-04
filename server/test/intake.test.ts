@@ -9,7 +9,7 @@ import { seed, WORKSPACE_ID } from '../src/db/seed.ts'
 import { buildApp } from '../src/api.ts'
 import { MockActiveCollab, MockMailSender } from '../src/inbox/connectors.ts'
 import { MockModelClient } from '../src/skills/model.ts'
-import { parseJotform, receiveIntake, unwrapJotformBody } from '../src/review/intake.ts'
+import { parseJotform, receiveIntake, startManualReview, unwrapJotformBody } from '../src/review/intake.ts'
 import { HEALTHY, NEGLECTED, fixtureFetch } from './fixtures/practice-site.ts'
 import { collectReview, decideFinding, getReview, listReviews, setScores } from '../src/review/store.ts'
 import { authed, freePort } from './helpers.ts'
@@ -167,6 +167,90 @@ describe('receiving an audit request', () => {
         WHERE action = 'review.requested' AND why LIKE '%stellarsmiles.com.au%'`)
     expect(rows).toHaveLength(1)
     expect(rows[0].why).toContain('amy@stellarsmiles.com.au')
+  })
+})
+
+/* Most reviews will start by typing a URL, not by waiting for an enquiry. */
+describe('auditing a URL by hand', () => {
+  it('opens a review from a bare domain without notifying anyone', async () => {
+    const before = mail.sent.length
+    const r = await startManualReview(db, {
+      workspaceId: WORKSPACE_ID, url: 'https://www.TrowseDental.com.au/about/', actor: 'WC',
+    })
+    expect(r.domain).toBe('trowsedental.com.au')
+    expect(r.duplicate).toBe(false)
+    // the person who typed it in does not need to be told it arrived
+    expect(r.notified).toBe(0)
+    expect(mail.sent.length).toBe(before)
+
+    const { rows } = await db.query(`SELECT domain, status::text FROM reviews WHERE id = $1`, [r.reviewId])
+    expect(rows[0]).toMatchObject({ domain: 'trowsedental.com.au', status: 'requested' })
+  })
+
+  it('leaves the same evidence trail as a Jotform request', async () => {
+    const { rows } = await db.query(
+      `SELECT source, payload FROM intake_requests WHERE domain = 'trowsedental.com.au'`)
+    expect(rows[0].source).toBe('manual')
+    expect(rows[0].payload.enteredBy).toBe('WC')
+
+    const { rows: log } = await db.query(
+      `SELECT why FROM audit_log WHERE action = 'review.requested' AND why LIKE '%trowsedental%'`)
+    expect(log).toHaveLength(1)
+  })
+
+  /* Typing the same site twice is double-entry, not a deliberate re-audit —
+     hand back the open review rather than splitting the work in two. */
+  it('hands back an open review of the same site instead of duplicating it', async () => {
+    const first = await startManualReview(db, {
+      workspaceId: WORKSPACE_ID, url: 'aspireone.com.au', actor: 'WC',
+    })
+    const again = await startManualReview(db, {
+      workspaceId: WORKSPACE_ID, url: 'https://aspireone.com.au', actor: 'WC',
+    })
+    expect(again.duplicate).toBe(true)
+    expect(again.reviewId).toBe(first.reviewId)
+
+    const { rows } = await db.query(
+      `SELECT count(*)::int AS n FROM reviews WHERE domain = 'aspireone.com.au'`)
+    expect(rows[0].n).toBe(1)
+  })
+
+  it('allows a fresh audit once the last one was delivered', async () => {
+    const first = await startManualReview(db, {
+      workspaceId: WORKSPACE_ID, url: 'smiletogo.com.au', actor: 'WC',
+    })
+    await db.query(`UPDATE reviews SET status = 'delivered' WHERE id = $1`, [first.reviewId])
+    const second = await startManualReview(db, {
+      workspaceId: WORKSPACE_ID, url: 'smiletogo.com.au', actor: 'WC',
+    })
+    expect(second.duplicate).toBe(false)
+    expect(second.reviewId).not.toBe(first.reviewId)
+  })
+
+  it('refuses something that is not a website address', async () => {
+    for (const bad of ['', '   ', 'not a url', 'wally@2080.dental', 'just-words']) {
+      await expect(startManualReview(db, { workspaceId: WORKSPACE_ID, url: bad, actor: 'WC' }))
+        .rejects.toThrow()
+    }
+  })
+
+  it('is reachable over the API and 400s on rubbish', async () => {
+    const get = await authed(app)
+    const ok = await get('/api/reviews', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: 'gentletouchortho.com.au' }),
+    })
+    expect(ok.status).toBe(200)
+    expect((await ok.json() as { domain: string }).domain).toBe('gentletouchortho.com.au')
+
+    const bad = await get('/api/reviews', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ url: 'hello there' }),
+    })
+    expect(bad.status).toBe(400)
+    expect((await bad.json() as { error: string }).error).toMatch(/doesn’t look like a website address/)
   })
 })
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
 export type ReviewStatus = 'requested' | 'collecting' | 'draft' | 'in_review' | 'delivered' | 'failed'
@@ -55,6 +56,70 @@ function since(iso: string): string {
   return `${Math.round(mins / 1440)}d ago`
 }
 
+/* Type a URL and audit it. Most reviews start here rather than from an enquiry
+   — an existing client, a prospect, a competitor — so this sits above the queue
+   rather than behind a menu. */
+function AuditUrlBar() {
+  const navigate = useNavigate()
+  const [url, setUrl] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const start = async () => {
+    if (!url.trim() || busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ url }),
+      })
+      const json = (await res.json()) as { reviewId?: string; duplicate?: boolean; error?: string }
+      if (!res.ok || !json.reviewId) {
+        setError(json.error ?? 'Could not start that review.')
+        return
+      }
+      /* An open review of the same site is handed back rather than duplicated;
+         go to it, but do not re-crawl what is already collected. */
+      navigate(`/review/${json.reviewId}${json.duplicate ? '' : '?collect=1'}`)
+    } catch {
+      setError('The API is not reachable.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <section className="rounded-[14px] border border-line bg-surface px-5 py-4 shadow-card">
+      <label htmlFor="audit-url" className="text-[11.5px] font-semibold text-ink">
+        Audit a website
+      </label>
+      <div className="mt-1.5 flex gap-2">
+        <input
+          id="audit-url"
+          type="text"
+          value={url}
+          onChange={(e) => { setUrl(e.target.value); setError(null) }}
+          onKeyDown={(e) => { if (e.key === 'Enter') void start() }}
+          placeholder="heartsdental.com.au"
+          spellCheck={false}
+          autoComplete="off"
+          className="min-w-0 flex-1 rounded-[9px] border border-line bg-canvas px-3 py-2 text-[12.8px] text-ink outline-none placeholder:text-ink-faint focus:border-teal"
+        />
+        <Button onClick={() => void start()} disabled={busy || !url.trim()}>
+          {busy ? 'Starting…' : 'Run review'}
+        </Button>
+      </div>
+      <p className="mt-1.5 text-[11.5px] text-ink-muted">
+        {error
+          ? <span className="font-semibold text-crit">{error}</span>
+          : 'No enquiry needed — collection reads the site’s markup, DNS, mail records and certificate. Under a minute.'}
+      </p>
+    </section>
+  )
+}
+
 export function ReviewPage() {
   const [rows, setRows] = useState<ReviewRow[]>([])
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading')
@@ -85,6 +150,8 @@ export function ReviewPage() {
           Audit requests in, scored 8-category review out.
         </span>
       </div>
+
+      <AuditUrlBar />
 
       <div className="grid grid-cols-4 gap-4 max-[900px]:grid-cols-2">
         <Tile label="Awaiting collection" value={waiting} tone={waiting ? 'text-warn' : ''} />
