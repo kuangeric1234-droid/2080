@@ -12,9 +12,9 @@ import { MockModelClient, costCents } from '../src/skills/model.ts'
 import { runSkill } from '../src/skills/runner.ts'
 import { approve, reject, graduationStreak, inputHash } from '../src/skills/gates.ts'
 import { buildApp } from '../src/api.ts'
-import { authed } from './helpers.ts'
+import { authed, freePort } from './helpers.ts'
 
-const PORT = 5498
+let PORT: number
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures/skills')
 
 let server: EmbeddedPostgres
@@ -42,6 +42,7 @@ async function runHello() {
 }
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080s-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir,

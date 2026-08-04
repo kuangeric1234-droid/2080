@@ -4,6 +4,7 @@ import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import EmbeddedPostgres from 'embedded-postgres'
 import pg from 'pg'
+import { freePort } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed, WORKSPACE_ID } from '../src/db/seed.ts'
 import { receiveIntake } from '../src/review/intake.ts'
@@ -11,13 +12,14 @@ import { collectReview, decideFinding, getReview, setScores } from '../src/revie
 import { exportReviewDocx } from '../src/review/docx.ts'
 import { NEGLECTED, fixtureFetch } from './fixtures/practice-site.ts'
 
-const PORT = 5514
+let PORT: number
 let server: EmbeddedPostgres
 let db: pg.Client
 let dataDir: string
 let reviewId: string
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080dx-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir, user: 'postgres', password: 'postgres', port: PORT,

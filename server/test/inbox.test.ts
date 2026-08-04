@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import EmbeddedPostgres from 'embedded-postgres'
 import pg from 'pg'
+import { freePort } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed } from '../src/db/seed.ts'
 import { MockModelClient } from '../src/skills/model.ts'
@@ -15,7 +16,7 @@ import { processInboundEmail, zeroLossAudit } from '../src/inbox/pipeline.ts'
 import { onTaskCompleted } from '../src/inbox/completion.ts'
 import { evalTriageGoldenSet, type TriageGoldenCase } from '../src/skills/eval.ts'
 
-const PORT = 5500
+let PORT: number
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
 let server: EmbeddedPostgres
@@ -46,6 +47,7 @@ async function counts() {
 }
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080i-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir,

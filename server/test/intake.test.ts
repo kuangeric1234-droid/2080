@@ -12,9 +12,9 @@ import { MockModelClient } from '../src/skills/model.ts'
 import { parseJotform, receiveIntake, unwrapJotformBody } from '../src/review/intake.ts'
 import { HEALTHY, NEGLECTED, fixtureFetch } from './fixtures/practice-site.ts'
 import { collectReview, decideFinding, getReview, listReviews, setScores } from '../src/review/store.ts'
-import { authed } from './helpers.ts'
+import { authed, freePort } from './helpers.ts'
 
-const PORT = 5513
+let PORT: number
 let server: EmbeddedPostgres
 let db: pg.Client
 let dataDir: string
@@ -22,6 +22,7 @@ let mail: MockMailSender
 let app: ReturnType<typeof buildApp>
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080itk-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir, user: 'postgres', password: 'postgres', port: PORT,

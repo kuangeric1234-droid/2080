@@ -8,9 +8,9 @@ import { migrate } from '../src/db/migrate.ts'
 import { seed } from '../src/db/seed.ts'
 import { buildApp } from '../src/api.ts'
 import { MockModelClient } from '../src/skills/model.ts'
-import { authed } from './helpers.ts'
+import { authed, freePort } from './helpers.ts'
 
-const PORT = 5510
+let PORT: number
 let server: EmbeddedPostgres
 let db: pg.Client
 let dataDir: string
@@ -25,6 +25,7 @@ const FIXTURE = `<!doctype html><html lang="en"><head>
 </body></html>`
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080seo-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir, user: 'postgres', password: 'postgres', port: PORT,

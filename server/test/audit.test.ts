@@ -15,9 +15,9 @@ import { resolveFlag } from '../src/flags.ts'
 import { resolveMatch, ingestEvent } from '../src/matcher.ts'
 import { rankFlags } from '../src/flags.ts'
 import { buildApp } from '../src/api.ts'
-import { authed } from './helpers.ts'
+import { authed, freePort } from './helpers.ts'
 
-const PORT = 5502
+let PORT: number
 let server: EmbeddedPostgres
 let db: pg.Client
 let dataDir: string
@@ -29,6 +29,7 @@ const model = new MockModelClient((req) => {
 })
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080a-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir,

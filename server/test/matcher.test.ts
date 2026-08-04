@@ -5,11 +5,12 @@ import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import EmbeddedPostgres from 'embedded-postgres'
 import pg from 'pg'
+import { freePort } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed } from '../src/db/seed.ts'
 import { matchInbound, ingestEvent, resolveMatch, type InboundRefs } from '../src/matcher.ts'
 
-const PORT = 5499
+let PORT: number
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 
 interface GoldenCase {
@@ -35,6 +36,7 @@ const NOTE = {
 } as const
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080m-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir,

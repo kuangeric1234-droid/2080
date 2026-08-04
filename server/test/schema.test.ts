@@ -4,15 +4,17 @@ import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import EmbeddedPostgres from 'embedded-postgres'
 import pg from 'pg'
+import { freePort } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed, WORKSPACE_ID } from '../src/db/seed.ts'
 
-const PORT = 5497
+let PORT: number
 let server: EmbeddedPostgres
 let client: pg.Client
 let dataDir: string
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir,

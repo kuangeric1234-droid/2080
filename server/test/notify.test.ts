@@ -9,14 +9,15 @@ import { seed } from '../src/db/seed.ts'
 import { ack, escalate, listForUser, MATRIX, route, routingView, updatePrefs } from '../src/notify.ts'
 import { buildApp } from '../src/api.ts'
 import { MockModelClient } from '../src/skills/model.ts'
-import { authed } from './helpers.ts'
+import { authed, freePort } from './helpers.ts'
 
-const PORT = 5507
+let PORT: number
 let server: EmbeddedPostgres
 let db: pg.Client
 let dataDir: string
 
 beforeAll(async () => {
+  PORT = await freePort()
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080n-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir, user: 'postgres', password: 'postgres', port: PORT,
