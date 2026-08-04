@@ -4,6 +4,35 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.13 — The unattended report, measured — 2026-08-04
+
+**Ran:** a genuinely untouched audit of **heartsdental.com.au** — POSTed to `/api/reviews` the way the queue page does, then nothing until the export. The worker collected, auto-accepted and summarised on its own.
+
+**Result:** settled in **36s**. 35 signals · 12 findings · **7 accepted with no human (58%)**, 5 left as candidates · 1 exhibit · a written opening and overall comment · a **48-paragraph .docx, 576KB**.
+
+**The document, against the template:** letterhead image in `header1.xml`; footer with the domain and page numbers; "Review of heartsdental.com.au:", Date, Attention; the eight-row summary table with star scores and an em dash where nothing was scored; Recommendations opening on the model's paragraph; a section per category with issues before strengths; the homepage capture under Evidence. Two media parts — logo and screenshot.
+
+**What generated itself, per category:**
+
+| Category | Auto | Awaiting | Why the rest is missing |
+|---|---|---|---|
+| Website (Technical) | 4 | 1 | the one left is a judgement call |
+| Website (Usability) | 3 | 1 | as above |
+| Website (Business) | 0 | 1 | judgement by design — §13.4 |
+| Visibility (SEO) | 0 | 1 | manual; no SERP provider |
+| Visibility (SEM) | 0 | 0 | nothing can fire — needs ads data (SEMrush per the template's own comment) |
+| Reputation | 0 | 0 | nothing can fire — needs a Places/reviews provider |
+| Social Media | 0 | 0 | profile URLs found, no metrics — **Meta Page Public Content Access** |
+| Competition | 0 | 0 | manual entry now exists; nobody typed a competitor |
+
+**The summariser, checked by hand.** Its opening named blue-on-blue navigation text, a nav bar that does not stay in view, HTTPS, WordPress, separate mail hosting, Analytics and mobile-friendliness. **Every one of those traces to an accepted finding** — "blue text on a blue background" is `use.contrast.fail`'s house copy verbatim. It compressed and re-ordered; it did not add. This was the first live run against the real model rather than the mock.
+
+**Decisions / notes:** (1) An earlier run returned **0 auto-accepted** — the API process predated 1.9 and `tsx` does not hot-reload. Worth remembering before believing a disappointing unattended result: restart the server first. (2) A second run against `trowsedental.com.au` collected nothing (`ERR_NAME_NOT_RESOLVED`) and still produced a valid, near-empty report rather than failing — the render layer recorded the failure and the export succeeded. (3) The polling race I hit was in the test script, not the product: `collectReview` sets `draft` before the handler summarises, but the workspace polls the **job**, which only reports done after the summary lands. (4) "Attention:" falls back to the domain when a manual audit has no contact name.
+
+**What a practice would still notice if this went out today:** four of the eight scored sections would be blank or unscored — SEM, Reputation, Social Media and Competition. Three of those are a purchasing decision and one is a data-entry habit. Nothing in that list is an engineering problem.
+
+---
+
 ## §13.2 step 1.12b — Competitors, the workspace UI — 2026-08-04
 
 **Built:** a Competition panel in the review workspace — list, add (name, optional website, threat 1–10) and remove — wired to the 1.12a routes. Each fact is chipped by provenance: green where it was measured from the competitor's own site, grey where a reviewer typed it, with a tooltip saying which. That split is comp.row's own note ("technical and usability facts are collected automatically once the domain is named; the SERP, review and social facts are entered by hand"), surfaced so Wally can see what he still owes the report.
