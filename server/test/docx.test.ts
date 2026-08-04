@@ -11,6 +11,7 @@ import { seed, WORKSPACE_ID } from '../src/db/seed.ts'
 import { receiveIntake } from '../src/review/intake.ts'
 import { collectReview, decideFinding, getReview, setScores } from '../src/review/store.ts'
 import { exportReviewDocx } from '../src/review/docx.ts'
+import { loadBank } from '../src/review/bank.ts'
 import { NEGLECTED, fixtureFetch } from './fixtures/practice-site.ts'
 
 let PORT: number
@@ -100,6 +101,37 @@ async function documentText(buf: Buffer): Promise<string> {
 }
 
 describe('exporting the review as .docx', () => {
+  /* §13.2 step 1.9 DoD. Runs first, before any test accepts anything by hand,
+     so what it sees is purely what the collector decided on its own. */
+  it('auto-accepts the measurements and leaves judgement to a human', async () => {
+    const bank = loadBank()
+    const full = (await getReview(db, WORKSPACE_ID, reviewId))!
+    const accepted = full.findings.filter((f) => f.state === 'accepted')
+    const candidates = full.findings.filter((f) => f.state === 'candidate')
+
+    expect(accepted.length, 'nothing was auto-accepted — the report would be empty').toBeGreaterThan(0)
+    expect(candidates.length, 'everything was auto-accepted — §13.4 breached').toBeGreaterThan(0)
+
+    for (const f of accepted) {
+      const s = bank.byId.get(f.snippet_id)!
+      expect(s.auto_safe, `${f.snippet_id}: auto-accepted but not auto_safe`).toBe(true)
+      expect(s.ahpra_blocking ?? false, `${f.snippet_id}: AHPRA finding auto-accepted`).toBe(false)
+      expect(typeof s.when, `${f.snippet_id}: non-trigger snippet auto-accepted`).not.toBe('string')
+      expect(f.decided_by, `${f.snippet_id}: no auto attribution`).toBe('auto')
+      expect(f.rendered_text, `${f.snippet_id}: unfilled variable auto-accepted`).not.toMatch(/\{\{/)
+    }
+
+    /* The document that falls out with zero human input: carries the
+       measurements, carries nothing anyone still has to rule on. */
+    const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
+    expect(text).toContain('The website is not using the SSL/HTTPS protocol')
+    for (const f of candidates) {
+      const probe = f.rendered_text.replace(/\{\{[^}]*\}\}/g, '').trim().slice(0, 45)
+      if (probe.length < 30) continue // too short to attribute safely
+      expect(text, `${f.snippet_id} reached the client unreviewed`).not.toContain(probe)
+    }
+  })
+
   it('refuses to ship a paragraph with an unfilled variable', async () => {
     const full = (await getReview(db, WORKSPACE_ID, reviewId))!
     const email = full.findings.find((f) => f.snippet_id === 'biz.email.public_domain')

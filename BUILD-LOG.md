@@ -4,6 +4,20 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.9 — Auto-accept pass on collect — 2026-08-04
+
+**Built:** `autoAccepts()` in `store.ts` and a widened findings upsert. A collected finding whose snippet is `auto_safe` is written straight to `accepted` with `decided_by='auto'`; everything else stays `candidate`. The upsert now carries `state`/`decided_by`/`decided_at` and guards all three the same way it already guarded `rendered_text` — only a row still sitting at `candidate` may change, so a reviewer's accept, edit or reject survives every later crawl.
+
+**Evidence:** docx **9 → 10**, full suite **170/170**, typecheck green. The new test runs first in its file, before anything is accepted by hand, so it observes only the collector's own decisions: it asserts every accepted finding is `auto_safe`, is not `ahpra_blocking`, came from a trigger object rather than a `judgement`/`manual` snippet, carries the `auto` attribution and holds no unfilled variable — then exports and checks the document contains the SSL measurement and none of the candidate paragraphs.
+
+**Files:** `server/src/review/store.ts`, `server/test/docx.test.ts`, `server/test/intake.test.ts`, `MASTER-BUILD-PLAN.md` (§13.2 1.9).
+
+**Decisions:** (1) `auto_safe === true` rather than truthy — a bank version that predates the field reads `undefined`, and undefined must mean "ask a human". (2) The AHPRA re-check is redundant with the 1.8 bank test on purpose: this is the last code between a paragraph and a practice's inbox, so it re-checks rather than trusting an upstream invariant. (3) An unfilled `{{variable}}` disqualifies, because the export already refuses those and an auto-accepted finding that can never ship is a silent dead end. (4) **One existing test changed.** `intake.test.ts` asserted `findings_accepted` was exactly 1 — true when only a human could accept. It now counts the table and asserts the total matches and exceeds one, so the queue stays honest as the `auto_safe` list changes instead of being pinned to a number that 1.8 can move. The assertion was made stronger, not weaker.
+
+**Result on the neglected fixture:** six findings auto-accept; the rest wait for Wally.
+
+---
+
 ## §13.2 step 1.8 — Snippet risk classification (`auto_safe`) — 2026-08-04
 
 **Built:** a required `auto_safe: boolean` on all 71 bank snippets. It is not "is this deterministic" — it is permission to put that paragraph in front of a practice with nobody having read it. True for 18: https (2), analytics (2), CMS (3), email hosting (3), load time, contrast, mobile (2), font size, sticky nav, tel/mailto, CAPTCHA. False for the other 53. Contract note added to `snippets.json` and the field documented on the `Snippet` type so the reason travels with the data.

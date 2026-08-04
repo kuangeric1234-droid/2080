@@ -3,7 +3,7 @@ import { monotonicFactory } from 'ulid'
 import { collectFetchLayer } from './collect.ts'
 import { collectRenderLayer } from './render.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
-import { loadBank, render } from './bank.ts'
+import { loadBank, render, type Snippet } from './bank.ts'
 
 const ulid = monotonicFactory()
 const id = (p: string) => `${p}_${ulid()}`
@@ -87,6 +87,24 @@ export async function getReview(db: pg.Client | pg.Pool, workspaceId: string, re
 
   const bank = loadBank(review.bank_version)
   return { review, signals, findings, competitors, exhibits, categories: bank.categories }
+}
+
+/* §13.2 step 1.9. Whether a freshly collected finding may go straight to
+   'accepted' with nobody having read it.
+
+   Three conditions, deliberately redundant. `auto_safe` is the bank's own
+   judgement (1.8) and the bank test already proves no AHPRA snippet carries it
+   — but this is the last code between a paragraph and a practice's inbox, so it
+   re-checks rather than trusting an upstream invariant. An unfilled {{variable}}
+   is disqualifying because the export would refuse it anyway, and a finding
+   parked in 'accepted' that can never ship is worse than one awaiting review.
+
+   `=== true` on purpose: a bank version that has never heard of auto_safe reads
+   as undefined, and undefined must mean "ask a human". */
+function autoAccepts(c: { snippet: Snippet; renderedText: string }): boolean {
+  return c.snippet.auto_safe === true
+    && c.snippet.ahpra_blocking !== true
+    && !/\{\{/.test(c.renderedText)
 }
 
 /** Crawl the domain, store the evidence, and refresh the candidate findings. */
@@ -174,17 +192,29 @@ export async function collectReview(
     await db.query(
       `INSERT INTO review_findings
          (id, workspace_id, review_id, snippet_id, category, dimension, variant, weight,
-          rendered_text, vars, triggered_by, ahpra_blocking, position)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+          rendered_text, vars, triggered_by, ahpra_blocking, position,
+          state, decided_by, decided_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+               $14,$15, CASE WHEN $15::text IS NULL THEN NULL ELSE now() END)
        ON CONFLICT (review_id, snippet_id) DO UPDATE SET
          rendered_text = CASE WHEN review_findings.state = 'candidate'
                               THEN EXCLUDED.rendered_text ELSE review_findings.rendered_text END,
          triggered_by  = EXCLUDED.triggered_by,
          vars          = CASE WHEN review_findings.state = 'candidate'
-                              THEN EXCLUDED.vars ELSE review_findings.vars END`,
+                              THEN EXCLUDED.vars ELSE review_findings.vars END,
+         /* A human's ruling is final. Only an untouched candidate may be
+            promoted by the auto-accept pass, and a rejection is never
+            resurrected by a later crawl. */
+         state         = CASE WHEN review_findings.state = 'candidate'
+                              THEN EXCLUDED.state ELSE review_findings.state END,
+         decided_by    = CASE WHEN review_findings.state = 'candidate'
+                              THEN EXCLUDED.decided_by ELSE review_findings.decided_by END,
+         decided_at    = CASE WHEN review_findings.state = 'candidate'
+                              THEN EXCLUDED.decided_at ELSE review_findings.decided_at END`,
       [id('fnd'), workspaceId, reviewId, c.snippet.id, c.snippet.category, c.snippet.dimension,
         c.snippet.variant, c.snippet.weight, c.renderedText, JSON.stringify(c.vars),
-        JSON.stringify(c.triggeredBy), c.snippet.ahpra_blocking ?? false, i],
+        JSON.stringify(c.triggeredBy), c.snippet.ahpra_blocking ?? false, i,
+        autoAccepts(c) ? 'accepted' : 'candidate', autoAccepts(c) ? 'auto' : null],
     )
   }
 

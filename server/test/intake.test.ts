@@ -396,7 +396,15 @@ describe('review lifecycle', () => {
     const rows = await listReviews(db, WORKSPACE_ID)
     const mine = rows.find((r) => r.id === reviewId)!
     expect(mine.findings_candidate).toBeGreaterThan(8)
-    expect(mine.findings_accepted).toBe(1)
+    /* Was `toBe(1)` — one reviewer accept — until 1.9 started auto-accepting the
+       measurements on collect. Counted from the table rather than pinned to a
+       number so the queue stays honest as the auto_safe list changes, while
+       still proving the reviewer's own decision is in there. */
+    const { rows: [truth] } = await db.query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM review_findings
+        WHERE review_id = $1 AND state IN ('accepted','edited')`, [reviewId])
+    expect(mine.findings_accepted).toBe(Number(truth.n))
+    expect(mine.findings_accepted).toBeGreaterThan(1) // autos plus the human's
     expect(mine.status).toBe('in_review')
     expect(rows.some((r) => r.source === 'jotform')).toBe(true)
   })
