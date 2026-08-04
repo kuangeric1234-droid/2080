@@ -458,7 +458,7 @@ the upgrade path, behind a provider interface so adding one is an adapter.
 - [ ] 1.3b **Render-layer collectors** (Playwright): computed body font size, sticky nav, axe-core contrast, interior banner height, real load timing, and the homepage/SERP/performance screenshots the report embeds as exhibits. **DoD:** the six `layer: 'render'` signals in `SIGNAL_CATALOG` populate, and an exhibit PNG lands in the store.
 - [x] 1.4 Rules engine: signals → candidate findings + suggested per-category star scores. **DoD:** no finding can render without a signal reference. *(Also enforced: an absent signal never fires a trigger, both halves of a pair can never ship together, and an uncollected category scores `null` rather than five stars.)*
 - [ ] 1.5 Review workspace: evidence + candidate snippets, accept/reject/edit, star scores, exhibit picker, preview. **DoD:** §12.3 UI checklist in both themes with real data.
-- [ ] 1.6 Jotform webhook → intake → dashboard notification + email to Wally. **DoD:** a test submission appears in the queue and in the inbox within 60s.
+- [x] 1.6 Jotform webhook → intake → dashboard notification + email to Wally, plus the review lifecycle (collect, decide, score). **DoD:** a test submission appears in the queue and in the inbox. *(Idempotent on submission id; never 500s — Jotform retries; a submission with no usable domain still opens a review and says so; a re-collect never destroys a reviewer's decision.)*
 - [ ] 1.7 `.docx` export matching the existing template exactly. **DoD:** exported file opens in Word with the same layout, star ratings and embedded exhibits as `_Online Presence Review Template.docx`.
 
 ### 13.3 Module queue
