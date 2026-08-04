@@ -7,6 +7,7 @@ import type { Signal } from './signals.ts'
 import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from './social.ts'
 import { collectCompetitorFacts } from './competitors.ts'
 import { defaultPlacesProvider, practiceKeyword, researchPractice, type PlacesProvider } from './places.ts'
+import { collectPageSpeed, defaultPageSpeedProvider, type PageSpeedProvider } from './pagespeed.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
 import { loadBank, render, type Snippet } from './bank.ts'
 
@@ -120,6 +121,7 @@ export async function collectReview(
   opts: {
     fetchImpl?: typeof fetch; networkProbes?: boolean
     socialProvider?: SocialProvider; placesProvider?: PlacesProvider
+    pageSpeedProvider?: PageSpeedProvider
   } = {},
 ) {
   const { rows } = await db.query(
@@ -153,6 +155,17 @@ export async function collectReview(
       interiorUrl: result.pages.find((p) => p.url !== result.finalUrl)?.url,
       reviewId,
     })
+  }
+
+  /* Lighthouse, for the performance exhibit the template embeds (§13.2 1.16).
+     Gated with the other network layers so fixture tests stay offline. */
+  let perf: Awaited<ReturnType<typeof collectPageSpeed>> = { signals: [], exhibits: [], errors: [] }
+  if (opts.networkProbes !== false) {
+    perf = await collectPageSpeed(
+      opts.pageSpeedProvider ?? defaultPageSpeedProvider(),
+      result.finalUrl,
+      { exhibitDir: defaultExhibitDir(), reviewId },
+    )
   }
 
   /* Social audience and engagement come from a credentialed third-party API,
@@ -203,7 +216,7 @@ export async function collectReview(
 
   /* Render after fetch: toMap() is last-wins, so where both layers measure the
      same key the browser's answer is the one that survives. */
-  const allSignals = [tradeSignal, ...result.signals, ...renderResult.signals, ...socialResult.signals, ...research.signals]
+  const allSignals = [tradeSignal, ...result.signals, ...renderResult.signals, ...perf.signals, ...socialResult.signals, ...research.signals]
 
   for (const s of allSignals) {
     await db.query(
@@ -217,7 +230,7 @@ export async function collectReview(
      looked two crawls ago is worse than none, and the finding it was attached
      to may no longer fire. */
   await db.query(`DELETE FROM review_exhibits WHERE review_id = $1`, [reviewId])
-  for (const [i, ex] of renderResult.exhibits.entries()) {
+  for (const [i, ex] of [...renderResult.exhibits, ...perf.exhibits].entries()) {
     await db.query(
       `INSERT INTO review_exhibits
          (id, workspace_id, review_id, kind, label, path, width, height, position)
@@ -328,7 +341,7 @@ export async function collectReview(
     sitemap: result.sitemap.length,
     exhibits: renderResult.exhibits.length,
     findings: candidates.length,
-    errors: [...result.errors, ...renderResult.errors, ...socialResult.errors, ...research.errors],
+    errors: [...result.errors, ...renderResult.errors, ...socialResult.errors, ...perf.errors, ...research.errors],
     scores,
   }
 }

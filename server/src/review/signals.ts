@@ -78,6 +78,16 @@ export const SIGNAL_CATALOG: Record<string, { desc: string; layer: 'fetch' | 're
   'render.captcha_legacy': { desc: 'A pre-reCAPTCHA challenge image is in use', layer: 'fetch' },
   'render.team_images_linked': { desc: 'Practitioner photos link to their own page', layer: 'fetch' },
 
+  /* ── performance (§13.2 1.16) ──
+     Lighthouse via PageSpeed Insights. The template's own comment says to test
+     speed with GTmetrix from Australia; this is the official equivalent, and it
+     returns the screenshot the report embeds as its performance exhibit. */
+  'perf.score': { desc: 'Lighthouse performance score out of 100 (mobile)', layer: 'provider' },
+  'perf.lcp_seconds': { desc: 'Largest Contentful Paint, seconds', layer: 'provider' },
+  'perf.fcp_seconds': { desc: 'First Contentful Paint, seconds', layer: 'provider' },
+  'perf.speed_index_seconds': { desc: 'Speed Index, seconds', layer: 'provider' },
+  'perf.top_opportunity': { desc: "Lighthouse's highest-impact fix", layer: 'provider' },
+
   /* ── reputation (§13.2 1.14) ──
      Google Places, not our crawler. The {{count}}x {{rating}}* line appears in
      15 of 17 real reports, which is why this is worth an API key. */
