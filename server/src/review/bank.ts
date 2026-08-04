@@ -41,6 +41,14 @@ export interface Snippet {
   dimension: string
   variant: Variant
   weight: number
+  /* Permission to ship this paragraph into a client's report with no human
+     having read it (§13.2 step 1.8). True only for pure measurements of the
+     practice's own site plumbing. Anything manual, judgement-driven,
+     AHPRA-adjacent, or about a third party — competitors, reviews, social —
+     is false, because those are the sentences a practice would be harmed by
+     getting wrong. Required, not optional: a snippet with no answer here is a
+     snippet nobody has decided about. */
+  auto_safe: boolean
   when: Trigger | WhenKind
   text: string
   vars?: string[]

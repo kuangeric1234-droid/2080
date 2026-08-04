@@ -4,6 +4,18 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.8 — Snippet risk classification (`auto_safe`) — 2026-08-04
+
+**Built:** a required `auto_safe: boolean` on all 71 bank snippets. It is not "is this deterministic" — it is permission to put that paragraph in front of a practice with nobody having read it. True for 18: https (2), analytics (2), CMS (3), email hosting (3), load time, contrast, mobile (2), font size, sticky nav, tel/mailto, CAPTCHA. False for the other 53. Contract note added to `snippets.json` and the field documented on the `Snippet` type so the reason travels with the data.
+
+**Evidence:** bank **13/13** (8 → 13; five new guards: field answered on every snippet · never true where `ahpra_blocking` · never true for a `judgement`/`manual`/`generated`/`always` trigger · never true in `recommendations` · the 18 ids pinned exactly). Full suite **169/169**, typecheck green. The AHPRA guard also asserts its own fixture still exists, so deleting `biz.ahpra.testimonials` fails the test rather than silently emptying the check.
+
+**Files:** `review-bank/v1/snippets.json`, `server/src/review/bank.ts`, `server/test/bank.test.ts`, `MASTER-BUILD-PLAN.md` (§13.2 1.8).
+
+**Decisions:** (1) The allowlist was derived from the 36 trigger-driven snippets rather than assumed, then narrowed. (2) **Deliberately narrower than "deterministic."** `tech.wpadmin.default`, `seo.onpage.*`, `biz.email.public_domain`, `use.nav.too_many` and `use.nav.home_item` are all machine-measured and were still left false: each prints a sentence carrying a judgement the queue's allowlist did not name, and 1.8's rule is that widening is a decision someone makes on purpose. (3) `use.banner.tall` is false for a second reason — 1.3b shipped `render.banner_height_ratio` on a first-full-width-block heuristic that returned 11% on heartsdental, likely a header strip. Auto-accepting a finding built on an uncalibrated measurement is exactly the failure this field exists to prevent. (4) The pinned-id test is the point of the step: a future bank edit cannot widen what reaches a client unread without editing that list and saying why.
+
+---
+
 ## Clients CRM (§10) — 2026-07-30
 
 **Built:** the portfolio backbone — filled the placeholder Clients tab with a real CRM over the seeded data. (1) **API** — enriched `GET /api/clients` (health, lifecycle, practice type, 30-day enquiries, ad-cost, open-flag count, site-health status; worst-health-first; still carries slug+name so the audit filter keeps working) + **`GET /api/clients/:slug`** (full record: client, contacts, 12 recent timeline events, open flags, open tasks, latest SEO audit, site health, 30-day KPIs + enquiry series). (2) **App** — `ClientsPage`: a portfolio table (click a row) → a client detail view (header with health, KPI tiles incl. a return-per-$1 estimate, recent-activity timeline, open flags, contacts, and a Site & SEO summary that reuses the SEO/Site-Health signals).

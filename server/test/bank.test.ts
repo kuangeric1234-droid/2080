@@ -108,4 +108,56 @@ describe('snippet bank v1', () => {
   it('marks the AHPRA testimonial finding as blocking', () => {
     expect(bank.byId.get('biz.ahpra.testimonials')?.ahpra_blocking).toBe(true)
   })
+
+  /* §13.2 step 1.8. auto_safe is permission to put a paragraph in front of a
+     practice with nobody having read it, so every guard here is about keeping
+     that set small and deliberate rather than letting it drift wider. */
+  describe('auto_safe', () => {
+    it('is answered for every snippet', () => {
+      for (const s of bank.snippets) {
+        expect(typeof s.auto_safe, `${s.id}: auto_safe missing`).toBe('boolean')
+      }
+    })
+
+    it('is never true for an AHPRA-blocking snippet', () => {
+      for (const s of bank.snippets) {
+        if (s.ahpra_blocking) {
+          expect(s.auto_safe, `${s.id}: AHPRA snippet must stay human-reviewed`).toBe(false)
+        }
+      }
+      // the guard is worthless if the fixture it guards ever disappears
+      expect(bank.snippets.some((s) => s.ahpra_blocking)).toBe(true)
+    })
+
+    it('is never true for a judgement, manual, generated or always snippet', () => {
+      for (const s of bank.snippets) {
+        if (typeof s.when === 'string') {
+          expect(s.auto_safe, `${s.id}: '${s.when}' cannot be auto-accepted`).toBe(false)
+        }
+      }
+    })
+
+    it('is never true for a summary snippet', () => {
+      for (const s of bank.snippets) {
+        if (s.category === 'recommendations') {
+          expect(s.auto_safe, `${s.id}: summaries are written, not measured`).toBe(false)
+        }
+      }
+    })
+
+    /* Pinned on purpose. Widening auto_safe is a decision about what reaches a
+       client unread, so it should require editing this number and saying why —
+       not fall out of an unrelated bank edit. */
+    it('covers exactly the 18 measurements signed off in 1.8', () => {
+      const safe = bank.snippets.filter((s) => s.auto_safe).map((s) => s.id).sort()
+      expect(safe).toEqual([
+        'tech.analytics.absent', 'tech.analytics.present',
+        'tech.cms.squarespace', 'tech.cms.static_html', 'tech.cms.wordpress',
+        'tech.email.same_server', 'tech.email.separate_server', 'tech.email.unknown',
+        'tech.hosting.speed', 'tech.https.absent', 'tech.https.present',
+        'use.captcha.legacy', 'use.contrast.fail', 'use.cta.not_tappable',
+        'use.font.small', 'use.mobile.absent', 'use.mobile.ok', 'use.nav.not_sticky',
+      ])
+    })
+  })
 })
