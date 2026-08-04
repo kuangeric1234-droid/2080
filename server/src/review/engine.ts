@@ -1,5 +1,6 @@
 import { loadBank, render, type Bank, type Condition, type Snippet, type Trigger } from './bank.ts'
 import type { Signal, SignalMap } from './signals.ts'
+import { professionFor } from './profession.ts'
 
 /* Signals in, candidate findings out. The whole of the judgement lives in the
    bank's triggers, so this file has no opinions about SEO — it evaluates
@@ -246,6 +247,15 @@ export function varsFromSignals(signals: SignalMap, target: string): Record<stri
   if (revCount !== undefined) v.count = revCount
   const revRating = num('reputation.google_rating')
   if (revRating !== undefined) v.rating = revRating
+
+  /* One bank, every trade (§13.2 1.15): the six paragraphs mined from a dental
+     template carry these instead of hard-coded "dental". */
+  const trade = str('practice.profession')
+  const prof = professionFor(trade ?? 'dentist')
+  v.profession_adj = prof.adj
+  v.practitioners = prof.practitioners
+  v.condition_examples = prof.condition_examples
+  v.treatment_example = prof.treatment_example
 
   const email = str('site.contact.email')
   if (email && signals.get('site.contact.email_domain_public')?.value === true) {

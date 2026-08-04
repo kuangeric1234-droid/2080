@@ -4,6 +4,22 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.15 — One bank, every trade — 2026-08-04
+
+**Measured first, then built.** Clustering the 654 paragraphs across the 17 real reports gave 413 distinct clusters, of which **39 recur in three or more reports** — the reusable house copy. Matching those against the bank: **35 already exist**. The four apparent misses were wording drift, not gaps (`/wp-login` vs `/wp-admin`, "Google Business Profile" vs "GMB"). **This corrects an earlier claim in this log's session that the bank covered only 28% of real reports** — that number counted 357 one-off bespoke sentences as missing house copy, which they are not.
+
+The real gap was the thing the matcher kept tagging `(variant)`: trade wording. `social.video.opportunity` says "dental IQ"; the chiro reports say "chiro IQ".
+
+**Built:** `server/src/review/profession.ts` — a lexicon of seven trades (dentist, orthodontist, chiropractor, dermatologist, physiotherapist, podiatrist, veterinarian), each supplying an adjective, a plural for the practitioners, a pair of condition examples and a named treatment. Six snippets parameterised; `practice.profession` emitted as a signal during collection; `varsFromSignals` fills the four variables.
+
+**Evidence:** new `profession.test.ts` **5/5** — the trade used for the Google search and the trade used for the wording are asserted to be the same inference; every profession variable the bank asks for is filled; the same paragraph renders as "dental IQ" and "chiropractic IQ" with nothing left showing; and an **unknown trade still leaves no unfilled variable**, which matters because an unfilled `{{variable}}` blocks the export entirely (1.7). `bank.test.ts` still green — the variables did not break source-template traceability. Full suite **211 → 216**.
+
+**Files:** `server/src/review/profession.ts` (new), `server/test/profession.test.ts` (new) · `review-bank/v1/snippets.json`, `server/src/review/engine.ts`, `server/src/review/signals.ts`, `server/src/review/store.ts`, `MASTER-BUILD-PLAN.md`.
+
+**Decisions:** (1) **One paragraph with a variable, not one per trade.** Forking the copy per vertical would triple what has to stay in step and let the versions drift, which is how a house style stops being one. The bank is 20-80's IP and the test that every snippet traces to the source template is what protects it. (2) The trade keys match `practiceKeyword()` exactly, so the trade searched for nearby competitors and the trade written about are the same decision made once. (3) Fallback is dental — the template's own trade and the commonest — rather than leaving a hole that would block an export. (4) `practice.profession` is emitted even when the network layers are off, since it is derived from the name and domain.
+
+---
+
 ## §13.2 step 1.14 — Google research: reputation and competitors — 2026-08-04
 
 **Why now:** 17 completed real reviews landed in `Downloads/presence`. Measured across them, the Google review line ("44x 5.0* on GMB") appears in **15 of 17** and a competitor set in **15 of 17** — the two most consistently present things the system could not produce.

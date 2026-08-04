@@ -19,7 +19,8 @@
     ],
     "weight": "1–3. How hard this finding pushes the category's suggested star score.",
     "conflicts": "Snippet ids that must not appear in the same report — the positive/negative halves of one check.",
-    "auto_safe": "Whether this paragraph may ship into a client's report with no human having read it. True only for pure measurements of the practice's own site plumbing. Anything manual, judgement-driven, AHPRA-adjacent, or about a third party is false — see MASTER-BUILD-PLAN §13.2 step 1.8 and §13.4."
+    "auto_safe": "Whether this paragraph may ship into a client's report with no human having read it. True only for pure measurements of the practice's own site plumbing. Anything manual, judgement-driven, AHPRA-adjacent, or about a third party is false — see MASTER-BUILD-PLAN §13.2 step 1.8 and §13.4.",
+    "profession": "Six paragraphs were mined from a dental template but appear in the real reports for chiropractic and dermatology with the trade swapped. They carry {{profession_adj}}, {{practitioners}}, {{condition_examples}} and {{treatment_example}}, filled from the trade inferred for the practice (server/src/review/profession.ts). One paragraph with a variable, not one per trade."
   },
   "snippets": [
     {
@@ -62,7 +63,10 @@
       "links": [
         "https://gentletouchortho.com.au/"
       ],
-      "text": "Judging by the photos on the website, the practice is very modern but the website doesn’t seem to reflect that. Unfortunately, the website looks a little dated and lacks the personality (eg, stock photos, no photos of the actual dentists). See https://gentletouchortho.com.au/ for examples how how to use the photos boldly"
+      "text": "Judging by the photos on the website, the practice is very modern but the website doesn’t seem to reflect that. Unfortunately, the website looks a little dated and lacks the personality (eg, stock photos, no photos of the actual {{practitioners}}). See https://gentletouchortho.com.au/ for examples how how to use the photos boldly",
+      "vars": [
+        "practitioners"
+      ]
     },
     {
       "id": "biz.uvp.generic",
@@ -174,7 +178,11 @@
       "links": [
         "https://heartsdental.com.au/dental-conditions/"
       ],
-      "text": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true. It’s important to make sure the website caters to patients who are searching for solutions to their issues (eg, toothache or missing teeth). See https://heartsdental.com.au/dental-conditions/ for example."
+      "text": "The website only focuses on the different types of {{profession_adj}} treatments and thus assumes that the patients know what they need, which isn’t necessarily true. It’s important to make sure the website caters to patients who are searching for solutions to their issues (eg, {{condition_examples}}). See https://heartsdental.com.au/dental-conditions/ for example.",
+      "vars": [
+        "condition_examples",
+        "profession_adj"
+      ]
     },
     {
       "id": "biz.blog.absent",
@@ -1135,7 +1143,10 @@
       "conflicts": [
         "social.fb_ads.running"
       ],
-      "text": "You currently don’t run any social media campaigns which is a pity as you have strong fundamentals. Setting up funnels and landing pages (i.e. Facebook video funnels for Teeth Whitening) can ensure you get a constant flow of mid-long term patients who are not ready to engage you right this minute (complementary to Adwords)."
+      "text": "You currently don’t run any social media campaigns which is a pity as you have strong fundamentals. Setting up funnels and landing pages (i.e. Facebook video funnels for {{treatment_example}}) can ensure you get a constant flow of mid-long term patients who are not ready to engage you right this minute (complementary to Adwords).",
+      "vars": [
+        "treatment_example"
+      ]
     },
     {
       "id": "social.fb_ads.running",
@@ -1180,7 +1191,10 @@
       "links": [
         "https://www.facebook.com/watch/?v=563389824329717"
       ],
-      "text": "Consider doing some short educational videos to increase the dental IQ of your patients (as well as attract new higher quality patients via social media). See https://www.facebook.com/watch/?v=563389824329717 for example."
+      "text": "Consider doing some short educational videos to increase the {{profession_adj}} IQ of your patients (as well as attract new higher quality patients via social media). See https://www.facebook.com/watch/?v=563389824329717 for example.",
+      "vars": [
+        "profession_adj"
+      ]
     },
     {
       "id": "comp.intro",

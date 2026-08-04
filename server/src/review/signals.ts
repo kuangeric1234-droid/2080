@@ -33,6 +33,11 @@ export const SIGNAL_CATALOG: Record<string, { desc: string; layer: 'fetch' | 're
   'site.cms': { desc: 'wordpress | squarespace | wix | shopify | static | unknown', layer: 'fetch' },
   'site.wp_admin_default': { desc: '/wp-admin is reachable at the default path', layer: 'fetch' },
 
+  /* The trade, inferred from the practice name and domain. Drives both the
+     competitor search and the bank's profession variables, so the trade we look
+     for and the trade we write about cannot disagree (§13.2 1.15). */
+  'practice.profession': { desc: 'dentist | chiropractor | dermatologist | …', layer: 'fetch' },
+
   // ── analytics ──
   'site.analytics.ga4': { desc: 'GA4 gtag present', layer: 'fetch' },
   'site.analytics.gtm': { desc: 'Google Tag Manager container present', layer: 'fetch' },

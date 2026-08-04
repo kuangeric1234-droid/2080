@@ -3,6 +3,7 @@ import { monotonicFactory } from 'ulid'
 import { collectFetchLayer } from './collect.ts'
 import pathMod from 'node:path'
 import { collectRenderLayer, defaultExhibitDir } from './render.ts'
+import type { Signal } from './signals.ts'
 import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from './social.ts'
 import { collectCompetitorFacts } from './competitors.ts'
 import { defaultPlacesProvider, practiceKeyword, researchPractice, type PlacesProvider } from './places.ts'
@@ -173,6 +174,17 @@ export async function collectReview(
     ])
   }
 
+  /* The trade, decided once and used twice: it picks what Google is asked for
+     nearby, and it fills the bank's profession variables. Emitted even when the
+     network layers are off, because it is derived from the name and domain. */
+  const { rows: nameRow } = await db.query(
+    `SELECT practice_name FROM reviews WHERE id = $1`, [reviewId])
+  const trade = practiceKeyword((nameRow[0]?.practice_name as string | null) ?? null, domain)
+  const tradeSignal: Signal = {
+    key: 'practice.profession', value: trade, source: 'crawl',
+    provenance: `inferred from "${(nameRow[0]?.practice_name as string | null) ?? domain}"`,
+  }
+
   /* Google research (§13.2 1.14): find the practice the way a person would,
      read its rating and review count, then ask Google what else of the same
      trade sits within 5km — which is what a competitor set is. Nothing here is
@@ -185,13 +197,13 @@ export async function collectReview(
     research = await researchPractice(opts.placesProvider ?? defaultPlacesProvider(), {
       practiceName: (meta[0]?.practice_name as string | null) ?? null,
       domain,
-      keyword: practiceKeyword((meta[0]?.practice_name as string | null) ?? null, domain),
+      keyword: trade,
     })
   }
 
   /* Render after fetch: toMap() is last-wins, so where both layers measure the
      same key the browser's answer is the one that survives. */
-  const allSignals = [...result.signals, ...renderResult.signals, ...socialResult.signals, ...research.signals]
+  const allSignals = [tradeSignal, ...result.signals, ...renderResult.signals, ...socialResult.signals, ...research.signals]
 
   for (const s of allSignals) {
     await db.query(
