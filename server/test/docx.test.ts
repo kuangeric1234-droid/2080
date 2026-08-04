@@ -9,7 +9,7 @@ import { freePort } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed, WORKSPACE_ID } from '../src/db/seed.ts'
 import { receiveIntake } from '../src/review/intake.ts'
-import { addCompetitor, collectReview, decideFinding, getReview, removeCompetitor, setScores } from '../src/review/store.ts'
+import { addCompetitor, attachExhibit, collectReview, decideFinding, getReview, removeCompetitor, setScores } from '../src/review/store.ts'
 import { exportReviewDocx } from '../src/review/docx.ts'
 import { loadBank } from '../src/review/bank.ts'
 import { summariseReview } from '../src/review/summarise.ts'
@@ -305,6 +305,56 @@ describe('exporting the review as .docx', () => {
       expect(text).not.toMatch(/\{\{/)
     } finally {
       await removeCompetitor(db, WORKSPACE_ID, added.competitor.id)
+    }
+  })
+
+  /* §13.2 step 1.5b. The exporter has placed a picture beside its finding since
+     1.7; until now nothing could say which finding, so every capture fell to
+     the back. */
+  it('prints an attached exhibit beside its finding, not in the Evidence block', async () => {
+    const { writeFileSync } = await import('node:fs')
+    const exDir = mkdtempSync(path.join(tmpdir(), 'exh2-'))
+    writeFileSync(path.join(exDir, 'shot.png'), Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64'))
+    const full = (await getReview(db, WORKSPACE_ID, reviewId))!
+    const target = full.findings.find((f) => f.state === 'accepted' && f.category === 'website_technical')!
+    await db.query(
+      `INSERT INTO review_exhibits (id, workspace_id, review_id, kind, label, path, width, height, position)
+       VALUES ('exh_att',$1,$2,'screenshot','Homepage capture','shot.png',1440,900,0)`,
+      [WORKSPACE_ID, reviewId])
+
+    try {
+      // unattached: it goes to the back under Evidence
+      let text = await documentText(
+        (await exportReviewDocx(db, WORKSPACE_ID, reviewId, { exhibitDir: exDir })).buffer)
+      expect(text).toContain('Evidence:')
+      expect(text.indexOf('Homepage capture')).toBeGreaterThan(text.indexOf('Evidence:'))
+
+      // attached: it moves up beside the paragraph it proves
+      await attachExhibit(db, WORKSPACE_ID, 'exh_att', target.id)
+      text = await documentText(
+        (await exportReviewDocx(db, WORKSPACE_ID, reviewId, { exhibitDir: exDir })).buffer)
+      expect(text).not.toContain('Evidence:')
+      const finding = text.indexOf(target.rendered_text.slice(0, 40))
+      const caption = text.indexOf('Homepage capture')
+      expect(finding).toBeGreaterThan(-1)
+      expect(caption).toBeGreaterThan(finding)
+    } finally {
+      await db.query(`DELETE FROM review_exhibits WHERE id = 'exh_att'`)
+      rmSync(exDir, { recursive: true, force: true })
+    }
+  })
+
+  it('refuses to attach an exhibit to a finding from another review', async () => {
+    await db.query(
+      `INSERT INTO review_exhibits (id, workspace_id, review_id, kind, label, path, position)
+       VALUES ('exh_x',$1,$2,'screenshot','x','x.png',0)`, [WORKSPACE_ID, reviewId])
+    try {
+      await expect(attachExhibit(db, WORKSPACE_ID, 'exh_x', 'fnd_not_in_this_review'))
+        .rejects.toThrow(/not in this review/)
+    } finally {
+      await db.query(`DELETE FROM review_exhibits WHERE id = 'exh_x'`)
     }
   })
 

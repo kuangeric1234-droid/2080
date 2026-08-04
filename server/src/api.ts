@@ -14,7 +14,7 @@ import { runAudit } from './seo/audit.ts'
 import { runCheck } from './sitehealth/probe.ts'
 import { receiveIntake, startManualReview, unwrapJotformBody } from './review/intake.ts'
 import { exportReviewDocx } from './review/docx.ts'
-import { addCompetitor, addManualFinding, decideFinding, getReview, listCompetitors, listReviews, manualBank, removeCompetitor, setScores, updateCompetitor } from './review/store.ts'
+import { addCompetitor, addManualFinding, attachExhibit, decideFinding, exhibitFile, getReview, listCompetitors, listReviews, manualBank, removeCompetitor, setScores, updateCompetitor } from './review/store.ts'
 import { enqueue, getJob, listJobs } from './jobs/queue.ts'
 import { JOB_KINDS, collectDedupeKey } from './jobs/handlers.ts'
 import { WORKSPACE_ID } from './db/seed.ts'
@@ -537,6 +537,34 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
         body.snippetId, body.vars ?? {}, c.get('principal').handle))
     } catch (err) {
       return c.json({ error: (err as Error).message }, 422)
+    }
+  })
+
+  /* Exhibits (§13.2 1.5b). The exporter has placed a picture beside its finding
+     since 1.7; nothing could say which finding until now. */
+  app.patch('/api/reviews/exhibits/:id', async (c) => {
+    const body = await c.req.json<{ findingId: string | null }>()
+    try {
+      return c.json(await attachExhibit(
+        db, c.get('principal').workspaceId, c.req.param('id'), body.findingId ?? null))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
+    }
+  })
+
+  app.get('/api/reviews/exhibits/:id/image', async (c) => {
+    const found = await exhibitFile(db, c.get('principal').workspaceId, c.req.param('id'))
+    if (!found) return c.json({ error: 'not found' }, 404)
+    const { readFile } = await import('node:fs/promises')
+    try {
+      const bytes = await readFile(found.absolute)
+      return c.body(bytes, 200, {
+        'content-type': 'image/png',
+        'cache-control': 'private, max-age=300',
+      })
+    } catch {
+      // collected on another machine, or cleaned up — not an error worth 500ing
+      return c.json({ error: 'exhibit file is not on this machine' }, 404)
     }
   })
 

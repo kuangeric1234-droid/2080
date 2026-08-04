@@ -1,7 +1,8 @@
 import pg from 'pg'
 import { monotonicFactory } from 'ulid'
 import { collectFetchLayer } from './collect.ts'
-import { collectRenderLayer } from './render.ts'
+import pathMod from 'node:path'
+import { collectRenderLayer, defaultExhibitDir } from './render.ts'
 import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from './social.ts'
 import { collectCompetitorFacts } from './competitors.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
@@ -562,4 +563,52 @@ export async function removeCompetitor(
   await refreshCompetitorCount(db, workspaceId, reviewId)
   await refreshFindingsFor(db, workspaceId, reviewId)
   return { ok: true }
+}
+
+/* ── exhibits (§13.2 step 1.5b) ─────────────────────────────────────────────
+   The template puts a screenshot beside the finding it evidences, and the
+   exporter has supported that since 1.7 — but nothing ever set `finding_id`,
+   so every capture landed in the Evidence block at the back instead. This is
+   the missing half: letting a reviewer say which paragraph a picture is for. */
+
+export async function attachExhibit(
+  db: pg.Client | pg.Pool,
+  workspaceId: string,
+  exhibitId: string,
+  findingId: string | null,
+) {
+  if (findingId) {
+    /* An exhibit may only point at a finding in the same review — otherwise a
+       screenshot of one practice could be filed against another's paragraph. */
+    const { rows } = await db.query(
+      `SELECT 1 FROM review_exhibits e
+         JOIN review_findings f ON f.review_id = e.review_id
+        WHERE e.id = $1 AND f.id = $2 AND e.workspace_id = $3`,
+      [exhibitId, findingId, workspaceId])
+    if (rows.length === 0) throw new Error('that finding is not in this review')
+  }
+  const { rows } = await db.query(
+    `UPDATE review_exhibits SET finding_id = $3
+      WHERE id = $1 AND workspace_id = $2
+      RETURNING id, review_id, finding_id, kind, label, path, width, height, position`,
+    [exhibitId, workspaceId, findingId])
+  if (rows.length === 0) throw new Error('exhibit not found')
+  return rows[0]
+}
+
+/** The bytes, for the workspace preview. Kept behind the session like the rest. */
+export async function exhibitFile(
+  db: pg.Client | pg.Pool, workspaceId: string, exhibitId: string,
+): Promise<{ absolute: string; label: string } | null> {
+  const { rows } = await db.query(
+    `SELECT path, label FROM review_exhibits WHERE id = $1 AND workspace_id = $2`,
+    [exhibitId, workspaceId])
+  if (rows.length === 0) return null
+  const rel = String(rows[0].path)
+  /* The path came out of our own collector, but it is still a path being joined
+     onto a root — resolve it and refuse anything that climbs out. */
+  const root = pathMod.resolve(defaultExhibitDir())
+  const abs = pathMod.resolve(root, rel)
+  if (!abs.startsWith(root + pathMod.sep)) throw new Error('exhibit path escapes the store')
+  return { absolute: abs, label: String(rows[0].label) }
 }

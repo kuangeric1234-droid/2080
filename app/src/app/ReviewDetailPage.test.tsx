@@ -52,6 +52,7 @@ const REVIEW = {
     },
   ],
   competitors: [],
+  exhibits: [],
   categories: [
     {
       key: 'website_business', label: 'Website (Business)',
@@ -336,5 +337,54 @@ describe('competition', () => {
     await waitFor(() => {
       expect(calls.some((c) => c.init?.method === 'DELETE' && c.url.includes('/competitors/cmp_1'))).toBe(true)
     })
+  })
+})
+
+/* §13.2 step 1.5b. */
+describe('evidence images', () => {
+  const EX = [{
+    id: 'exh_1', finding_id: null, kind: 'screenshot',
+    label: 'Homepage as it loads', width: 1440, height: 900, position: 0,
+  }]
+
+  it('explains where an unattached capture ends up', async () => {
+    vi.stubGlobal('fetch', mockFetch({ exhibits: EX }))
+    renderPage()
+    const panel = await screen.findByRole('region', { name: 'Evidence images' })
+    expect(within(panel).getByText('Homepage as it loads')).toBeInTheDocument()
+    expect(within(panel).getByRole('combobox', { name: 'Attach Homepage as it loads' }))
+      .toHaveValue('')
+  })
+
+  it('attaches a capture to an accepted finding', async () => {
+    vi.stubGlobal('fetch', mockFetch({ exhibits: EX }))
+    const user = userEvent.setup()
+    renderPage()
+    const panel = await screen.findByRole('region', { name: 'Evidence images' })
+    // fnd_2 and fnd_3 are the accepted ones in the fixture
+    await user.selectOptions(
+      within(panel).getByRole('combobox', { name: 'Attach Homepage as it loads' }), 'fnd_3')
+
+    await waitFor(() => {
+      const patch = calls.find((c) => c.init?.method === 'PATCH' && c.url.includes('/exhibits/exh_1'))
+      expect(patch, 'no PATCH to /exhibits').toBeTruthy()
+      expect(JSON.parse(String(patch!.init!.body))).toEqual({ findingId: 'fnd_3' })
+    })
+  })
+
+  it('only offers findings that are actually shipping', async () => {
+    vi.stubGlobal('fetch', mockFetch({ exhibits: EX }))
+    renderPage()
+    const panel = await screen.findByRole('region', { name: 'Evidence images' })
+    const select = within(panel).getByRole('combobox', { name: 'Attach Homepage as it loads' })
+    const values = within(select).getAllByRole('option').map((o) => (o as HTMLOptionElement).value)
+    expect(values).toContain('fnd_3')   // accepted
+    expect(values).not.toContain('fnd_1') // still a candidate
+  })
+
+  it('says so when there are no captures', async () => {
+    renderPage()
+    const panel = await screen.findByRole('region', { name: 'Evidence images' })
+    expect(within(panel).getByText(/No captures yet/)).toBeInTheDocument()
   })
 })

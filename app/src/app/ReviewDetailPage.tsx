@@ -63,6 +63,16 @@ interface BankGroup {
   items: BankItem[]
 }
 
+interface Exhibit {
+  id: string
+  finding_id: string | null
+  kind: string
+  label: string
+  width: number | null
+  height: number | null
+  position: number
+}
+
 interface Competitor {
   id: string
   name: string
@@ -90,6 +100,7 @@ interface ReviewDetail {
   findings: Finding[]
   categories: Category[]
   competitors: Competitor[]
+  exhibits: Exhibit[]
 }
 
 const VARIANT: Record<Finding['variant'], { chip: string; label: string }> = {
@@ -401,6 +412,79 @@ function CompetitorPanel({
   )
 }
 
+
+/* §13.2 step 1.5b. The exporter has put a picture beside its finding since 1.7,
+   but nothing ever set finding_id, so every capture fell to the Evidence block
+   at the back. The template does the opposite — the performance report sits
+   under the load-time paragraph. This is where a reviewer says which. */
+function ExhibitPanel({
+  exhibits, findings, busy, onAttach,
+}: {
+  exhibits: Exhibit[]
+  findings: Finding[]
+  busy: boolean
+  onAttach: (exhibitId: string, findingId: string | null) => void
+}) {
+  const attachable = findings.filter((f) => f.state === 'accepted' || f.state === 'edited')
+
+  return (
+    <section aria-label="Evidence images" className="rounded-[14px] border border-line bg-surface shadow-card">
+      <header className="flex flex-wrap items-center gap-2 border-b border-line px-5 py-3">
+        <h2 className="font-display text-[13.5px] font-[650]">Evidence images</h2>
+        <span className="text-[11.5px] text-ink-muted">
+          Attach a capture to the finding it proves and it prints beside that paragraph; leave it
+          unattached and it goes at the back.
+        </span>
+      </header>
+
+      <ul className="divide-y divide-grid">
+        {exhibits.map((ex) => (
+          <li key={ex.id} className="flex flex-wrap items-start gap-4 px-5 py-3">
+            <img
+              src={`/api/reviews/exhibits/${ex.id}/image`}
+              alt={ex.label}
+              className="h-20 w-32 rounded-[8px] border border-line object-cover object-top"
+            />
+            <div className="min-w-0 flex-1">
+              <p className="text-[12.5px] font-[650]">{ex.label}</p>
+              {/* the label already carries the size — it is the caption the
+                  document prints, so repeating it here is just noise */}
+              <p className="text-[11.5px] text-ink-muted">{ex.kind.replace(/_/g, ' ')}</p>
+              <label className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] text-ink-muted">
+                Prints beside
+                <select
+                  aria-label={`Attach ${ex.label}`}
+                  disabled={busy}
+                  value={ex.finding_id ?? ''}
+                  onChange={(e) => onAttach(ex.id, e.target.value || null)}
+                  className="max-w-[26rem] rounded-[8px] border border-line bg-canvas px-2 py-1 text-[12px]"
+                >
+                  <option value="">Nothing — print it under Evidence</option>
+                  {attachable.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {(f.edited_text ?? f.rendered_text).slice(0, 70)}…
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {attachable.length === 0 && (
+                <p className="mt-1 text-[11.5px] text-ink-faint">
+                  Accept a finding first — a picture can only sit beside a paragraph that is shipping.
+                </p>
+              )}
+            </div>
+          </li>
+        ))}
+        {exhibits.length === 0 && (
+          <li className="px-5 py-4 text-[12px] text-ink-muted">
+            No captures yet. Collecting the site takes a screenshot of the homepage.
+          </li>
+        )}
+      </ul>
+    </section>
+  )
+}
+
 export function ReviewDetailPage() {
   const { id = '' } = useParams()
   const [params, setParams] = useSearchParams()
@@ -511,6 +595,20 @@ export function ReviewDetailPage() {
   /* The export refuses a paragraph with an unfilled variable in it, so a 422
      here is the server protecting the practice from receiving
      "such as {{public_email}}". Show it rather than swallowing it. */
+  const attachExhibit = async (exhibitId: string, findingId: string | null) => {
+    setBusy('exhibit')
+    try {
+      await fetch(`/api/reviews/exhibits/${exhibitId}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ findingId }),
+      })
+      await load()
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const addCompetitor = async (input: { name: string; domain: string | null; threat: number | null }) => {
     setBusy('competitor')
     try {
@@ -806,6 +904,14 @@ export function ReviewDetailPage() {
               </section>
             )
           })}
+
+          {/* ── evidence images and where each one prints ── */}
+          <ExhibitPanel
+            exhibits={data.exhibits ?? []}
+            findings={data.findings}
+            busy={busy === 'exhibit'}
+            onAttach={(eid, fid) => void attachExhibit(eid, fid)}
+          />
 
           {/* ── competition: the one section with no automatic source ── */}
           <CompetitorPanel

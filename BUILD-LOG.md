@@ -4,6 +4,18 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.5b — Exhibit picker — 2026-08-04
+
+**Built:** `attachExhibit()` and `exhibitFile()` in `store.ts`, `PATCH /api/reviews/exhibits/:id` and `GET /api/reviews/exhibits/:id/image`, and an Evidence images panel in the review workspace — thumbnail, label, and a "Prints beside" picker listing only findings that are actually shipping.
+
+**Evidence:** `docx.test.ts` **12 → 14**: unattached, the capture appears *after* the Evidence heading; attached, the Evidence block disappears entirely and the caption appears *after* its finding's text — position asserted, not merely presence. Plus a rejection test for attaching across reviews. App `ReviewDetailPage.test.tsx` **16 → 20**. Server **201 → 203**, app **47 → 51**, lint and build green. **Visual pass done:** Playwright against the running stack, real screenshot thumbnail served by the new route (HTTP 200), both themes.
+
+**Files:** `server/src/review/store.ts`, `server/src/api.ts`, `server/test/docx.test.ts` · `app/src/app/ReviewDetailPage.tsx`, `app/src/app/ReviewDetailPage.test.tsx` · `MASTER-BUILD-PLAN.md` (1.5b added, 1.5's deferral note resolved).
+
+**Decisions:** (1) **This was the visible gap.** 1.5 recorded the picker as waiting on 1.3b and 1.7; both landed hours ago and the deferral had simply gone unnoticed, so every capture printed at the back while the template puts it under the paragraph it evidences. (2) An exhibit may only attach to a finding **in the same review** — without that check one practice's screenshot could be filed against another's paragraph, which is the kind of error nobody would catch before it shipped. (3) The image path is resolved and verified to sit inside the exhibit store before any read: it comes from our own collector, but it is still a path being joined onto a root. (4) The picker offers only accepted and edited findings — a picture cannot sit beside a paragraph that is not going out. (5) The visual pass again earned itself: the panel printed the capture's dimensions twice, because the caption already carries them.
+
+---
+
 ## §13.2 step 1.13 — The unattended report, measured — 2026-08-04
 
 **Ran:** a genuinely untouched audit of **heartsdental.com.au** — POSTed to `/api/reviews` the way the queue page does, then nothing until the export. The worker collected, auto-accepted and summarised on its own.
