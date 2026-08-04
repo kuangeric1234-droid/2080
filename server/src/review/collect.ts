@@ -71,20 +71,32 @@ export async function collectFetchLayer(input: string, opts: CrawlOptions = {}):
   const host = new URL(start).host
   const target = host.replace(/^www\./, '')
 
-  // ── homepage ──
+  /* ── homepage ──
+     Try https first, then fall back to http. The fallback is not politeness:
+     an http-only practice site is exactly the one that earns the "not using
+     SSL" finding, and without this we would fail to collect the sites that
+     most need the report. */
   const t0 = Date.now()
-  const home = await get(start, doFetch, timeoutMs)
+  let home = await get(start, doFetch, timeoutMs)
+  let insecureFallback = false
+  if (!home && start.startsWith('https://')) {
+    home = await get(start.replace(/^https:/, 'http:'), doFetch, timeoutMs)
+    insecureFallback = home !== null
+  }
   const loadSeconds = (Date.now() - t0) / 1000
   if (!home) {
-    errors.push(`could not fetch ${start}`)
+    errors.push(`could not fetch ${start} over https or http`)
     return { target, finalUrl: start, signals, pages: [], sitemap: [], errors }
   }
   const finalUrl = home.url
   const finalHost = new URL(finalUrl).host
+  const secure = finalUrl.startsWith('https:') && !insecureFallback
 
   signals.push(
-    sig('site.https', finalUrl.startsWith('https:'), 'http',
-      `GET ${start} resolved to ${finalUrl} (HTTP ${home.status})`),
+    sig('site.https', secure, 'http',
+      insecureFallback
+        ? `${start} did not answer over https; the site served ${finalUrl} over plain http (HTTP ${home.status})`
+        : `GET ${start} resolved to ${finalUrl} (HTTP ${home.status})`),
     sig('site.load_seconds', Math.round(loadSeconds * 10) / 10, 'http',
       `Homepage document downloaded in ${loadSeconds.toFixed(1)}s — server response and transfer, not full render`),
   )
@@ -100,7 +112,8 @@ export async function collectFetchLayer(input: string, opts: CrawlOptions = {}):
   const sitemap = await fetchSitemap(finalUrl, finalHost, doFetch, timeoutMs)
 
   const navRoot = pickNav(homeRoot)
-  const navLinks = collectNavLinks(navRoot ?? homeRoot, finalHost)
+  const origin = new URL(finalUrl).origin
+  const navLinks = collectNavLinks(navRoot ?? homeRoot, origin)
   for (const url of navLinks.slice(0, maxPages - 1)) {
     const p = await get(url, doFetch, timeoutMs)
     if (p) pages.push(p.page)
@@ -116,7 +129,7 @@ export async function collectFetchLayer(input: string, opts: CrawlOptions = {}):
   signals.push(...analyticsSignals(homeRoot))
   signals.push(...structureSignals(pages, sitemap))
   signals.push(...onPageSignals(homeRoot, pages))
-  signals.push(...linkSignals(pages, finalHost))
+  signals.push(...linkSignals(pages, origin))
   signals.push(...socialSignals(pages))
 
   const contact = contactEmail(pages)
@@ -132,7 +145,7 @@ export async function collectFetchLayer(input: string, opts: CrawlOptions = {}):
   // ── DNS + TLS ──
   if (opts.networkProbes !== false) {
     signals.push(...(await emailHostingSignals(target, finalHost, errors)))
-    if (finalUrl.startsWith('https:')) {
+    if (secure) {
       const cert = await tlsInfo(finalHost, errors)
       if (cert) {
         signals.push(sig('site.tls_days_left', cert.daysLeft, 'tls',
@@ -245,11 +258,11 @@ function pickNav(root: HTMLElement): HTMLElement | null {
   return bestCount >= 3 ? best : null
 }
 
-function collectNavLinks(scope: HTMLElement, host: string): string[] {
+function collectNavLinks(scope: HTMLElement, base: string): string[] {
   const out = new Set<string>()
   for (const a of scope.querySelectorAll('a[href]')) {
     const href = a.getAttribute('href') ?? ''
-    const abs = absolute(href, host)
+    const abs = absolute(href, base)
     if (abs) out.add(abs)
   }
   return [...out]
@@ -421,7 +434,7 @@ function onPageSignals(home: HTMLElement, pages: Page[]): Signal[] {
   ]
 }
 
-function linkSignals(pages: Page[], host: string): Signal[] {
+function linkSignals(pages: Page[], base: string): Signal[] {
   let externalSameTab = 0
   let tel = 0
   let mailto = 0
@@ -431,7 +444,7 @@ function linkSignals(pages: Page[], host: string): Signal[] {
       const href = a.getAttribute('href') ?? ''
       if (href.startsWith('tel:')) tel++
       else if (href.startsWith('mailto:')) mailto++
-      else if (isExternal(href, host) && (a.getAttribute('target') ?? '') !== '_blank') externalSameTab++
+      else if (isExternal(href, base) && (a.getAttribute('target') ?? '') !== '_blank') externalSameTab++
     }
     const html = p.root.toString()
     if (/captcha/i.test(html) && !/recaptcha|hcaptcha|turnstile/i.test(html)) legacyCaptcha = true
@@ -542,12 +555,16 @@ async function wpAdminOpen(finalUrl: string, doFetch: typeof fetch, timeoutMs: n
 
 // ───────────────────────────────────────────────────────────────── url utils
 
-function absolute(href: string, host: string): string | null {
+/* `base` is the site's own origin, scheme included. Resolving against a
+   hardcoded https:// meant every interior page of an http-only site was
+   fetched over a scheme it does not serve — so the sites that most need the
+   report were crawled one page deep. */
+function absolute(href: string, base: string): string | null {
   if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:')) return null
   if (href.startsWith('javascript:')) return null
   try {
-    const u = new URL(href, `https://${host}`)
-    if (u.host !== host) return null
+    const u = new URL(href, base)
+    if (u.host !== new URL(base).host) return null
     u.hash = ''
     return u.href
   } catch {
@@ -555,10 +572,10 @@ function absolute(href: string, host: string): string | null {
   }
 }
 
-function isExternal(href: string, host: string): boolean {
+function isExternal(href: string, base: string): boolean {
   if (href.startsWith('/') || href.startsWith('#') || href.startsWith('?')) return false
   try {
-    return new URL(href, `https://${host}`).host !== host
+    return new URL(href, base).host !== new URL(base).host
   } catch {
     return false
   }

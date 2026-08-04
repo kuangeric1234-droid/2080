@@ -72,6 +72,30 @@ describe('fetch-layer collector', () => {
     }
   })
 
+  /* An http-only practice site is the one that most needs the "not using SSL"
+     finding. Trying https and giving up would mean never collecting it at all. */
+  it('falls back to http when https does not answer, and says so', async () => {
+    // intake stores a bare domain, so the collector reaches for https first
+    const r = await collectFetchLayer('stellarsmiles.test', {
+      fetchImpl: fixtureFetch(NEGLECTED, 'http://stellarsmiles.test'),
+      networkProbes: false,
+    })
+    const s = signalsToMap(r.signals)
+    expect(r.errors).toEqual([])
+    expect(s.get('site.https')?.value).toBe(false)
+    expect(s.get('site.https')?.provenance).toMatch(/did not answer over https/)
+    expect(selectFindings(s).map((c) => c.snippet.id)).toContain('tech.https.absent')
+  })
+
+  it('reports an unreachable site rather than pretending it collected', async () => {
+    const r = await collectFetchLayer('nothing-here.test', {
+      fetchImpl: fixtureFetch(HEALTHY, 'https://heartsdental.test'),
+      networkProbes: false,
+    })
+    expect(r.errors[0]).toMatch(/could not fetch .* over https or http/)
+    expect(r.signals).toEqual([])
+  })
+
   it('only emits signals the catalog documents', async () => {
     const r = await collect(HEALTHY, 'https://heartsdental.test')
     for (const s of r.signals) {

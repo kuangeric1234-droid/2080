@@ -122,12 +122,17 @@ export const OPAQUE: Site = {
 }
 
 /** A fetch stand-in that serves one of the fixture sites and 404s everything
-    else — including /wp-admin/, so that probe stays honest. */
+    else — including /wp-admin/, so that probe stays honest.
+
+    A request to an origin the site does not serve *throws*, the way a real
+    connection to a closed port does. That is what makes the collector's
+    https → http fallback testable: an http-only practice site must still be
+    reachable, since it is precisely the site that earns the "no SSL" finding. */
 export function fixtureFetch(site: Site, origin: string): typeof fetch {
   return (async (input: Parameters<typeof fetch>[0]) => {
     const url = new URL(typeof input === 'string' ? input : input.toString())
     if (url.origin !== origin) {
-      return new Response('', { status: 404 })
+      throw new TypeError(`fetch failed: nothing listening on ${url.origin}`)
     }
     const page = site[url.pathname]
     if (!page) return new Response('not found', { status: 404 })

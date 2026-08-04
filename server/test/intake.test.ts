@@ -240,7 +240,7 @@ describe('review lifecycle', () => {
     reviewId = r.reviewId
 
     const out = await collectReview(db, WORKSPACE_ID, reviewId, {
-      fetchImpl: fixtureFetch(NEGLECTED, 'https://stellarsmiles.test'),
+      fetchImpl: fixtureFetch(NEGLECTED, 'http://stellarsmiles.test'),
       networkProbes: false,
     })
     expect(out.signals).toBeGreaterThanOrEqual(25)
@@ -267,7 +267,7 @@ describe('review lifecycle', () => {
     })
 
     await collectReview(db, WORKSPACE_ID, reviewId, {
-      fetchImpl: fixtureFetch(NEGLECTED, 'https://stellarsmiles.test'),
+      fetchImpl: fixtureFetch(NEGLECTED, 'http://stellarsmiles.test'),
       networkProbes: false,
     })
 
