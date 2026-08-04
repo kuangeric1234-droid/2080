@@ -4,6 +4,18 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.11 — Social metrics behind a provider — 2026-08-04
+
+**Built:** `server/src/review/social.ts` — `SocialProvider` interface, `MetaGraphProvider` (real, Graph API), `MockSocialProvider` (PROVISIONAL, deterministic from the URL so a re-collect never moves the numbers), and `collectSocialSignals()`. Six new signals under a new `provider` signal source (migration `0011_social_provider.sql`) and a new `provider` catalog layer. `varsFromSignals` now fills `{{fans}}`, `{{followers}}` and `{{posts}}` — variables the bank has carried unfilled since 1.1 because nothing measured them.
+
+**Evidence:** new `social.test.ts` **7/7** with no database (0.7s), including the two cases that matter: Meta refusing a page produces **null and therefore no signal**, and a reachable page produces a real audience with `PROVISIONAL` absent from its provenance. Full suite **182 → 189**, typecheck green.
+
+**Files:** `server/src/review/social.ts` (new), `server/test/social.test.ts` (new), `server/migrations/0011_social_provider.sql` (new) · `server/src/review/signals.ts`, `server/src/review/engine.ts`, `server/src/review/store.ts`, `BLOCKERS.md`, `MASTER-BUILD-PLAN.md`.
+
+**Decisions:** (1) **A token was supplied and tested live, and it does not unblock the step.** `/me` and `/me/accounts` succeeded (one administered page); `heartsdental.melbourne`, `gentletouchortho` and `BUPADentalAustralia` each returned `(#100) Object does not exist, cannot be loaded due to missing permission or reviewable feature`. Reading an arbitrary public page has needed **Page Public Content Access** since 2018 — App Review plus Business Verification. BLOCKERS.md now says so explicitly, including "a token alone does not unblock this step", so nobody spends another afternoon supplying one. (2) **Null, not a guess.** The real provider returns null for an unreachable page, `collectSocialSignals` emits nothing, and the reviewer fills the section by hand — which is the status quo, honestly labelled, rather than a fabricated figure in a client's report. (3) **Absent beats zero**: a `0` reads as "measured, and it was none". (4) Post counts and engagement stay null even for reachable pages — the insights edge sits behind the same permission wall, and guessing them would undo (2). (5) Deviated from the queue's flat `social.fans`/`social.posts_30d` naming: the bank has separate Facebook and Instagram snippets with separate variables, so one flat set cannot fill both. (6) Every social snippet stays `when: manual`, so no provider number — real or stood-in — can auto-accept into a report (1.9). (7) Scraping was not considered a fallback: it breaches both platforms' terms.
+
+---
+
 ## §13.2 step 1.10 — review-summariser — 2026-08-04
 
 **Built:** `skills/review-summariser/v1` (SKILL.md, skill.json at G1 / top tier / `action: none`, output schema, 10-case provisional golden set) and `server/src/review/summarise.ts`. The skill turns the accepted findings into the Recommendations opening and the Overall comment. `groundingViolations()` then checks the output against the evidence and **refuses** the write if anything is unsourced. The job handler runs it after collection, so the unattended path is now collect → auto-accept → summarise.

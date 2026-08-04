@@ -2,7 +2,7 @@
    how it was measured. Snippet triggers only ever read signals — a finding that
    cannot name the signal that earned it does not ship. */
 
-export type SignalSource = 'crawl' | 'render' | 'dns' | 'tls' | 'http' | 'archive' | 'manual' | 'judgement'
+export type SignalSource = 'crawl' | 'render' | 'dns' | 'tls' | 'http' | 'archive' | 'manual' | 'judgement' | 'provider'
 export type SignalValue = string | number | boolean | null
 
 export interface Signal {
@@ -24,7 +24,7 @@ export function toMap(signals: Signal[]): SignalMap {
 /** Every signal the bank's triggers may reference, with what it means. Keeping
     this list beside the collectors is what lets a test catch a snippet that
     triggers on a signal nobody produces. */
-export const SIGNAL_CATALOG: Record<string, { desc: string; layer: 'fetch' | 'render' | 'manual' }> = {
+export const SIGNAL_CATALOG: Record<string, { desc: string; layer: 'fetch' | 'render' | 'manual' | 'provider' }> = {
   // ── transport & hosting ──
   'site.https': { desc: 'Final URL is served over HTTPS with a valid certificate', layer: 'fetch' },
   'site.tls_days_left': { desc: 'Days until the TLS certificate expires', layer: 'fetch' },
@@ -76,6 +76,16 @@ export const SIGNAL_CATALOG: Record<string, { desc: string; layer: 'fetch' | 're
   // ── social ──
   'social.facebook_url': { desc: 'Facebook page linked from the site', layer: 'fetch' },
   'social.instagram_url': { desc: 'Instagram profile linked from the site', layer: 'fetch' },
+
+  /* Credentialed third-party API, not our crawler (§13.2 1.11). Every social
+     snippet stays `when: manual` — these fill its variables and sit beside the
+     reviewer's call as evidence, they do not decide. */
+  'social.facebook.fans': { desc: 'Facebook page likes', layer: 'provider' },
+  'social.facebook.posts_30d': { desc: 'Facebook posts in the last 30 days', layer: 'provider' },
+  'social.facebook.engagement_avg': { desc: 'Mean likes+comments per Facebook post over 30 days', layer: 'provider' },
+  'social.instagram.followers': { desc: 'Instagram followers', layer: 'provider' },
+  'social.instagram.posts_30d': { desc: 'Instagram posts in the last 30 days', layer: 'provider' },
+  'social.instagram.engagement_avg': { desc: 'Mean likes+comments per Instagram post over 30 days', layer: 'provider' },
 
   // ── reviewer-supplied ──
   'manual.competitors.count': { desc: 'Competitors the reviewer entered', layer: 'manual' },

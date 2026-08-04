@@ -2,6 +2,7 @@ import pg from 'pg'
 import { monotonicFactory } from 'ulid'
 import { collectFetchLayer } from './collect.ts'
 import { collectRenderLayer } from './render.ts'
+import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from './social.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
 import { loadBank, render, type Snippet } from './bank.ts'
 
@@ -112,7 +113,7 @@ export async function collectReview(
   db: pg.Client | pg.Pool,
   workspaceId: string,
   reviewId: string,
-  opts: { fetchImpl?: typeof fetch; networkProbes?: boolean } = {},
+  opts: { fetchImpl?: typeof fetch; networkProbes?: boolean; socialProvider?: SocialProvider } = {},
 ) {
   const { rows } = await db.query(
     `SELECT id, domain FROM reviews WHERE id = $1 AND workspace_id = $2`, [reviewId, workspaceId],
@@ -147,9 +148,28 @@ export async function collectReview(
     })
   }
 
+  /* Social audience and engagement come from a credentialed third-party API,
+     so they are gated the same way the browser layer is. The provider is
+     injectable: the real Meta provider when META_GRAPH_TOKEN is set, the
+     PROVISIONAL mock otherwise. Either way its numbers only fill the bank's
+     {{fans}}/{{followers}} and sit beside the reviewer's manual call — every
+     social snippet stays `when: manual`, so nothing sourced this way can
+     auto-accept its way into a report (1.9). */
+  let socialResult: Awaited<ReturnType<typeof collectSocialSignals>> = { signals: [], errors: [] }
+  if (opts.networkProbes !== false) {
+    const urlOf = (key: string) => {
+      const s = result.signals.find((x) => x.key === key)
+      return typeof s?.value === 'string' ? s.value : null
+    }
+    socialResult = await collectSocialSignals(opts.socialProvider ?? defaultSocialProvider(), [
+      { network: 'facebook', url: urlOf('social.facebook_url') },
+      { network: 'instagram', url: urlOf('social.instagram_url') },
+    ])
+  }
+
   /* Render after fetch: toMap() is last-wins, so where both layers measure the
      same key the browser's answer is the one that survives. */
-  const allSignals = [...result.signals, ...renderResult.signals]
+  const allSignals = [...result.signals, ...renderResult.signals, ...socialResult.signals]
 
   for (const s of allSignals) {
     await db.query(

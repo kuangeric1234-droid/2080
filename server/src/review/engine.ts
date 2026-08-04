@@ -231,6 +231,15 @@ export function varsFromSignals(signals: SignalMap, target: string): Record<stri
   const country = str('site.host.country')
   if (country !== undefined) v.host_country = country
 
+  /* The social snippets have carried unfilled {{fans}}/{{followers}}/{{posts}}
+     since 1.1 because nothing measured them. The provider (1.11) does. */
+  const fans = num('social.facebook.fans')
+  if (fans !== undefined) v.fans = fans
+  const followers = num('social.instagram.followers')
+  if (followers !== undefined) v.followers = followers
+  const igPosts = num('social.instagram.posts_30d')
+  if (igPosts !== undefined) v.posts = igPosts
+
   const email = str('site.contact.email')
   if (email && signals.get('site.contact.email_domain_public')?.value === true) {
     v.public_email = email
