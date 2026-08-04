@@ -13,7 +13,7 @@ import { can, createSession, issueCookie, type Principal, requireAuth, revokeSes
 import { runAudit } from './seo/audit.ts'
 import { runCheck } from './sitehealth/probe.ts'
 import { receiveIntake, unwrapJotformBody } from './review/intake.ts'
-import { collectReview, decideFinding, getReview, listReviews, setScores } from './review/store.ts'
+import { addManualFinding, collectReview, decideFinding, getReview, listReviews, manualBank, setScores } from './review/store.ts'
 import { WORKSPACE_ID } from './db/seed.ts'
 import {
   MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
@@ -463,6 +463,25 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
   app.post('/api/reviews/:id/collect', async (c) => {
     try {
       return c.json(await collectReview(db, c.get('principal').workspaceId, c.req.param('id')))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
+    }
+  })
+
+  app.get('/api/reviews/:id/bank', async (c) => {
+    try {
+      return c.json({ groups: await manualBank(db, c.get('principal').workspaceId, c.req.param('id')) })
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 404)
+    }
+  })
+
+  app.post('/api/reviews/:id/findings', async (c) => {
+    const body = await c.req.json<{ snippetId: string; vars?: Record<string, string | number> }>()
+    if (!body.snippetId) return c.json({ error: 'snippetId is required' }, 400)
+    try {
+      return c.json(await addManualFinding(db, c.get('principal').workspaceId, c.req.param('id'),
+        body.snippetId, body.vars ?? {}, c.get('principal').handle))
     } catch (err) {
       return c.json({ error: (err as Error).message }, 422)
     }

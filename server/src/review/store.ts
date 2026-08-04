@@ -2,7 +2,7 @@ import pg from 'pg'
 import { monotonicFactory } from 'ulid'
 import { collectFetchLayer } from './collect.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
-import { loadBank } from './bank.ts'
+import { loadBank, render } from './bank.ts'
 
 const ulid = monotonicFactory()
 const id = (p: string) => `${p}_${ulid()}`
@@ -182,6 +182,97 @@ export async function collectReview(
     errors: result.errors,
     scores,
   }
+}
+
+/* The manual worklist: snippets that need Wally rather than a crawler, with
+   whatever the collectors did measure attached as a hint. Grouped by category
+   so the hand-entry pass is one focused sweep instead of a hunt, and marked
+   with what is already on the review so nothing gets added twice. */
+export async function manualBank(db: pg.Client | pg.Pool, workspaceId: string, reviewId: string) {
+  const { rows: review } = await db.query(
+    `SELECT bank_version FROM reviews WHERE id = $1 AND workspace_id = $2`, [reviewId, workspaceId])
+  if (review.length === 0) throw new Error('review not found')
+  const bank = loadBank(review[0].bank_version)
+
+  const { rows: existing } = await db.query(
+    `SELECT snippet_id, state::text FROM review_findings WHERE review_id = $1`, [reviewId])
+  const onReview = new Map(existing.map((r) => [r.snippet_id as string, r.state as string]))
+
+  const { rows: signalRows } = await db.query(
+    `SELECT DISTINCT ON (key) key, value, provenance FROM review_signals
+      WHERE review_id = $1 ORDER BY key, collected_at DESC`, [reviewId])
+  const signals = new Map(signalRows.map((r) => [r.key as string, r]))
+
+  return bank.categories
+    .map((cat) => ({
+      category: cat.key,
+      label: cat.label,
+      automation: cat.automation,
+      automation_note: cat.automation_note,
+      items: (bank.byCategory.get(cat.key) ?? [])
+        .filter((s) => s.when === 'manual' || s.when === 'judgement')
+        .map((s) => ({
+          snippet_id: s.id,
+          dimension: s.dimension,
+          variant: s.variant,
+          text: s.text,
+          prompt: s.manual_prompt ?? s.judgement_prompt ?? null,
+          kind: s.when as string,
+          vars: s.vars ?? [],
+          conflicts: s.conflicts ?? [],
+          hint: s.hint_signal ? (signals.get(s.hint_signal) ?? null) : null,
+          state: onReview.get(s.id) ?? null,
+        })),
+    }))
+    .filter((g) => g.items.length > 0)
+}
+
+/** Add a manual or judgement finding the reviewer has confirmed. */
+export async function addManualFinding(
+  db: pg.Client | pg.Pool,
+  workspaceId: string,
+  reviewId: string,
+  snippetId: string,
+  vars: Record<string, string | number>,
+  actor: string,
+) {
+  const { rows: review } = await db.query(
+    `SELECT bank_version FROM reviews WHERE id = $1 AND workspace_id = $2`, [reviewId, workspaceId])
+  if (review.length === 0) throw new Error('review not found')
+  const bank = loadBank(review[0].bank_version)
+  const snippet = bank.byId.get(snippetId)
+  if (!snippet) throw new Error(`unknown snippet "${snippetId}"`)
+
+  /* Both halves of a pair can never ship together. Adding one withdraws the
+     other rather than leaving the report to contradict itself. */
+  if (snippet.conflicts?.length) {
+    await db.query(
+      `DELETE FROM review_findings WHERE review_id = $1 AND snippet_id = ANY($2)`,
+      [reviewId, snippet.conflicts],
+    )
+  }
+
+  const rendered = render(snippet.text, vars)
+  const findingId = id('fnd')
+  await db.query(
+    `INSERT INTO review_findings
+       (id, workspace_id, review_id, snippet_id, category, dimension, variant, weight,
+        state, rendered_text, vars, triggered_by, ahpra_blocking, decided_by, decided_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'accepted',$9,$10,$11,$12,$13,now())
+     ON CONFLICT (review_id, snippet_id) DO UPDATE SET
+       state = 'accepted', rendered_text = EXCLUDED.rendered_text, vars = EXCLUDED.vars,
+       decided_by = EXCLUDED.decided_by, decided_at = now()`,
+    [findingId, workspaceId, reviewId, snippetId, snippet.category, snippet.dimension,
+      snippet.variant, snippet.weight, rendered, JSON.stringify(vars),
+      JSON.stringify([`reviewer:${snippet.when}`]), snippet.ahpra_blocking ?? false, actor],
+  )
+
+  await db.query(
+    `INSERT INTO audit_log (id, workspace_id, actor_type, actor_id, action, target_type, target_id, why)
+     VALUES ($1,$2,'human',$3,'finding.added','review',$4,$5)`,
+    [id('aud'), workspaceId, actor, reviewId, `${snippetId} entered by hand`],
+  )
+  return { ok: true, snippetId, rendered }
 }
 
 /** Accept, reject or edit one finding. Every decision is attributed. */

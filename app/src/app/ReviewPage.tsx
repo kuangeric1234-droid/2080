@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 
 export type ReviewStatus = 'requested' | 'collecting' | 'draft' | 'in_review' | 'delivered' | 'failed'
@@ -159,12 +160,12 @@ export function ReviewPage() {
                     </td>
                     <td className="num px-4 py-2.5 text-[12px] text-ink-muted">{since(r.requested_at)}</td>
                     <td className="px-4 py-2.5 text-right">
-                      <a
-                        href={`/review/${r.id}`}
+                      <Link
+                        to={`/review/${r.id}`}
                         className="text-[12px] font-semibold text-teal hover:underline"
                       >
                         Open
-                      </a>
+                      </Link>
                     </td>
                   </tr>
                 ))}

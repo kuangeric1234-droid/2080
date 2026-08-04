@@ -6,6 +6,7 @@ import { InboxPage } from './InboxPage'
 import { TodayPage } from './TodayPage'
 import { NotificationsPage } from './NotificationsPage'
 import { ReviewPage } from './ReviewPage'
+import { ReviewDetailPage } from './ReviewDetailPage'
 import { SeoPage } from './SeoPage'
 import { SiteHealthPage } from './SiteHealthPage'
 import { ClientsPage } from './ClientsPage'
@@ -18,6 +19,7 @@ export function AppRoutes() {
 
         {/* the rail */}
         <Route path="review" element={<ReviewPage />} />
+        <Route path="review/:id" element={<ReviewDetailPage />} />
 
         {/* built but off-rail — parked in backlog/PARKED-MODULES.md, still reachable
             by URL so the work and its tests stay live */}
