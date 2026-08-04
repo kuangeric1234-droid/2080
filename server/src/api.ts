@@ -12,6 +12,9 @@ import { deleteCookie, getCookie } from 'hono/cookie'
 import { can, createSession, issueCookie, type Principal, requireAuth, revokeSession, SESSION_COOKIE, verifyPassword } from './auth.ts'
 import { runAudit } from './seo/audit.ts'
 import { runCheck } from './sitehealth/probe.ts'
+import { receiveIntake, unwrapJotformBody } from './review/intake.ts'
+import { collectReview, decideFinding, getReview, listReviews, setScores } from './review/store.ts'
+import { WORKSPACE_ID } from './db/seed.ts'
 import {
   MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
 } from './inbox/connectors.ts'
@@ -36,6 +39,49 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
     if (!email.messageId || !email.from) return c.json({ error: 'messageId and from are required' }, 400)
     const result = await processInboundEmail(db, model, inboxConnectors, email, { mode: inboxMode })
     return c.json(result)
+  })
+
+  /* The free-SEO-audit form on 2080solutions.com.au. Jotform posts
+     form-encoded with the answers as a JSON string in `rawRequest`; plain JSON
+     is accepted too so the endpoint is curl-testable.
+
+     Deliberately outside the /api/* session gate — Jotform cannot hold a
+     session — and guarded by a shared token instead. Deliberately never 500s:
+     Jotform retries on error, and a retry storm against a half-working parser
+     loses more leads than it saves. */
+  app.post('/hooks/jotform', async (c) => {
+    const expected = process.env.JOTFORM_WEBHOOK_TOKEN
+    if (expected && c.req.query('token') !== expected) {
+      return c.json({ error: 'bad token' }, 401)
+    }
+
+    let body: Record<string, unknown>
+    try {
+      const ct = c.req.header('content-type') ?? ''
+      body = ct.includes('json')
+        ? await c.req.json<Record<string, unknown>>()
+        : (Object.fromEntries((await c.req.formData()).entries()) as Record<string, unknown>)
+    } catch {
+      return c.json({ ok: false, error: 'unreadable body' }, 200)
+    }
+
+    const { payload, externalId } = unwrapJotformBody(body)
+    try {
+      const result = await receiveIntake(db, {
+        workspaceId: WORKSPACE_ID,
+        source: 'jotform',
+        externalId,
+        payload,
+        mail: inboxConnectors.mail,
+        notifyEmail: process.env.REVIEW_NOTIFY_EMAIL,
+      })
+      return c.json({ ok: true, ...result })
+    } catch (err) {
+      /* Record the failure rather than bouncing it: a submission we cannot
+         process is still a lead, and it must not vanish into a retry loop. */
+      console.error('jotform intake failed', err)
+      return c.json({ ok: false, error: (err as Error).message }, 200)
+    }
   })
 
   app.post('/hooks/activecollab', async (c) => {
@@ -399,6 +445,48 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
     const { rows } = await db.query(`SELECT id, url, form_canary FROM site_health WHERE id = $1`, [c.req.param('id')])
     if (rows.length === 0) return c.json({ error: 'not found' }, 404)
     return c.json(await runCheck(db, rows[0]))
+  })
+
+  /* ── Online Presence Review (module 1) ─────────────────────────────────── */
+
+  app.get('/api/reviews', async (c) =>
+    c.json({ reviews: await listReviews(db, c.get('principal').workspaceId) }))
+
+  app.get('/api/reviews/:id', async (c) => {
+    const found = await getReview(db, c.get('principal').workspaceId, c.req.param('id'))
+    return found ? c.json(found) : c.json({ error: 'not found' }, 404)
+  })
+
+  /* Crawling a live site takes tens of seconds. Kept synchronous while a
+     review is started by hand; the moment intake auto-collects this has to
+     become a job so the request is not holding the crawl open. */
+  app.post('/api/reviews/:id/collect', async (c) => {
+    try {
+      return c.json(await collectReview(db, c.get('principal').workspaceId, c.req.param('id')))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
+    }
+  })
+
+  app.post('/api/reviews/findings/:id/decide', async (c) => {
+    const body = await c.req.json<{ state: 'accepted' | 'rejected' | 'candidate'; editedText?: string }>()
+    try {
+      return c.json(await decideFinding(db, c.get('principal').workspaceId, c.req.param('id'), {
+        state: body.state, editedText: body.editedText, actor: c.get('principal').handle,
+      }))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 404)
+    }
+  })
+
+  app.put('/api/reviews/:id/scores', async (c) => {
+    const body = await c.req.json<{ scores: Record<string, number | null>; overall: number | null }>()
+    try {
+      return c.json(await setScores(db, c.get('principal').workspaceId, c.req.param('id'),
+        body.scores ?? {}, body.overall ?? null, c.get('principal').handle))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
+    }
   })
 
   return app

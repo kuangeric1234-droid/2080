@@ -1,0 +1,240 @@
+import pg from 'pg'
+import { monotonicFactory } from 'ulid'
+import { collectFetchLayer } from './collect.ts'
+import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
+import { loadBank } from './bank.ts'
+
+const ulid = monotonicFactory()
+const id = (p: string) => `${p}_${ulid()}`
+
+/* Persistence for a review. Collection is append-only: re-running it writes a
+   new generation of signals rather than editing the old ones, so a delivered
+   report stays explicable against the measurements that produced it.
+
+   Findings behave differently — they carry the reviewer's decisions, so a
+   re-collect updates a candidate in place but never silently overwrites an
+   accepted, rejected or edited one. Losing a reviewer's work to a background
+   re-crawl would be the fastest way to make this tool untrusted. */
+
+export interface ReviewRow {
+  id: string
+  domain: string
+  practice_name: string | null
+  contact_name: string | null
+  contact_email: string | null
+  status: string
+  overall_score: number | null
+  findings_accepted: number
+  findings_candidate: number
+  source: string
+  requested_at: string
+  updated_at: string
+}
+
+export async function listReviews(db: pg.Client | pg.Pool, workspaceId: string): Promise<ReviewRow[]> {
+  const { rows } = await db.query<ReviewRow>(
+    `SELECT r.id, r.domain, r.practice_name, r.contact_name, r.contact_email,
+            r.status::text, r.overall_score, r.requested_at, r.updated_at,
+            COALESCE(ir.source, 'manual') AS source,
+            COUNT(f.id) FILTER (WHERE f.state IN ('accepted','edited'))::int AS findings_accepted,
+            COUNT(f.id)::int AS findings_candidate
+       FROM reviews r
+       LEFT JOIN intake_requests ir ON ir.id = r.intake_request_id
+       LEFT JOIN review_findings f  ON f.review_id = r.id
+      WHERE r.workspace_id = $1
+      GROUP BY r.id, ir.source
+      ORDER BY r.requested_at DESC
+      LIMIT 200`,
+    [workspaceId],
+  )
+  return rows
+}
+
+export async function getReview(db: pg.Client | pg.Pool, workspaceId: string, reviewId: string) {
+  const { rows } = await db.query(
+    `SELECT * FROM reviews WHERE id = $1 AND workspace_id = $2`, [reviewId, workspaceId],
+  )
+  if (rows.length === 0) return null
+  const review = rows[0]
+
+  /* Latest generation only: DISTINCT ON keeps the newest measurement per key
+     while the history stays on the table for provenance. */
+  const { rows: signals } = await db.query(
+    `SELECT DISTINCT ON (target, key) target, key, value, source::text, provenance, collected_at
+       FROM review_signals WHERE review_id = $1
+      ORDER BY target, key, collected_at DESC`,
+    [reviewId],
+  )
+  const { rows: findings } = await db.query(
+    `SELECT id, snippet_id, category, dimension, variant, weight, state::text,
+            rendered_text, edited_text, vars, triggered_by, ahpra_blocking, position,
+            decided_by, decided_at
+       FROM review_findings WHERE review_id = $1
+      ORDER BY category, position, snippet_id`,
+    [reviewId],
+  )
+  const { rows: competitors } = await db.query(
+    `SELECT id, name, domain, facts, threat, position FROM review_competitors
+      WHERE review_id = $1 ORDER BY position`,
+    [reviewId],
+  )
+  const { rows: exhibits } = await db.query(
+    `SELECT id, finding_id, kind, label, path, width, height, position
+       FROM review_exhibits WHERE review_id = $1 ORDER BY position`,
+    [reviewId],
+  )
+
+  const bank = loadBank(review.bank_version)
+  return { review, signals, findings, competitors, exhibits, categories: bank.categories }
+}
+
+/** Crawl the domain, store the evidence, and refresh the candidate findings. */
+export async function collectReview(
+  db: pg.Client | pg.Pool,
+  workspaceId: string,
+  reviewId: string,
+  opts: { fetchImpl?: typeof fetch; networkProbes?: boolean } = {},
+) {
+  const { rows } = await db.query(
+    `SELECT id, domain FROM reviews WHERE id = $1 AND workspace_id = $2`, [reviewId, workspaceId],
+  )
+  if (rows.length === 0) throw new Error('review not found')
+  const domain = rows[0].domain as string
+  if (!domain || domain === '(not supplied)') throw new Error('this review has no domain yet')
+
+  await db.query(`UPDATE reviews SET status = 'collecting', collect_error = NULL WHERE id = $1`, [reviewId])
+
+  let result
+  try {
+    result = await collectFetchLayer(domain, opts)
+  } catch (err) {
+    await db.query(`UPDATE reviews SET status = 'failed', collect_error = $2 WHERE id = $1`,
+      [reviewId, (err as Error).message])
+    throw err
+  }
+
+  for (const s of result.signals) {
+    await db.query(
+      `INSERT INTO review_signals (id, workspace_id, review_id, target, key, value, source, provenance)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
+      [id('sig'), workspaceId, reviewId, result.target, s.key, JSON.stringify(s.value), s.source, s.provenance],
+    )
+  }
+
+  const signals = signalsToMap(result.signals)
+  const vars = varsFromSignals(signals, result.target)
+
+  /* Manual and judgement snippets the reviewer already confirmed stay confirmed
+     across a re-collect — the crawl learning something new must not silently
+     discard a call a human already made. */
+  const { rows: confirmed } = await db.query(
+    `SELECT snippet_id FROM review_findings
+      WHERE review_id = $1 AND state IN ('accepted','edited')`,
+    [reviewId],
+  )
+  const candidates = selectFindings(signals, {
+    vars,
+    manualAccepted: confirmed.map((r) => r.snippet_id as string),
+  })
+
+  for (const [i, c] of candidates.entries()) {
+    await db.query(
+      `INSERT INTO review_findings
+         (id, workspace_id, review_id, snippet_id, category, dimension, variant, weight,
+          rendered_text, vars, triggered_by, ahpra_blocking, position)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+       ON CONFLICT (review_id, snippet_id) DO UPDATE SET
+         rendered_text = CASE WHEN review_findings.state = 'candidate'
+                              THEN EXCLUDED.rendered_text ELSE review_findings.rendered_text END,
+         triggered_by  = EXCLUDED.triggered_by,
+         vars          = CASE WHEN review_findings.state = 'candidate'
+                              THEN EXCLUDED.vars ELSE review_findings.vars END`,
+      [id('fnd'), workspaceId, reviewId, c.snippet.id, c.snippet.category, c.snippet.dimension,
+        c.snippet.variant, c.snippet.weight, c.renderedText, JSON.stringify(c.vars),
+        JSON.stringify(c.triggeredBy), c.snippet.ahpra_blocking ?? false, i],
+    )
+  }
+
+  /* A finding that no longer fires is withdrawn only if nobody has ruled on it.
+     A reviewer's accept survives the signal that first suggested it. */
+  const liveIds = candidates.map((c) => c.snippet.id)
+  await db.query(
+    `DELETE FROM review_findings
+      WHERE review_id = $1 AND state = 'candidate' AND NOT (snippet_id = ANY($2))`,
+    [reviewId, liveIds],
+  )
+
+  const scores = suggestScores(candidates)
+  await db.query(
+    `UPDATE reviews SET status = 'draft', collected_at = now(),
+            category_scores = $2, overall_score = $3
+      WHERE id = $1`,
+    [reviewId,
+      JSON.stringify(Object.fromEntries(scores.map((s) => [s.category, s.suggested]))),
+      suggestOverall(scores)],
+  )
+
+  return {
+    signals: result.signals.length,
+    pages: result.pages.length,
+    sitemap: result.sitemap.length,
+    findings: candidates.length,
+    errors: result.errors,
+    scores,
+  }
+}
+
+/** Accept, reject or edit one finding. Every decision is attributed. */
+export async function decideFinding(
+  db: pg.Client | pg.Pool,
+  workspaceId: string,
+  findingId: string,
+  decision: { state: 'accepted' | 'rejected' | 'candidate'; editedText?: string; actor: string },
+) {
+  const state = decision.editedText ? 'edited' : decision.state
+  const { rows } = await db.query(
+    `UPDATE review_findings
+        SET state = $3, edited_text = COALESCE($4, edited_text),
+            decided_by = $5, decided_at = now()
+      WHERE id = $1 AND workspace_id = $2
+      RETURNING review_id, snippet_id, state::text`,
+    [findingId, workspaceId, state, decision.editedText ?? null, decision.actor],
+  )
+  if (rows.length === 0) throw new Error('finding not found')
+
+  await db.query(
+    `INSERT INTO audit_log (id, workspace_id, actor_type, actor_id, action, target_type, target_id, why)
+     VALUES ($1,$2,'human',$3,$4,'review_finding',$5,$6)`,
+    [id('aud'), workspaceId, decision.actor, `finding.${state}`, findingId,
+      `${rows[0].snippet_id} on review ${rows[0].review_id}`],
+  )
+  return rows[0]
+}
+
+/** Set the star scores the report ships with. The reviewer's number always wins
+    over the engine's suggestion. */
+export async function setScores(
+  db: pg.Client | pg.Pool,
+  workspaceId: string,
+  reviewId: string,
+  scores: Record<string, number | null>,
+  overall: number | null,
+  actor: string,
+) {
+  for (const [k, v] of Object.entries(scores)) {
+    if (v !== null && (v < 1 || v > 5)) throw new Error(`score for ${k} must be 1..5 or null`)
+  }
+  const { rows } = await db.query(
+    `UPDATE reviews SET category_scores = $3, overall_score = $4, status = 'in_review'
+      WHERE id = $1 AND workspace_id = $2 RETURNING id`,
+    [reviewId, workspaceId, JSON.stringify(scores), overall],
+  )
+  if (rows.length === 0) throw new Error('review not found')
+
+  await db.query(
+    `INSERT INTO audit_log (id, workspace_id, actor_type, actor_id, action, target_type, target_id, why)
+     VALUES ($1,$2,'human',$3,'review.scored','review',$4,$5)`,
+    [id('aud'), workspaceId, actor, reviewId, `overall ${overall ?? '—'}`],
+  )
+  return { ok: true }
+}
