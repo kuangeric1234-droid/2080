@@ -308,10 +308,69 @@ describe('exporting the review as .docx', () => {
     }
   })
 
+  /* comp.intro and comp.row are scaffolding for the block this exporter
+     assembles, not paragraphs of their own. addCompetitor writes the
+     manual.competitors.count signal and re-runs the findings pass, so both land
+     on the review as candidates the moment a competitor is entered — accepting
+     them printed the Competition heading and its intro twice, and shipped
+     comp.row's worked Chapel Gate example into the client's report verbatim. */
+  it('prints Competition once when the structural snippets also fired', async () => {
+    const bank = loadBank()
+    const added = await addCompetitor(db, WORKSPACE_ID, reviewId, {
+      name: 'Elwood Dental Group',
+      facts: { serp_position: 2, https: false, booking: true, days_open: 6 },
+      threat: 6,
+    })
+    try {
+      const full = (await getReview(db, WORKSPACE_ID, reviewId))!
+      const scaffolding = full.findings.filter((f) => ['comp.intro', 'comp.row'].includes(f.snippet_id))
+      expect(scaffolding.length, 'the structural snippets did not fire').toBe(2)
+      for (const f of scaffolding) {
+        await decideFinding(db, WORKSPACE_ID, f.id, { state: 'accepted', actor: 'WC' })
+      }
+
+      const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
+      const count = (needle: string) => text.split(needle).length - 1
+      expect(count('Competition:'), 'the Competition heading printed twice').toBe(1)
+      expect(count(bank.byId.get('comp.intro')!.text), 'the competitor intro printed twice').toBe(1)
+      expect(text).toContain('Elwood Dental Group')
+      expect(text, 'comp.row’s worked example reached the client').not.toContain('Chapel Gate Dental')
+    } finally {
+      await db.query(
+        `DELETE FROM review_findings WHERE review_id = $1 AND snippet_id IN ('comp.intro','comp.row')`,
+        [reviewId])
+      await removeCompetitor(db, WORKSPACE_ID, added.competitor.id)
+    }
+  })
+
+  /* The summary table lists all eight categories in every report. A section the
+     review has nothing for used to vanish from the body, leaving the table
+     promising eight and the document delivering three. */
+  it('prints all eight sections, saying so where there is nothing to report', async () => {
+    const bank = loadBank()
+    const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
+
+    for (const cat of bank.categories) {
+      expect(text, `${cat.label} section missing from the body`).toContain(`${cat.label}:`)
+    }
+    // no provider, no competitor typed — these four have nothing to say yet
+    for (const key of ['visibility_sem', 'reputation', 'social_media', 'competition']) {
+      const cat = bank.categories.find((c) => c.key === key)!
+      const section = text.slice(text.indexOf(`${cat.label}:`))
+      expect(section.slice(0, 400), `${cat.label} rendered empty and silent`)
+        .toContain(cat.empty_note)
+    }
+    // …while a section that does have findings never carries the note
+    const tech = bank.categories.find((c) => c.key === 'website_technical')!
+    const techSection = text.slice(
+      text.indexOf('Website (Technical):'), text.indexOf('Website (Usability):'))
+    expect(techSection).not.toContain(tech.empty_note)
+  })
+
   /* §13.2 step 1.5b. The exporter has placed a picture beside its finding since
      1.7; until now nothing could say which finding, so every capture fell to
      the back. */
-  it('prints an attached exhibit beside its finding, not in the Evidence block', async () => {
+  it('prints an attached exhibit beside its finding, not at the back', async () => {
     const { writeFileSync } = await import('node:fs')
     const exDir = mkdtempSync(path.join(tmpdir(), 'exh2-'))
     writeFileSync(path.join(exDir, 'shot.png'), Buffer.from(
@@ -325,11 +384,12 @@ describe('exporting the review as .docx', () => {
       [WORKSPACE_ID, reviewId])
 
     try {
-      // unattached: it goes to the back under Evidence
+      /* Unattached: it falls to the back, behind the last section. The template
+         has no Evidence heading, so position is the only thing that says so. */
       let text = await documentText(
         (await exportReviewDocx(db, WORKSPACE_ID, reviewId, { exhibitDir: exDir })).buffer)
-      expect(text).toContain('Evidence:')
-      expect(text.indexOf('Homepage capture')).toBeGreaterThan(text.indexOf('Evidence:'))
+      expect(text).not.toContain('Evidence:')
+      expect(text.indexOf('Homepage capture')).toBeGreaterThan(text.indexOf('Competition:'))
 
       // attached: it moves up beside the paragraph it proves
       await attachExhibit(db, WORKSPACE_ID, 'exh_att', target.id)
@@ -340,6 +400,7 @@ describe('exporting the review as .docx', () => {
       const caption = text.indexOf('Homepage capture')
       expect(finding).toBeGreaterThan(-1)
       expect(caption).toBeGreaterThan(finding)
+      expect(caption).toBeLessThan(text.indexOf('Competition:'))
     } finally {
       await db.query(`DELETE FROM review_exhibits WHERE id = 'exh_att'`)
       rmSync(exDir, { recursive: true, force: true })

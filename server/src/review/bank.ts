@@ -78,6 +78,11 @@ export interface CategoryDef {
   dimensions: string[]
   automation: 'full' | 'semi' | 'manual'
   automation_note: string
+  /** Printed under the heading when the section has nothing accepted in it.
+      The template carries all eight sections in every report, so a section with
+      no findings still appears — saying so, rather than vanishing and leaving
+      the summary table promising a section the document never delivers. */
+  empty_note: string
 }
 
 export interface Bank {

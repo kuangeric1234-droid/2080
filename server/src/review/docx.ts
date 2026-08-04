@@ -25,11 +25,21 @@ const BODY_FONT = 'Cambria'
 const HEAD_FONT = 'Calibri'
 const H1_BLUE = '335B8A'
 const H2_BLUE = '4F81BD'
-const RULE = 'D9D9D9'
-const HEADER_FILL = 'EAF0F7'
+const MUTED = '8A9CA3'
+
+/* The summary table is the template's `Table1` style, read out of its own
+   styles.xml: a 4F81BD header row in white bold, 7BA0CD rules, D3DFEE banding
+   on alternate data rows, and a bold first column throughout. */
+const TABLE_RULE = '7BA0CD'
+const HEADER_FILL = '4F81BD'
+const HEADER_INK = 'FFFFFF'
+const BAND_FILL = 'D3DFEE'
 
 /** Half-points, matching the template's w:sz values. */
-const SZ = { body: 22, small: 20, h1: 32, h2: 26, title: 40 }
+const SZ = { body: 22, small: 20, h1: 32, h2: 26 }
+
+/* The template's own w:gridCol widths — 2518 / 1559 / 4439 of 8516 twips. */
+const COL = { category: 30, score: 18, comments: 52 }
 
 const ASSET_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../assets')
 
@@ -108,11 +118,11 @@ function cell(children: Paragraph[], opts: { width?: number; fill?: string } = {
   })
 }
 
-function tableCellText(text: string, opts: { bold?: boolean; size?: number } = {}) {
+function tableCellText(text: string, opts: { bold?: boolean; size?: number; color?: string } = {}) {
   return new Paragraph({
     spacing: { after: 0 },
     children: [new TextRun({
-      text, font: BODY_FONT, bold: opts.bold, size: opts.size ?? SZ.small,
+      text, font: BODY_FONT, bold: opts.bold, size: opts.size ?? SZ.small, color: opts.color,
     })],
   })
 }
@@ -211,50 +221,71 @@ export async function exportReviewDocx(
     day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Melbourne',
   }).format(when)
 
-  // ── header block ──
-  const children: Paragraph[] = [
+  /* ── header block ──
+     The template styles these three as Heading1 / Heading3 / Heading3 with no
+     direct run overrides, so they inherit Calibri bold in the heading blues and
+     carry outline levels into Word's navigation pane. Matched here rather than
+     drawn as loose bold runs. */
+  const titleLine = (text: string, level: 1 | 3) =>
     new Paragraph({
+      heading: level === 1 ? HeadingLevel.HEADING_1 : HeadingLevel.HEADING_3,
       spacing: { after: 60 },
       children: [new TextRun({
-        text: `Review of ${review.domain}:`, font: HEAD_FONT, bold: true, size: SZ.title, color: H1_BLUE,
+        text, font: HEAD_FONT, bold: true,
+        size: level === 1 ? SZ.h1 : SZ.body,
+        color: level === 1 ? H1_BLUE : H2_BLUE,
       })],
-    }),
-    body(`Date: ${dateText}`),
-    body(`Attention: ${review.contact_name ?? review.practice_name ?? review.domain}`),
+    })
+
+  const children: Paragraph[] = [
+    titleLine(`Review of ${review.domain}:`, 1),
+    titleLine(`Date: ${dateText}`, 3),
+    titleLine(`Attention: ${review.contact_name ?? review.practice_name ?? review.domain}`, 3),
   ]
 
-  // ── summary table ──
+  /* ── summary table ──
+     Data rows band D3DFEE / none the way the template's tblLook turns on
+     horizontal banding, and the first column is bold in every row (its
+     `firstCol` conditional format). The Overall row is a data row like the
+     rest — the template gives it no fill of its own. */
+  const dataRow = (label: string, score: string, comment: string, index: number) =>
+    new TableRow({
+      children: [
+        cell([tableCellText(label, { bold: true })],
+          { width: COL.category, fill: index % 2 === 0 ? BAND_FILL : undefined }),
+        cell([tableCellText(score, { bold: true })],
+          { width: COL.score, fill: index % 2 === 0 ? BAND_FILL : undefined }),
+        cell([tableCellText(comment)],
+          { width: COL.comments, fill: index % 2 === 0 ? BAND_FILL : undefined }),
+      ],
+    })
+
+  const headerCell = (text: string, width: number) =>
+    cell([tableCellText(text, { bold: true, color: HEADER_INK })], { width, fill: HEADER_FILL })
+
   const rows: TableRow[] = [
     new TableRow({
       tableHeader: true,
       children: [
-        cell([tableCellText('Category', { bold: true })], { width: 26, fill: HEADER_FILL }),
-        cell([tableCellText('Score', { bold: true })], { width: 14, fill: HEADER_FILL }),
-        cell([tableCellText('Comments', { bold: true })], { width: 60, fill: HEADER_FILL }),
+        headerCell('Category', COL.category),
+        headerCell('Score', COL.score),
+        headerCell('Comments', COL.comments),
       ],
     }),
-    ...categories.map((cat) =>
-      new TableRow({
-        children: [
-          cell([tableCellText(cat.label)], { width: 26 }),
-          cell([tableCellText(stars(scores[cat.key] ?? null), { bold: true })], { width: 14 }),
-          cell([tableCellText(cat.dimensions.join(', '))], { width: 60 }),
-        ],
-      }),
-    ),
-    new TableRow({
-      children: [
-        cell([tableCellText('Overall Score', { bold: true })], { width: 26, fill: HEADER_FILL }),
-        cell([tableCellText(stars(review.overall_score ?? null), { bold: true })], { width: 14, fill: HEADER_FILL }),
-        cell([tableCellText(review.overall_comment ?? '')], { width: 60, fill: HEADER_FILL }),
-      ],
-    }),
+    ...categories.map((cat, i) =>
+      dataRow(cat.label, stars(scores[cat.key] ?? null), cat.dimensions.join(', '), i)),
+    dataRow('Overall Score', stars(review.overall_score ?? null),
+      review.overall_comment ?? '', categories.length),
   ]
 
-  const border = { style: BorderStyle.SINGLE, size: 4, color: RULE }
+  const rule = { style: BorderStyle.SINGLE, size: 8, color: TABLE_RULE }
+  const hairline = { style: BorderStyle.SINGLE, size: 4, color: '000000' }
   const summary = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
-    borders: { top: border, bottom: border, left: border, right: border, insideHorizontal: border, insideVertical: border },
+    borders: {
+      top: rule, bottom: rule, left: rule, right: rule,
+      insideHorizontal: rule, insideVertical: hairline,
+    },
     rows,
   })
 
@@ -283,12 +314,41 @@ export async function exportReviewDocx(
     byFinding.set(ex.finding_id, list)
   }
 
-  // ── one section per category, in the template's order ──
+  /* Some snippets are scaffolding for a block this file assembles rather than
+     paragraphs in their own right: `comp.intro` is the sentence the competitor
+     block opens with, `comp.row` is the shape of a competitor line. Printing
+     them as ordinary findings gave the Competition section two headings and its
+     intro twice over. The bank marks them; this honours the mark. */
+  const isAssembled = (snippetId: string) => {
+    const s = bank.byId.get(snippetId)
+    return s?.structural === true || s?.row_template !== undefined
+  }
+
+  const competitors = data.competitors
+  /* The competitor lines are assembled from the bank's own comp.row template
+     (1.12), not from an ad-hoc join here, so the wording and the order of the
+     fragments stay the template's — "#1 in Google search, not secure, online
+     booking, open 6 days" — rather than this file's. */
+  const competitorBlock = (): Paragraph[] => {
+    if (competitors.length === 0) return []
+    const out: Paragraph[] = []
+    const intro = bank.byId.get('comp.intro')
+    if (intro) out.push(body(intro.text))
+    const row = bank.byId.get('comp.row')
+    for (const comp of competitors) out.push(bullet(renderCompetitorRow(row ?? {}, comp)))
+    return out
+  }
+
+  /* ── one section per category, in the template's order ──
+     All eight print, every time. A section the review has nothing for says so
+     under its own heading instead of disappearing — the summary table above
+     lists all eight rows, and a document whose table promises a section its
+     body never delivers is the one that stops looking like the template. */
   const sections: Paragraph[] = []
   for (const cat of categories) {
-    const mine = accepted.filter((f) => f.category === cat.key)
-    if (mine.length === 0) continue
     sections.push(heading(`${cat.label}:`, 2))
+
+    const mine = accepted.filter((f) => f.category === cat.key && !isAssembled(f.snippet_id))
     /* Issues before strengths inside a category: the practice is paying
        attention to what is wrong, and the template reads that way too. */
     const ordered = [
@@ -296,37 +356,25 @@ export async function exportReviewDocx(
       ...mine.filter((f) => f.variant === 'neutral'),
       ...mine.filter((f) => f.variant === 'positive'),
     ]
+    /* Competition opens with its assembled intro and competitor lines, then the
+       reviewer's verdict paragraph — the order the template reads in. */
+    const assembled = cat.key === 'competition' ? competitorBlock() : []
+    sections.push(...assembled)
     for (const f of ordered) {
       sections.push(bullet(textOf(f)))
       for (const ex of byFinding.get(f.id as string) ?? []) sections.push(...exhibit(ex, exhibitDir))
     }
+    if (ordered.length === 0 && assembled.length === 0) {
+      sections.push(body(cat.empty_note, { italics: true, color: MUTED }))
+    }
   }
 
   /* An exhibit nobody attached to a finding still earned its place — the
-     homepage capture is collected for every review. It goes at the back rather
-     than being dropped or guessed into a section it may not belong to. */
+     homepage capture is collected for every review. It goes at the back, under
+     no heading of its own: the template has no Evidence section, and guessing
+     it into a category it may not belong to would be worse than a bare plate. */
   const loose = allExhibits.filter((ex) => !ex.finding_id)
-  const appendix: Paragraph[] = []
-  if (loose.length > 0) {
-    appendix.push(heading('Evidence:', 2))
-    for (const ex of loose) appendix.push(...exhibit(ex, exhibitDir))
-  }
-
-  const competitors = data.competitors
-  const competitorBlock: Paragraph[] = []
-  if (competitors.length > 0) {
-    const intro = bank.byId.get('comp.intro')
-    competitorBlock.push(heading('Competition:', 2))
-    if (intro) competitorBlock.push(body(intro.text))
-    /* The line is assembled from the bank's own comp.row template (1.12), not
-       from an ad-hoc join here, so the wording and the order of the fragments
-       stay the template's — "#1 in Google search, not secure, online booking,
-       open 6 days" — rather than this file's. */
-    const row = bank.byId.get('comp.row')
-    for (const comp of competitors) {
-      competitorBlock.push(bullet(renderCompetitorRow(row ?? {}, comp)))
-    }
-  }
+  const appendix: Paragraph[] = loose.flatMap((ex) => exhibit(ex, exhibitDir))
 
   const doc = new Document({
     styles: {
@@ -354,7 +402,6 @@ export async function exportReviewDocx(
         new Paragraph({ text: '', spacing: { after: 120 } }),
         ...(recommendations.length ? [heading('Recommendations:', 2), ...recommendations] : []),
         ...sections,
-        ...competitorBlock,
         ...appendix,
       ],
     }],
