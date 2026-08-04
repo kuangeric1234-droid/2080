@@ -73,6 +73,13 @@ export const SIGNAL_CATALOG: Record<string, { desc: string; layer: 'fetch' | 're
   'render.captcha_legacy': { desc: 'A pre-reCAPTCHA challenge image is in use', layer: 'fetch' },
   'render.team_images_linked': { desc: 'Practitioner photos link to their own page', layer: 'fetch' },
 
+  /* ── reputation (§13.2 1.14) ──
+     Google Places, not our crawler. The {{count}}x {{rating}}* line appears in
+     15 of 17 real reports, which is why this is worth an API key. */
+  'reputation.google_review_count': { desc: 'Google reviews on the practice listing', layer: 'provider' },
+  'reputation.google_rating': { desc: 'Google star average', layer: 'provider' },
+  'reputation.competitor_review_median': { desc: 'Median Google reviews across nearby same-trade practices', layer: 'provider' },
+
   // ── social ──
   'social.facebook_url': { desc: 'Facebook page linked from the site', layer: 'fetch' },
   'social.instagram_url': { desc: 'Instagram profile linked from the site', layer: 'fetch' },

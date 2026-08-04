@@ -4,6 +4,20 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.14 — Google research: reputation and competitors — 2026-08-04
+
+**Why now:** 17 completed real reviews landed in `Downloads/presence`. Measured across them, the Google review line ("44x 5.0* on GMB") appears in **15 of 17** and a competitor set in **15 of 17** — the two most consistently present things the system could not produce.
+
+**Built:** `server/src/review/places.ts` — `PlacesProvider`, `GooglePlacesProvider` (Text Search → Place Details → Nearby Search), `NoPlacesProvider`, `practiceKeyword()` and `researchPractice()`. Wired into `collectReview`: reputation signals join the signal set, and the nearby practices seed `review_competitors` so Competition populates itself. New signals `reputation.google_review_count`, `reputation.google_rating`, `reputation.competitor_review_median`; `varsFromSignals` now fills `{{count}}` and `{{rating}}`.
+
+**Evidence:** new `places.test.ts` **6/6** with no database (0.4s) — rating and review count read off the listing with provenance naming the search; nearby practices returned with the origin dropped (Google includes it); median computed; ZERO_RESULTS says so rather than inventing; **REQUEST_DENIED surfaces the key error** instead of silently producing an empty Reputation section; no key produces nothing at all. Full suite **203 → 211**, typecheck green.
+
+**Files:** `server/src/review/places.ts` (new), `server/test/places.test.ts` (new) · `server/src/review/store.ts`, `server/src/review/signals.ts`, `server/src/review/engine.ts`, `server/.env.local`, `BLOCKERS.md`, `MASTER-BUILD-PLAN.md`.
+
+**Decisions:** (1) **Places, not scraping.** Reading Google's results page would breach its terms and produce a report 20-80 could not defend. It is the paid API or it is nothing; there is no third option worth shipping. (2) **A bad key must be loud.** Any status other than OK or ZERO_RESULTS throws — an empty Reputation section from a disabled API looks identical to a practice with no reviews, and that is the kind of silence that ships. (3) The trade searched is inferred from the practice name: the bank's copy is dental but the real reports cover chiropractic and dermatology, and a chiropractor's competitors are not dentists. (4) Discovered competitors seed **only when the reviewer has entered none**, the same rule the findings follow — a re-collect must not duplicate or overwrite someone's own research. (5) The count signal is pushed into the in-memory set as well as the table, or `comp.intro`/`comp.row` would not fire until the *next* collect. (6) `NoPlacesProvider` returns nothing rather than a plausible rating: a fabricated "4.7 stars from 23 reviews" about a real practice, or a competitor that does not exist, would print on 20-80 letterhead.
+
+---
+
 ## §13.2 step 1.5b — Exhibit picker — 2026-08-04
 
 **Built:** `attachExhibit()` and `exhibitFile()` in `store.ts`, `PATCH /api/reviews/exhibits/:id` and `GET /api/reviews/exhibits/:id/image`, and an Evidence images panel in the review workspace — thumbnail, label, and a "Prints beside" picker listing only findings that are actually shipping.

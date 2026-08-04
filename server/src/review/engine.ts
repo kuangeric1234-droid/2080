@@ -240,6 +240,13 @@ export function varsFromSignals(signals: SignalMap, target: string): Record<stri
   const igPosts = num('social.instagram.posts_30d')
   if (igPosts !== undefined) v.posts = igPosts
 
+  /* rep.reviews.few / rep.reviews.good_diversify print "{{count}}x {{rating}}*"
+     — the line 15 of 17 real reports carry. Google Places supplies both. */
+  const revCount = num('reputation.google_review_count')
+  if (revCount !== undefined) v.count = revCount
+  const revRating = num('reputation.google_rating')
+  if (revRating !== undefined) v.rating = revRating
+
   const email = str('site.contact.email')
   if (email && signals.get('site.contact.email_domain_public')?.value === true) {
     v.public_email = email

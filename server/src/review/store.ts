@@ -5,6 +5,7 @@ import pathMod from 'node:path'
 import { collectRenderLayer, defaultExhibitDir } from './render.ts'
 import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from './social.ts'
 import { collectCompetitorFacts } from './competitors.ts'
+import { defaultPlacesProvider, practiceKeyword, researchPractice, type PlacesProvider } from './places.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
 import { loadBank, render, type Snippet } from './bank.ts'
 
@@ -115,7 +116,10 @@ export async function collectReview(
   db: pg.Client | pg.Pool,
   workspaceId: string,
   reviewId: string,
-  opts: { fetchImpl?: typeof fetch; networkProbes?: boolean; socialProvider?: SocialProvider } = {},
+  opts: {
+    fetchImpl?: typeof fetch; networkProbes?: boolean
+    socialProvider?: SocialProvider; placesProvider?: PlacesProvider
+  } = {},
 ) {
   const { rows } = await db.query(
     `SELECT id, domain FROM reviews WHERE id = $1 AND workspace_id = $2`, [reviewId, workspaceId],
@@ -169,9 +173,25 @@ export async function collectReview(
     ])
   }
 
+  /* Google research (§13.2 1.14): find the practice the way a person would,
+     read its rating and review count, then ask Google what else of the same
+     trade sits within 5km — which is what a competitor set is. Nothing here is
+     scraped; it is the Places API or it is nothing. */
+  const { rows: meta } = await db.query(
+    `SELECT practice_name FROM reviews WHERE id = $1`, [reviewId])
+  let research: Awaited<ReturnType<typeof researchPractice>> =
+    { practice: null, competitors: [], signals: [], errors: [] }
+  if (opts.networkProbes !== false) {
+    research = await researchPractice(opts.placesProvider ?? defaultPlacesProvider(), {
+      practiceName: (meta[0]?.practice_name as string | null) ?? null,
+      domain,
+      keyword: practiceKeyword((meta[0]?.practice_name as string | null) ?? null, domain),
+    })
+  }
+
   /* Render after fetch: toMap() is last-wins, so where both layers measure the
      same key the browser's answer is the one that survives. */
-  const allSignals = [...result.signals, ...renderResult.signals, ...socialResult.signals]
+  const allSignals = [...result.signals, ...renderResult.signals, ...socialResult.signals, ...research.signals]
 
   for (const s of allSignals) {
     await db.query(
@@ -192,6 +212,37 @@ export async function collectReview(
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
       [id('exh'), workspaceId, reviewId, ex.kind, ex.label, ex.path, ex.width, ex.height, i],
     )
+  }
+
+  /* Competitors Google found. Only ever seeded when the reviewer has entered
+     none — a re-collect must not delete or duplicate someone's own research,
+     the same rule the findings follow. */
+  if (research.competitors.length > 0) {
+    const { rows: existing } = await db.query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM review_competitors WHERE review_id = $1`, [reviewId])
+    if (Number(existing[0].n) === 0) {
+      for (const [i, c] of research.competitors.entries()) {
+        await db.query(
+          `INSERT INTO review_competitors
+             (id, workspace_id, review_id, name, domain, facts, position)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
+          [id('cmp'), workspaceId, reviewId, c.name,
+            c.website ? new URL(c.website).host.replace(/^www\./, '') : null,
+            JSON.stringify({
+              review_count: c.reviewCount ?? undefined,
+              review_rating: c.rating ?? undefined,
+            }),
+            i],
+        )
+      }
+      await refreshCompetitorCount(db, workspaceId, reviewId)
+      /* the count signal must be in the map the findings pass reads, or
+         comp.intro/comp.row will not fire until the next collect */
+      allSignals.push({
+        key: 'manual.competitors.count', value: research.competitors.length, source: 'provider',
+        provenance: `${research.competitors.length} nearby practices found by Google Places`,
+      })
+    }
   }
 
   const signals = signalsToMap(allSignals)
@@ -265,7 +316,7 @@ export async function collectReview(
     sitemap: result.sitemap.length,
     exhibits: renderResult.exhibits.length,
     findings: candidates.length,
-    errors: [...result.errors, ...renderResult.errors],
+    errors: [...result.errors, ...renderResult.errors, ...socialResult.errors, ...research.errors],
     scores,
   }
 }
