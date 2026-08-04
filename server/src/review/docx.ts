@@ -9,7 +9,7 @@ import type pg from 'pg'
 import { getReview } from './store.ts'
 import { defaultExhibitDir } from './render.ts'
 import { renderCompetitorRow } from './competitors.ts'
-import { loadBank } from './bank.ts'
+import { loadBank, type Severity } from './bank.ts'
 
 /* The deliverable. Layout, fonts and colours are lifted from
    new/1. Online Presence Review/_Online Presence Review Template.docx so the
@@ -82,12 +82,46 @@ function body(text: string, opts: { italics?: boolean; color?: string; size?: nu
   })
 }
 
-function bullet(text: string) {
+/* The template's own legend, read out of its runs: every finding is coloured by
+   how alarmed the reader should be, and the legend is printed so the colours
+   mean something rather than being decoration. */
+const SEVERITY_INK: Record<Severity, string> = {
+  positive: '00FF00',
+  moderate: 'FF9900',
+  critical: 'FF0000',
+}
+const SEVERITY_LABEL: Record<Severity, string> = {
+  positive: 'Positive',
+  moderate: 'Negative (Moderate)',
+  critical: 'Negative (Critical)',
+}
+
+function bullet(text: string, severity?: Severity) {
   return new Paragraph({
     bullet: { level: 0 },
     spacing: { after: 120, line: 276 },
-    children: [new TextRun({ text, font: BODY_FONT, size: SZ.body })],
+    children: [new TextRun({
+      text, font: BODY_FONT, size: SZ.body,
+      color: severity ? SEVERITY_INK[severity] : undefined,
+    })],
   })
+}
+
+/** Prints between Recommendations and the first section, as the template does. */
+function legend(): Paragraph[] {
+  const out = [new Paragraph({
+    spacing: { before: 240, after: 60 },
+    children: [new TextRun({ text: 'Legend:', font: HEAD_FONT, bold: true, size: SZ.body })],
+  })]
+  for (const sev of ['positive', 'moderate', 'critical'] as Severity[]) {
+    out.push(new Paragraph({
+      spacing: { after: 40 },
+      children: [new TextRun({
+        text: SEVERITY_LABEL[sev], font: BODY_FONT, size: SZ.body, color: SEVERITY_INK[sev],
+      })],
+    }))
+  }
+  return out
 }
 
 function heading(text: string, level: 1 | 2) {
@@ -361,7 +395,7 @@ export async function exportReviewDocx(
     const assembled = cat.key === 'competition' ? competitorBlock() : []
     sections.push(...assembled)
     for (const f of ordered) {
-      sections.push(bullet(textOf(f)))
+      sections.push(bullet(textOf(f), bank.byId.get(f.snippet_id as string)?.severity))
       for (const ex of byFinding.get(f.id as string) ?? []) sections.push(...exhibit(ex, exhibitDir))
     }
     if (ordered.length === 0 && assembled.length === 0) {
@@ -401,6 +435,7 @@ export async function exportReviewDocx(
         summary,
         new Paragraph({ text: '', spacing: { after: 120 } }),
         ...(recommendations.length ? [heading('Recommendations:', 2), ...recommendations] : []),
+        ...legend(),
         ...sections,
         ...appendix,
       ],

@@ -419,6 +419,53 @@ describe('exporting the review as .docx', () => {
     }
   })
 
+  /* §13.2 step 1.17. Every real report colours its findings and prints a legend
+     saying what the colours mean — Oh Dental's is Positive 00FF00, Negative
+     (Moderate) FF9900, Negative (Critical) FF0000. */
+  it('prints the legend and colours each finding by severity', async () => {
+    const { execFileSync } = await import('node:child_process')
+    const { writeFileSync, readFileSync } = await import('node:fs')
+    const out = await exportReviewDocx(db, WORKSPACE_ID, reviewId)
+    const dir = mkdtempSync(path.join(tmpdir(), 'lg-'))
+    const file = path.join(dir, 'out.zip')
+    writeFileSync(file, out.buffer)
+    execFileSync('powershell', ['-NoProfile', '-Command',
+      `Expand-Archive -LiteralPath '${file}' -DestinationPath '${dir}\\x' -Force`])
+    const xml = readFileSync(path.join(dir, 'x', 'word', 'document.xml'), 'utf8')
+    rmSync(dir, { recursive: true, force: true })
+
+    const text = xml.replace(/<\/w:p>/g, '\n').replace(/<[^>]+>/g, '')
+    expect(text).toContain('Legend:')
+    expect(text).toContain('Negative (Moderate)')
+    expect(text).toContain('Negative (Critical)')
+
+    // the template's exact inks, not an approximation
+    expect(xml).toContain('w:val="00FF00"')
+    expect(xml).toContain('w:val="FF9900"')
+
+    /* A shipped positive finding must actually carry the positive ink, not just
+       appear somewhere in the legend. */
+    const bank = loadBank()
+    const full = (await getReview(db, WORKSPACE_ID, reviewId))!
+    const shipped = full.findings.filter((f) => f.state === 'accepted' || f.state === 'edited')
+    /* A named one, not "the first positive": the competition verdicts are also
+       positive and are assembled rather than bulleted, so picking by sort order
+       tests a different code path depending on the fixture. */
+    const green = shipped.find((f) => f.snippet_id === 'tech.https.absent'
+      || f.snippet_id === 'tech.https.present')!
+    expect(green, 'no https finding shipped').toBeTruthy()
+    expect(bank.byId.get(green.snippet_id)?.severity).toBeTruthy()
+    expect(green, 'no positive finding shipped').toBeTruthy()
+    /* filter, not find: the Recommendations opening quotes the same wording and
+       is deliberately uncoloured, so the first match is the wrong paragraph. */
+    const paras = xml.split('</w:p>').filter((p) => p.includes(green.rendered_text.slice(0, 40)))
+    expect(paras.length, 'positive finding not found in the document').toBeGreaterThan(0)
+    const INK = { positive: '00FF00', moderate: 'FF9900', critical: 'FF0000' } as const
+    const ink = INK[bank.byId.get(green.snippet_id)!.severity]
+    expect(paras.some((p) => p.includes(`w:val="${ink}"`)),
+      `the ${green.snippet_id} bullet carries no severity ink`).toBe(true)
+  })
+
   it('puts issues before strengths inside a category', async () => {
     const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
     const tech = text.slice(text.indexOf('Website (Technical):'))

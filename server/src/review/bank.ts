@@ -14,6 +14,11 @@ import path from 'node:path'
 const BANK_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../../review-bank')
 
 export type Variant = 'positive' | 'negative' | 'neutral'
+/* How alarmed the reader should be. The template prints a legend for exactly
+   these three and colours every finding to match, which is not the same thing
+   as `weight` (scoring impact): biz.website.dated is weight 3 but moderate,
+   biz.conditions_content.missing is weight 2 but critical. */
+export type Severity = 'positive' | 'moderate' | 'critical'
 export type WhenKind = 'manual' | 'judgement' | 'generated' | 'always'
 
 export interface Condition {
@@ -40,6 +45,7 @@ export interface Snippet {
   category: string
   dimension: string
   variant: Variant
+  severity: Severity
   weight: number
   /* Permission to ship this paragraph into a client's report with no human
      having read it (§13.2 step 1.8). True only for pure measurements of the

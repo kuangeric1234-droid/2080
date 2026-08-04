@@ -4,6 +4,22 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.17 — The severity legend — 2026-08-04
+
+**Found by reading Oh Dental.** Every real report prints a Legend between Recommendations and the first section — Positive, Negative (Moderate), Negative (Critical) — and colours every finding paragraph to match. The exporter printed everything in black.
+
+**Built:** `severity` on all 71 snippets, `Severity` on the type, `SEVERITY_INK`/`SEVERITY_LABEL` and a `legend()` block in the exporter, and `bullet()` taking the severity so each finding carries its own ink. The template's exact hex: `00FF00`, `FF9900`, `FF0000`.
+
+**Seeded from evidence, not judgement.** Every coloured paragraph across all 17 reports was matched back to its snippet and the severity taken by majority vote — 18 snippets observed directly. The rest default to moderate when negative: **critical is earned, not assumed.** Final split: 5 critical, 49 moderate, 17 positive.
+
+**Evidence:** `docx.test.ts` **16 → 17** — the legend text appears, the template's exact inks are present, and a named finding's own bullet is asserted to carry its own severity ink (not merely that the colour exists somewhere in the file, which the legend alone would satisfy). Full suite **220 → 221**.
+
+**Files:** `review-bank/v1/snippets.json`, `server/src/review/bank.ts`, `server/src/review/docx.ts`, `server/test/docx.test.ts`, `MASTER-BUILD-PLAN.md`.
+
+**Decisions:** (1) **`severity` is not `weight`.** `biz.website.dated` is weight 3 but prints moderate; `biz.conditions_content.missing` is weight 2 but prints critical. Weight is scoring impact, severity is how alarmed the reader should be, and conflating them would have mis-coloured a third of the report. (2) Mined rather than assigned: five of the six criticals I would have guessed were right, but `use.cta.not_tappable` reads as a nit and the reports consistently mark it critical — that is Wally's judgement, not mine to invent. (3) Two of my own test bugs, both worth noting because they were nearly invisible: `.find()` matched the Recommendations opening quoting a finding rather than the coloured bullet, and the ink ternary only mapped positive/critical so a moderate finding failed against the wrong expectation. Neither was a product fault.
+
+---
+
 ## §13.2 step 1.15 — One bank, every trade — 2026-08-04
 
 **Measured first, then built.** Clustering the 654 paragraphs across the 17 real reports gave 413 distinct clusters, of which **39 recur in three or more reports** — the reusable house copy. Matching those against the bank: **35 already exist**. The four apparent misses were wording drift, not gaps (`/wp-login` vs `/wp-admin`, "Google Business Profile" vs "GMB"). **This corrects an earlier claim in this log's session that the bank covered only 28% of real reports** — that number counted 357 one-off bespoke sentences as missing house copy, which they are not.
