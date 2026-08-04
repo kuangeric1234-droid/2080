@@ -14,7 +14,7 @@ import { runAudit } from './seo/audit.ts'
 import { runCheck } from './sitehealth/probe.ts'
 import { receiveIntake, startManualReview, unwrapJotformBody } from './review/intake.ts'
 import { exportReviewDocx } from './review/docx.ts'
-import { addManualFinding, decideFinding, getReview, listReviews, manualBank, setScores } from './review/store.ts'
+import { addCompetitor, addManualFinding, decideFinding, getReview, listCompetitors, listReviews, manualBank, removeCompetitor, setScores, updateCompetitor } from './review/store.ts'
 import { enqueue, getJob, listJobs } from './jobs/queue.ts'
 import { JOB_KINDS, collectDedupeKey } from './jobs/handlers.ts'
 import { WORKSPACE_ID } from './db/seed.ts'
@@ -535,6 +535,45 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
     try {
       return c.json(await addManualFinding(db, c.get('principal').workspaceId, c.req.param('id'),
         body.snippetId, body.vars ?? {}, c.get('principal').handle))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
+    }
+  })
+
+  /* Competitors (§13.2 1.12). The Competition section could never render
+     before this: nothing wrote review_competitors and nothing wrote the
+     manual.competitors.count signal that comp.intro/comp.row trigger on. */
+  app.get('/api/reviews/:id/competitors', async (c) =>
+    c.json(await listCompetitors(db, c.get('principal').workspaceId, c.req.param('id'))))
+
+  app.post('/api/reviews/:id/competitors', async (c) => {
+    const body = await c.req.json<{
+      name: string; domain?: string | null
+      facts?: Record<string, unknown>; threat?: number | null
+    }>()
+    try {
+      return c.json(await addCompetitor(
+        db, c.get('principal').workspaceId, c.req.param('id'), body))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
+    }
+  })
+
+  app.patch('/api/reviews/competitors/:id', async (c) => {
+    const body = await c.req.json<{
+      name?: string; domain?: string | null
+      facts?: Record<string, unknown>; threat?: number | null
+    }>()
+    try {
+      return c.json(await updateCompetitor(db, c.get('principal').workspaceId, c.req.param('id'), body))
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
+    }
+  })
+
+  app.delete('/api/reviews/competitors/:id', async (c) => {
+    try {
+      return c.json(await removeCompetitor(db, c.get('principal').workspaceId, c.req.param('id')))
     } catch (err) {
       return c.json({ error: (err as Error).message }, 422)
     }

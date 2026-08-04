@@ -9,7 +9,7 @@ import { freePort } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed, WORKSPACE_ID } from '../src/db/seed.ts'
 import { receiveIntake } from '../src/review/intake.ts'
-import { collectReview, decideFinding, getReview, setScores } from '../src/review/store.ts'
+import { addCompetitor, collectReview, decideFinding, getReview, removeCompetitor, setScores } from '../src/review/store.ts'
 import { exportReviewDocx } from '../src/review/docx.ts'
 import { loadBank } from '../src/review/bank.ts'
 import { summariseReview } from '../src/review/summarise.ts'
@@ -282,6 +282,30 @@ describe('exporting the review as .docx', () => {
     const text = await documentText(out.buffer)
     expect(text).toContain('Homepage as it loads at 1440×900') // the caption
     await db.query(`DELETE FROM review_exhibits WHERE id = 'exh_t1'`)
+  })
+
+  /* §13.2 step 1.12 DoD. Nothing had ever written to review_competitors and
+     there was no route to, so this section of the template could never render
+     at all — not a formatting bug, an absent feature. */
+  it('renders a competitor added by hand via the comp.row template', async () => {
+    const added = await addCompetitor(db, WORKSPACE_ID, reviewId, {
+      name: 'Chapel Gate Dental',
+      facts: { serp_position: 1, map_position: 1, https: false, booking: true, days_open: 6 },
+      threat: 7,
+    })
+    try {
+      const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
+      expect(text).toContain('Competition:')
+      expect(text).toContain('The primary competitors in the local area are:')
+      expect(text).toContain('Chapel Gate Dental')
+      expect(text).toContain('#1 in Google search')
+      expect(text).toContain('not secure')
+      expect(text).toContain('open 6 days')
+      expect(text).toContain('Threat: 7/10.')
+      expect(text).not.toMatch(/\{\{/)
+    } finally {
+      await removeCompetitor(db, WORKSPACE_ID, added.competitor.id)
+    }
   })
 
   it('puts issues before strengths inside a category', async () => {

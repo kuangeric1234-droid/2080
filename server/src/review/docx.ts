@@ -8,6 +8,7 @@ import {
 import type pg from 'pg'
 import { getReview } from './store.ts'
 import { defaultExhibitDir } from './render.ts'
+import { renderCompetitorRow } from './competitors.ts'
 import { loadBank } from './bank.ts'
 
 /* The deliverable. Layout, fonts and colours are lifted from
@@ -317,12 +318,13 @@ export async function exportReviewDocx(
     const intro = bank.byId.get('comp.intro')
     competitorBlock.push(heading('Competition:', 2))
     if (intro) competitorBlock.push(body(intro.text))
+    /* The line is assembled from the bank's own comp.row template (1.12), not
+       from an ad-hoc join here, so the wording and the order of the fragments
+       stay the template's — "#1 in Google search, not secure, online booking,
+       open 6 days" — rather than this file's. */
+    const row = bank.byId.get('comp.row')
     for (const comp of competitors) {
-      const facts = Object.values((comp.facts ?? {}) as Record<string, string>).filter(Boolean)
-      competitorBlock.push(bullet(
-        `${comp.name}${facts.length ? ` - ${facts.join(', ')}` : ''}` +
-        (comp.threat != null ? ` - Threat: ${comp.threat}/10.` : ''),
-      ))
+      competitorBlock.push(bullet(renderCompetitorRow(row ?? {}, comp)))
     }
   }
 

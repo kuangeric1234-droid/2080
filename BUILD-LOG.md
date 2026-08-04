@@ -4,6 +4,20 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.12a — Competitors, the manual path — 2026-08-04
+
+**Built:** `server/src/review/competitors.ts` (row rendering, `collectCompetitorFacts`, `SerpProvider`/`NoSerpProvider`), competitor persistence in `store.ts` (`add`/`update`/`remove`/`list`), four API routes, and `docx.ts` now assembling each line from the bank's `comp.row` `row_template` rather than joining fields itself.
+
+**Evidence:** new `competitors.test.ts` **11/11** with no database (0.5s); `docx.test.ts` **11 → 12** — a competitor added by hand produces the Competition heading, comp.intro's verbatim line, `#1 in Google search`, `not secure`, `open 6 days` and `Threat: 7/10.` with no unfilled variable anywhere. Full suite **189 → 201**, typecheck green.
+
+**Files:** `server/src/review/competitors.ts` (new), `server/test/competitors.test.ts` (new) · `server/src/review/store.ts`, `server/src/review/docx.ts`, `server/src/api.ts`, `server/test/docx.test.ts`, `BLOCKERS.md`, `MASTER-BUILD-PLAN.md`.
+
+**Decisions:** (1) **This section had never rendered.** Nothing wrote `review_competitors`, and nothing wrote the `manual.competitors.count` signal that `comp.intro` and `comp.row` both trigger on — two absences, either of which alone would have kept it invisible. (2) The line is assembled from `row_template` so the wording and fragment order stay the template's; the exporter previously joined fact values in map order, which is not the same document. (3) **A real bug, caught by a test that looked wrong:** with no facts at all, `{{https?secure:not secure}}` printed "not secure" about a competitor nobody had checked — a claim about a named third party with nothing behind it. Not-measured now drops; only a measured false prints the negative word. (4) `NoSerpProvider` returns nothing rather than a plausible rank: `#1 in Google search` beside a real competitor's name is the most defamatory-adjacent thing this system could fabricate. (5) BLOCKERS.md notes this **reopens** the 2026-08-03 free-sources-only decision rather than overriding it. (6) The reviewer's own entry always wins over anything collected from the domain.
+
+**Not done:** the workspace UI (1.12b). The routes exist and the export renders, but Wally has no screen to add a competitor on yet — so 1.12 is deliberately split rather than ticked whole.
+
+---
+
 ## §13.2 step 1.11 — Social metrics behind a provider — 2026-08-04
 
 **Built:** `server/src/review/social.ts` — `SocialProvider` interface, `MetaGraphProvider` (real, Graph API), `MockSocialProvider` (PROVISIONAL, deterministic from the URL so a re-collect never moves the numbers), and `collectSocialSignals()`. Six new signals under a new `provider` signal source (migration `0011_social_provider.sql`) and a new `provider` catalog layer. `varsFromSignals` now fills `{{fans}}`, `{{followers}}` and `{{posts}}` — variables the bank has carried unfilled since 1.1 because nothing measured them.

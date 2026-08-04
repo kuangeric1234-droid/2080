@@ -3,6 +3,7 @@ import { monotonicFactory } from 'ulid'
 import { collectFetchLayer } from './collect.ts'
 import { collectRenderLayer } from './render.ts'
 import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from './social.ts'
+import { collectCompetitorFacts } from './competitors.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
 import { loadBank, render, type Snippet } from './bank.ts'
 
@@ -411,5 +412,154 @@ export async function setScores(
      VALUES ($1,$2,'human',$3,'review.scored','review',$4,$5)`,
     [id('aud'), workspaceId, actor, reviewId, `overall ${overall ?? '—'}`],
   )
+  return { ok: true }
+}
+
+/* ── competitors (§13.2 step 1.12) ──────────────────────────────────────────
+   comp.intro and comp.row both trigger on `manual.competitors.count > 0`, so
+   adding a competitor has to write that signal or the Competition section stays
+   invisible no matter how many rows are in the table. That is exactly why this
+   section has never rendered: nothing wrote the row, and nothing wrote the
+   count. */
+
+async function refreshCompetitorCount(
+  db: pg.Client | pg.Pool, workspaceId: string, reviewId: string,
+): Promise<number> {
+  const { rows } = await db.query<{ n: string }>(
+    `SELECT count(*)::text AS n FROM review_competitors WHERE review_id = $1`, [reviewId])
+  const n = Number(rows[0].n)
+  const { rows: r } = await db.query(`SELECT domain FROM reviews WHERE id = $1`, [reviewId])
+  await db.query(
+    `INSERT INTO review_signals (id, workspace_id, review_id, target, key, value, source, provenance)
+     VALUES ($1,$2,$3,$4,'manual.competitors.count',$5,'manual',$6)`,
+    [id('sig'), workspaceId, reviewId, r[0]?.domain ?? '', JSON.stringify(n),
+      `${n} competitor${n === 1 ? '' : 's'} entered by the reviewer`],
+  )
+  return n
+}
+
+/** Re-run the findings pass so comp.intro/comp.row appear or disappear. */
+async function refreshFindingsFor(
+  db: pg.Client | pg.Pool, workspaceId: string, reviewId: string,
+): Promise<void> {
+  const data = await getReview(db, workspaceId, reviewId)
+  if (!data) return
+  const signals = signalsToMap(data.signals as never)
+  const vars = varsFromSignals(signals, String((data.review as Record<string, unknown>).domain ?? ''))
+  const { rows: confirmed } = await db.query(
+    `SELECT snippet_id FROM review_findings WHERE review_id = $1 AND state IN ('accepted','edited')`,
+    [reviewId])
+  const candidates = selectFindings(signals, {
+    vars, manualAccepted: confirmed.map((r) => r.snippet_id as string),
+  })
+  for (const [i, c] of candidates.entries()) {
+    await db.query(
+      `INSERT INTO review_findings
+         (id, workspace_id, review_id, snippet_id, category, dimension, variant, weight,
+          rendered_text, vars, triggered_by, ahpra_blocking, position, state, decided_by, decided_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,
+               CASE WHEN $15::text IS NULL THEN NULL ELSE now() END)
+       ON CONFLICT (review_id, snippet_id) DO UPDATE SET
+         rendered_text = CASE WHEN review_findings.state = 'candidate'
+                              THEN EXCLUDED.rendered_text ELSE review_findings.rendered_text END,
+         triggered_by  = EXCLUDED.triggered_by`,
+      [id('fnd'), workspaceId, reviewId, c.snippet.id, c.snippet.category, c.snippet.dimension,
+        c.snippet.variant, c.snippet.weight, c.renderedText, JSON.stringify(c.vars),
+        JSON.stringify(c.triggeredBy), c.snippet.ahpra_blocking ?? false, i,
+        autoAccepts(c) ? 'accepted' : 'candidate', autoAccepts(c) ? 'auto' : null],
+    )
+  }
+}
+
+export async function listCompetitors(
+  db: pg.Client | pg.Pool, workspaceId: string, reviewId: string,
+) {
+  const { rows } = await db.query(
+    `SELECT c.id, c.name, c.domain, c.facts, c.threat, c.position
+       FROM review_competitors c JOIN reviews r ON r.id = c.review_id
+      WHERE c.review_id = $1 AND r.workspace_id = $2 ORDER BY c.position`,
+    [reviewId, workspaceId])
+  return rows
+}
+
+/**
+ * Add a competitor. Naming a domain earns the technical facts automatically —
+ * comp.row's own note says so — while the SERP, review and social fields stay
+ * the reviewer's to type until somebody buys a provider.
+ */
+export async function addCompetitor(
+  db: pg.Client | pg.Pool,
+  workspaceId: string,
+  reviewId: string,
+  input: { name: string; domain?: string | null; facts?: Record<string, unknown>; threat?: number | null },
+  opts: { fetchImpl?: typeof fetch; networkProbes?: boolean } = {},
+) {
+  if (!input.name?.trim()) throw new Error('a competitor needs a name')
+  if (input.threat != null && (input.threat < 1 || input.threat > 10)) {
+    throw new Error('threat must be between 1 and 10')
+  }
+  const { rows: own } = await db.query(
+    `SELECT id FROM reviews WHERE id = $1 AND workspace_id = $2`, [reviewId, workspaceId])
+  if (own.length === 0) throw new Error('review not found')
+
+  let facts: Record<string, unknown> = { ...(input.facts ?? {}) }
+  const errors: string[] = []
+  if (input.domain) {
+    try {
+      const auto = await collectCompetitorFacts(input.domain, opts)
+      // the reviewer's own entry wins over anything measured
+      facts = { ...auto.facts, ...facts }
+      errors.push(...auto.errors)
+    } catch (err) {
+      errors.push(`could not collect ${input.domain}: ${(err as Error).message}`)
+    }
+  }
+
+  const { rows: pos } = await db.query<{ n: string }>(
+    `SELECT COALESCE(MAX(position) + 1, 0)::text AS n FROM review_competitors WHERE review_id = $1`,
+    [reviewId])
+  const { rows } = await db.query(
+    `INSERT INTO review_competitors (id, workspace_id, review_id, name, domain, facts, threat, position)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, name, domain, facts, threat, position`,
+    [id('cmp'), workspaceId, reviewId, input.name.trim(), input.domain ?? null,
+      JSON.stringify(facts), input.threat ?? null, Number(pos[0].n)])
+
+  await refreshCompetitorCount(db, workspaceId, reviewId)
+  await refreshFindingsFor(db, workspaceId, reviewId)
+  return { competitor: rows[0], errors }
+}
+
+export async function updateCompetitor(
+  db: pg.Client | pg.Pool, workspaceId: string, competitorId: string,
+  patch: { name?: string; domain?: string | null; facts?: Record<string, unknown>; threat?: number | null },
+) {
+  if (patch.threat != null && (patch.threat < 1 || patch.threat > 10)) {
+    throw new Error('threat must be between 1 and 10')
+  }
+  const { rows } = await db.query(
+    `UPDATE review_competitors SET
+       name   = COALESCE($3, name),
+       domain = COALESCE($4, domain),
+       facts  = COALESCE($5::jsonb, facts),
+       threat = COALESCE($6, threat)
+     WHERE id = $1 AND workspace_id = $2
+     RETURNING id, review_id, name, domain, facts, threat, position`,
+    [competitorId, workspaceId, patch.name ?? null, patch.domain ?? null,
+      patch.facts ? JSON.stringify(patch.facts) : null, patch.threat ?? null])
+  if (rows.length === 0) throw new Error('competitor not found')
+  await refreshFindingsFor(db, workspaceId, rows[0].review_id as string)
+  return rows[0]
+}
+
+export async function removeCompetitor(
+  db: pg.Client | pg.Pool, workspaceId: string, competitorId: string,
+) {
+  const { rows } = await db.query(
+    `DELETE FROM review_competitors WHERE id = $1 AND workspace_id = $2 RETURNING review_id`,
+    [competitorId, workspaceId])
+  if (rows.length === 0) throw new Error('competitor not found')
+  const reviewId = rows[0].review_id as string
+  await refreshCompetitorCount(db, workspaceId, reviewId)
+  await refreshFindingsFor(db, workspaceId, reviewId)
   return { ok: true }
 }
