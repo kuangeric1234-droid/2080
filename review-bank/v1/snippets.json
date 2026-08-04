@@ -571,6 +571,7 @@
       "weight": 2,
       "when": "manual",
       "manual_prompt": "Are there negative reviews, and has the practice replied to them?",
+      "conflicts": ["rep.reviews.none"],
       "links": ["https://www.youtube.com/watch?v=X8JR9nVPNLw"],
       "text": "The practice has a few negative reviews which we think is important to reply to, the professional management of negative reviews can reflect positively on the practice. It is also perceived as more genuine than just having only positive reviews. Watch a detailed explanation via the link below https://www.youtube.com/watch?v=X8JR9nVPNLw"
     },
@@ -581,6 +582,7 @@
       "variant": "negative",
       "weight": 3,
       "when": "manual",
+      "conflicts": ["rep.reviews.none"],
       "links": ["https://www.accc.gov.au/business/advertising-promoting-your-business/managing-online-reviews"],
       "text": "Though you have many positive reviews on Google+ but I can tell some of them are fake. This is technically illegal as stated by ACCC (https://www.accc.gov.au/business/advertising-promoting-your-business/managing-online-reviews)"
     },
@@ -591,7 +593,7 @@
       "variant": "negative",
       "weight": 3,
       "when": "manual",
-      "conflicts": ["rep.reviews.few", "rep.reviews.good_diversify"],
+      "conflicts": ["rep.reviews.few", "rep.reviews.good_diversify", "rep.reviews.negative_unanswered", "rep.reviews.suspected_fake"],
       "links": ["https://www.youtube.com/watch?v=dTtLodrOKUY"],
       "text": "You currently don’t have any online reputation whatsoever. This isn’t good because the potential patients won’t be able to judge whether you’re any good from other people. Stats show 88% of consumers would trust online reviews just as much as their friends/family’s recommendation. The purpose is to reduce the risk in engaging your practice and manage public perception of you being fake - see https://www.youtube.com/watch?v=dTtLodrOKUY"
     },
