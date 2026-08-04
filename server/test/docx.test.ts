@@ -12,6 +12,9 @@ import { receiveIntake } from '../src/review/intake.ts'
 import { collectReview, decideFinding, getReview, setScores } from '../src/review/store.ts'
 import { exportReviewDocx } from '../src/review/docx.ts'
 import { loadBank } from '../src/review/bank.ts'
+import { summariseReview } from '../src/review/summarise.ts'
+import { MockModelClient } from '../src/skills/model.ts'
+import { mockReviewSummary } from '../src/inbox/mockResponders.ts'
 import { NEGLECTED, fixtureFetch } from './fixtures/practice-site.ts'
 
 let PORT: number
@@ -130,6 +133,27 @@ describe('exporting the review as .docx', () => {
       if (probe.length < 30) continue // too short to attribute safely
       expect(text, `${f.snippet_id} reached the client unreviewed`).not.toContain(probe)
     }
+  })
+
+  /* §13.2 step 1.10 DoD: the unattended pipeline ends with a written opening,
+     and the document opens on it rather than on its closing sentence. */
+  it('writes the Recommendations opening from the accepted findings', async () => {
+    const model = new MockModelClient((req) =>
+      mockReviewSummary(req.input as Parameters<typeof mockReviewSummary>[0]))
+    const res = await summariseReview(db, model, WORKSPACE_ID, reviewId)
+
+    expect(res, 'nothing accepted, so nothing to summarise').not.toBeNull()
+    expect(res!.unsourced, `summariser invented: ${res!.unsourced.join(', ')}`).toEqual([])
+    expect(res!.summary_text.length).toBeGreaterThan(30)
+
+    const { rows } = await db.query(
+      `SELECT summary_text, overall_comment FROM reviews WHERE id = $1`, [reviewId])
+    expect(rows[0].summary_text).toBe(res!.summary_text)
+    expect(rows[0].overall_comment).toBe(res!.overall_comment)
+
+    const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
+    expect(text).toContain('Recommendations:')
+    expect(text).toContain(res!.summary_text)
   })
 
   it('refuses to ship a paragraph with an unfilled variable', async () => {

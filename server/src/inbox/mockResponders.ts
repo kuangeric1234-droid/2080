@@ -142,3 +142,32 @@ export function mockCompletion(input: {
     ].join('\n'),
   }
 }
+
+/* PROVISIONAL (BLOCKERS.md: anthropic-api-key) — the review-summariser stand-in.
+   Deliberately writes with no digits and no domain: the grounding validator is
+   the point of 1.10, and a mock that trips it would make every test about the
+   mock rather than about the skill. */
+export function mockReviewSummary(input: {
+  findings?: { category: string; variant: string; text: string }[]
+}): { summary_text: string; overall_comment: string } {
+  const findings = input.findings ?? []
+  const weak = [...new Set(findings.filter((f) => f.variant === 'negative').map((f) => f.category))]
+  const strong = [...new Set(findings.filter((f) => f.variant === 'positive').map((f) => f.category))]
+  const label = (k: string) => k.replace(/_/g, ' ')
+
+  const parts: string[] = []
+  if (weak.length) {
+    parts.push(`There are a number of areas of improvement with your online presence, particularly around ${weak.map(label).join(', ')}.`)
+  }
+  if (strong.length) {
+    parts.push(`Your ${strong.map(label).join(' and ')} already work in your favour and are worth building on.`)
+  }
+  if (!parts.length) parts.push('Your online presence is broadly in good order.')
+
+  return {
+    summary_text: parts.join(' '),
+    overall_comment: weak.length
+      ? 'Room to improve, with solid foundations already in place.'
+      : 'A solid online presence overall.',
+  }
+}

@@ -4,6 +4,18 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.10 — review-summariser — 2026-08-04
+
+**Built:** `skills/review-summariser/v1` (SKILL.md, skill.json at G1 / top tier / `action: none`, output schema, 10-case provisional golden set) and `server/src/review/summarise.ts`. The skill turns the accepted findings into the Recommendations opening and the Overall comment. `groundingViolations()` then checks the output against the evidence and **refuses** the write if anything is unsourced. The job handler runs it after collection, so the unattended path is now collect → auto-accept → summarise.
+
+**Evidence:** new `summarise.test.ts` **11/11** with no database (2.3s): grounded prose passes, a number that genuinely came from a finding passes, the practice's own domain passes, and an invented measurement, an invented percentage and an invented competitor domain are each caught with every distinct invention reported. `docx.test.ts` **10 → 11**: the summary is written to `reviews`, matches what the skill returned, and appears in the exported document under Recommendations. Full suite **170 → 182**, typecheck green.
+
+**Files:** `skills/review-summariser/v1/*` (new), `server/src/review/summarise.ts` (new), `server/test/summarise.test.ts` (new) · `server/src/jobs/handlers.ts`, `server/src/inbox/mockResponders.ts`, `server/src/skills/model.ts`, `server/test/docx.test.ts`, `BLOCKERS.md`, `MASTER-BUILD-PLAN.md`.
+
+**Decisions:** (1) **Numbers and domains, not prose.** A wrong adjective is a bad sentence; a wrong number is a false statement about someone's business — "loads in 8.4 seconds", "behind 90% of practices", "three competitors outrank you". Those are checkable without a judge, so they are checked now rather than waiting for a set that can catch everything. (2) **Refuse, don't repair.** A summary trimmed of its invented number still came from a run that invented one; the reviewer should see the skill misfired. (3) The summariser runs from the job handler rather than inside `collectReview`, because `summarise.ts` reads through `getReview` and putting the call in `store.ts` would make the two modules import each other. (4) A summary that fails must not fail the collection — the evidence is the expensive part and is already on the table. (5) The mock responder writes with no digits and no domain on purpose: a mock that trips the validator would make every test about the mock. (6) **PROVISIONAL.** The synthetic exam scores grounding only. Whether the paragraph reads like Wally and leads with the right thing is exactly what it cannot score — BLOCKERS.md now asks for 20–30 past reports as {accepted findings} → {what he actually wrote}.
+
+---
+
 ## §13.2 step 1.9 — Auto-accept pass on collect — 2026-08-04
 
 **Built:** `autoAccepts()` in `store.ts` and a widened findings upsert. A collected finding whose snippet is `auto_safe` is written straight to `accepted` with `decided_by='auto'`; everything else stays `candidate`. The upsert now carries `state`/`decided_by`/`decided_at` and guards all three the same way it already guarded `rendered_text` — only a row still sitting at `candidate` may change, so a reviewer's accept, edit or reject survives every later crawl.

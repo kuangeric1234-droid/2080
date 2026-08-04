@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "summary_text": { "type": "string" },
+    "overall_comment": { "type": "string" }
+  },
+  "required": ["summary_text", "overall_comment"],
+  "additionalProperties": false
+}

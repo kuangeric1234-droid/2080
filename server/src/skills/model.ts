@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { mockAck, mockCompletion, mockTriage } from '../inbox/mockResponders.ts'
+import { mockAck, mockCompletion, mockReviewSummary, mockTriage } from '../inbox/mockResponders.ts'
 
 /* Model tiers per MASTER-BUILD-PLAN §3.2: high-volume classification/triage
    on the fast tier, drafting/judgement on the top tier. */
@@ -105,6 +105,9 @@ export function defaultModelClient(): ModelClient {
     }
     if (req.system.startsWith('# ack-writer')) {
       return mockAck(req.input as Parameters<typeof mockAck>[0])
+    }
+    if (req.system.startsWith('# review-summariser')) {
+      return mockReviewSummary(req.input as Parameters<typeof mockReviewSummary>[0])
     }
     if (req.system.startsWith('# completion-writer')) {
       return mockCompletion(req.input as Parameters<typeof mockCompletion>[0])

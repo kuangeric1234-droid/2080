@@ -1,0 +1,9 @@
+{
+  "name": "review-summariser",
+  "version": "v1",
+  "description": "Writes the Recommendations opening and Overall comment of an Online Presence Review from findings a human already accepted. Grounding-validated: a claim with no finding behind it is rejected.",
+  "gate": "G1",
+  "model_tier": "top",
+  "expires_hours": 24,
+  "action": "none"
+}

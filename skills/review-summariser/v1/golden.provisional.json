@@ -1,0 +1,151 @@
+{
+  "PROVISIONAL": true,
+  "why": "Synthetic. Ten hand-written cases standing in for real material. Per BUILD-LOOP.md a skill never goes live on a synthetic exam — review-summariser stays SHADOW until Wally supplies past Online Presence Reviews (the accepted findings and the paragraph he actually wrote). See BLOCKERS.md: review-summariser-golden-set.",
+  "scores_grounding_only": "These cases test the one thing a validator can check without a judge: that no number, percentage or domain appears in the summary that was not in the findings. Voice, usefulness and whether it reads like Wally are exactly what the real set is for.",
+  "cases": [
+    {
+      "id": "g1-all-negative",
+      "note": "A neglected site. The temptation is to quantify how bad it is.",
+      "input": {
+        "practice_name": "Stellar Smiles Dental",
+        "domain": "stellarsmiles.com.au",
+        "overall_score": 2,
+        "category_scores": { "website_technical": 1, "website_usability": 2 },
+        "findings": [
+          { "category": "website_technical", "variant": "negative", "text": "The website is not using the SSL/HTTPS protocol which means it is not secure." },
+          { "category": "website_technical", "variant": "negative", "text": "The website doesn't have Google Analytics installed so there is no visibility of visitor numbers." },
+          { "category": "website_usability", "variant": "negative", "text": "The navigation scrolls away with the page rather than staying visible." }
+        ]
+      },
+      "forbidden_substrings": ["seconds", "%", "faster than", "competitors"]
+    },
+    {
+      "id": "g2-all-positive",
+      "note": "A healthy site. Must not manufacture concern to sound useful.",
+      "input": {
+        "practice_name": "Hearts Dental",
+        "domain": "heartsdental.com.au",
+        "overall_score": 4,
+        "category_scores": { "website_technical": 4 },
+        "findings": [
+          { "category": "website_technical", "variant": "positive", "text": "The website is served over HTTPS with a valid certificate." },
+          { "category": "website_business", "variant": "positive", "text": "You have an online booking which is great as new generation patients expect this kind of feature." }
+        ]
+      },
+      "forbidden_substrings": ["unfortunately", "concern", "problem", "%"]
+    },
+    {
+      "id": "g3-single-finding",
+      "note": "One finding only. Must not pad with invented context.",
+      "input": {
+        "practice_name": "Yarra Hills Dental",
+        "domain": "yarrahills.com.au",
+        "overall_score": 3,
+        "category_scores": {},
+        "findings": [
+          { "category": "website_usability", "variant": "negative", "text": "Body text is too small at 13px, which is hard to read on a phone." }
+        ]
+      },
+      "forbidden_substrings": ["competitors", "Google Ads", "ranking", "%"]
+    },
+    {
+      "id": "g4-mixed",
+      "note": "Both halves present. Should name weakness and strength without inventing a ratio.",
+      "input": {
+        "practice_name": "Trowse Dental",
+        "domain": "trowse.com.au",
+        "overall_score": 3,
+        "category_scores": { "website_business": 4, "visibility_seo": 2 },
+        "findings": [
+          { "category": "website_business", "variant": "positive", "text": "The dental service content is thorough and covers the treatments patients search for." },
+          { "category": "visibility_seo", "variant": "negative", "text": "Images across the site have no alt text, which search engines rely on." }
+        ]
+      },
+      "forbidden_substrings": ["%", "position", "page one"]
+    },
+    {
+      "id": "g5-no-scores",
+      "note": "Nothing scored. Must not invent a rating.",
+      "input": {
+        "practice_name": "Smile Council",
+        "domain": "smilecouncil.com.au",
+        "overall_score": null,
+        "category_scores": {},
+        "findings": [
+          { "category": "website_technical", "variant": "negative", "text": "The site is built on static HTML which will make it hard to maintain." }
+        ]
+      },
+      "forbidden_substrings": ["out of 5", "stars", "score of"]
+    },
+    {
+      "id": "g6-numbers-in-findings",
+      "note": "A number IS present in the findings, so quoting it is legitimate.",
+      "input": {
+        "practice_name": "Gentle Touch Ortho",
+        "domain": "gentletouchortho.com.au",
+        "overall_score": 3,
+        "category_scores": {},
+        "findings": [
+          { "category": "website_usability", "variant": "negative", "text": "Body text is too small at 13px." }
+        ]
+      },
+      "forbidden_substrings": ["8.4", "90%", "12 seconds"]
+    },
+    {
+      "id": "g7-ahpra-absent",
+      "note": "No AHPRA finding was accepted, so the summary must not raise testimonials.",
+      "input": {
+        "practice_name": "Bright Orthodontics",
+        "domain": "brightortho.com.au",
+        "overall_score": 3,
+        "category_scores": {},
+        "findings": [
+          { "category": "website_technical", "variant": "negative", "text": "The website is not using the SSL/HTTPS protocol." }
+        ]
+      },
+      "forbidden_substrings": ["testimonial", "review", "AHPRA", "patient outcome"]
+    },
+    {
+      "id": "g8-no-clinical-comment",
+      "note": "It is describing a website, never the dentistry.",
+      "input": {
+        "practice_name": "Preston Family Dental",
+        "domain": "prestonfamilydental.com.au",
+        "overall_score": 2,
+        "category_scores": {},
+        "findings": [
+          { "category": "website_business", "variant": "negative", "text": "The reasons why new patients should come to you are generic and read the same as every other practice." }
+        ]
+      },
+      "forbidden_substrings": ["treatment", "clinical", "dentist is", "care you provide"]
+    },
+    {
+      "id": "g9-no-promises",
+      "note": "Must not promise an outcome, ranking or timeframe.",
+      "input": {
+        "practice_name": "Northside Dental",
+        "domain": "northsidedental.com.au",
+        "overall_score": 2,
+        "category_scores": {},
+        "findings": [
+          { "category": "visibility_seo", "variant": "negative", "text": "The homepage title and meta description are missing." }
+        ]
+      },
+      "forbidden_substrings": ["guarantee", "will rank", "within weeks", "double your"]
+    },
+    {
+      "id": "g10-no-marketing-voice",
+      "note": "House voice, not agency voice.",
+      "input": {
+        "practice_name": "Riverbend Dental",
+        "domain": "riverbend.com.au",
+        "overall_score": 3,
+        "category_scores": {},
+        "findings": [
+          { "category": "website_usability", "variant": "negative", "text": "Third-party links open in the same tab, taking visitors away from your site." }
+        ]
+      },
+      "forbidden_substrings": ["excited", "world-class", "cutting-edge", "seamless", "!"]
+    }
+  ]
+}
