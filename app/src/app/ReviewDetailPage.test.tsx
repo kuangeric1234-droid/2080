@@ -51,6 +51,7 @@ const REVIEW = {
       ahpra_blocking: false, decided_by: 'WC',
     },
   ],
+  competitors: [],
   categories: [
     {
       key: 'website_business', label: 'Website (Business)',
@@ -270,5 +271,70 @@ describe('review workspace', () => {
     vi.stubGlobal('fetch', vi.fn(async () => new Response('{}', { status: 404 })) as unknown as typeof fetch)
     renderPage()
     expect(await screen.findByText(/That review doesn’t exist/)).toBeInTheDocument()
+  })
+})
+
+/* §13.2 step 1.12b. The Competition section had no screen at all — the routes
+   and the export existed but nothing could put a competitor in front of them. */
+describe('competition', () => {
+  it('says the section is left out until a competitor is added', async () => {
+    renderPage()
+    const panel = await screen.findByRole('region', { name: 'Competition' })
+    expect(within(panel).getByText(/left out of the report until you add one/)).toBeInTheDocument()
+  })
+
+  it('adds a competitor with the name, website and threat typed', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    const panel = await screen.findByRole('region', { name: 'Competition' })
+
+    await user.type(within(panel).getByLabelText('Name'), 'Chapel Gate Dental')
+    await user.type(within(panel).getByLabelText('Website (optional)'), 'chapelgate.com.au')
+    await user.type(within(panel).getByLabelText('Threat'), '7')
+    await user.click(within(panel).getByRole('button', { name: 'Add competitor' }))
+
+    await waitFor(() => {
+      const post = calls.find((c) => c.init?.method === 'POST' && c.url.endsWith('/competitors'))
+      expect(post, 'no POST to /competitors').toBeTruthy()
+      expect(JSON.parse(String(post!.init!.body))).toEqual({
+        name: 'Chapel Gate Dental', domain: 'chapelgate.com.au', threat: 7,
+      })
+    })
+  })
+
+  /* comp.row's note splits the facts in two, and a reviewer needs to know which
+     half they are still on the hook for. */
+  it('marks which facts were measured and which a human typed', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      competitors: [{
+        id: 'cmp_1', name: 'Chapel Gate Dental', domain: 'chapelgate.com.au',
+        facts: { https: false, serp_position: 1 }, threat: 7, position: 0,
+      }],
+    }))
+    renderPage()
+    const panel = await screen.findByRole('region', { name: 'Competition' })
+
+    expect(within(panel).getByText('Chapel Gate Dental')).toBeInTheDocument()
+    expect(within(panel).getByText('Threat 7/10')).toBeInTheDocument()
+    // a yes/no fact reads as a phrase, not as "HTTPS: false"
+    expect(within(panel).getByTitle('Collected from their website')).toHaveTextContent('Not secure')
+    expect(within(panel).getByTitle('Entered by a reviewer')).toHaveTextContent('Google rank: 1')
+  })
+
+  it('removes a competitor', async () => {
+    vi.stubGlobal('fetch', mockFetch({
+      competitors: [{
+        id: 'cmp_1', name: 'Chapel Gate Dental', domain: null,
+        facts: {}, threat: null, position: 0,
+      }],
+    }))
+    const user = userEvent.setup()
+    renderPage()
+    const panel = await screen.findByRole('region', { name: 'Competition' })
+    await user.click(within(panel).getByRole('button', { name: 'Remove Chapel Gate Dental' }))
+
+    await waitFor(() => {
+      expect(calls.some((c) => c.init?.method === 'DELETE' && c.url.includes('/competitors/cmp_1'))).toBe(true)
+    })
   })
 })

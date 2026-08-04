@@ -4,6 +4,18 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.12b — Competitors, the workspace UI — 2026-08-04
+
+**Built:** a Competition panel in the review workspace — list, add (name, optional website, threat 1–10) and remove — wired to the 1.12a routes. Each fact is chipped by provenance: green where it was measured from the competitor's own site, grey where a reviewer typed it, with a tooltip saying which. That split is comp.row's own note ("technical and usability facts are collected automatically once the domain is named; the SERP, review and social facts are entered by hand"), surfaced so Wally can see what he still owes the report.
+
+**Evidence:** `ReviewDetailPage.test.tsx` **12 → 16** (empty state explains the section is omitted until a competitor exists · add POSTs the typed name/website/threat · facts are attributed to measured vs typed · remove DELETEs). App suite **47/47**, typecheck, lint and build green. **Visual pass done, not assumed:** Playwright against the running stack with a real review, both light and dark, screenshots reviewed.
+
+**Files:** `app/src/app/ReviewDetailPage.tsx`, `app/src/app/ReviewDetailPage.test.tsx`, `MASTER-BUILD-PLAN.md`.
+
+**Decisions:** (1) **The visual pass found something the tests could not.** The chips rendered "HTTPS: false" and "Online booking: true" — raw booleans, asserted just as happily by a green test. Yes/no facts now read as phrases ("Not secure", "Online booking"), which is how the report speaks and what §12.5 asks for. A test can only check the string it was told to expect; §12.3 exists because somebody has to look. (2) Provenance is chipped rather than described, so the measured/typed split is visible at a glance instead of in a paragraph nobody reads. (3) The empty state says the section is left out of the report entirely rather than showing an empty heading — matching the exporter, which omits Competition when there are no competitors.
+
+---
+
 ## §13.2 step 1.12a — Competitors, the manual path — 2026-08-04
 
 **Built:** `server/src/review/competitors.ts` (row rendering, `collectCompetitorFacts`, `SerpProvider`/`NoSerpProvider`), competitor persistence in `store.ts` (`add`/`update`/`remove`/`list`), four API routes, and `docx.ts` now assembling each line from the bank's `comp.row` `row_template` rather than joining fields itself.

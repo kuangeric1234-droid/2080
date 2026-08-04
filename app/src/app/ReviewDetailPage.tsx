@@ -63,6 +63,15 @@ interface BankGroup {
   items: BankItem[]
 }
 
+interface Competitor {
+  id: string
+  name: string
+  domain: string | null
+  facts: Record<string, unknown>
+  threat: number | null
+  position: number
+}
+
 interface ReviewDetail {
   review: {
     id: string
@@ -80,6 +89,7 @@ interface ReviewDetail {
   signals: Signal[]
   findings: Finding[]
   categories: Category[]
+  competitors: Competitor[]
 }
 
 const VARIANT: Record<Finding['variant'], { chip: string; label: string }> = {
@@ -245,6 +255,152 @@ function FindingCard({
   )
 }
 
+
+/* comp.row's own note draws this line: "Technical and usability facts are
+   collected automatically once the domain is named; the SERP, review and social
+   facts are entered by hand." The panel shows which is which, so a reviewer
+   knows what they still owe the report and what they can trust. */
+const AUTO_FACTS = new Set(['https', 'booking', 'platform', 'content_volume'])
+
+const FACT_LABEL: Record<string, string> = {
+  platform: 'Platform', content_volume: 'Pages',
+  serp_position: 'Google rank', map_position: 'Map rank',
+  review_count: 'Reviews', review_rating: 'Rating', days_open: 'Days open',
+}
+
+/* A yes/no fact reads as a phrase, not as "HTTPS: false". The report speaks
+   this way and so should the screen it is assembled on (§12.5). */
+const YES_NO: Record<string, [yes: string, no: string]> = {
+  https: ['Secure', 'Not secure'],
+  booking: ['Online booking', 'No online booking'],
+  corporate: ['Corporate', 'Independent'],
+  sem: ['Running ads', 'No ads'],
+}
+
+function factChip(key: string, value: unknown): string {
+  const pair = YES_NO[key]
+  if (pair) return value === true || value === 'true' ? pair[0] : pair[1]
+  return `${FACT_LABEL[key] ?? key}: ${String(value)}`
+}
+
+function CompetitorPanel({
+  competitors, busy, onAdd, onRemove,
+}: {
+  competitors: Competitor[]
+  busy: boolean
+  onAdd: (input: { name: string; domain: string | null; threat: number | null }) => void
+  onRemove: (id: string) => void
+}) {
+  const [name, setName] = useState('')
+  const [domain, setDomain] = useState('')
+  const [threat, setThreat] = useState('')
+
+  const submit = () => {
+    if (!name.trim()) return
+    onAdd({
+      name: name.trim(),
+      domain: domain.trim() || null,
+      threat: threat ? Number(threat) : null,
+    })
+    setName(''); setDomain(''); setThreat('')
+  }
+
+  return (
+    <section aria-label="Competition" className="rounded-[14px] border border-line bg-surface shadow-card">
+      <header className="flex flex-wrap items-center gap-2 border-b border-line px-5 py-3">
+        <h2 className="font-display text-[13.5px] font-[650]">Competition</h2>
+        <span className="rounded-full bg-warn-tint px-2 py-px text-[10.5px] font-semibold text-warn">
+          part manual
+        </span>
+        <span className="text-[11.5px] text-ink-muted">
+          Naming a domain collects the technical facts; rankings and reviews are yours to enter.
+        </span>
+      </header>
+
+      <ul className="divide-y divide-grid">
+        {competitors.map((c) => (
+          <li key={c.id} className="flex gap-3 px-5 py-3">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-[13px] font-[650]">{c.name}</span>
+                {c.domain && <span className="text-[11.5px] text-ink-muted">{c.domain}</span>}
+                {c.threat != null && (
+                  <span className="rounded-full bg-canvas px-2 py-px text-[10.5px] font-semibold text-ink-muted">
+                    Threat {c.threat}/10
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap gap-1.5">
+                {Object.entries(c.facts ?? {}).map(([k, v]) => (
+                  <span
+                    key={k}
+                    title={AUTO_FACTS.has(k) ? 'Collected from their website' : 'Entered by a reviewer'}
+                    className={cn(
+                      'rounded-full px-2 py-px text-[10.5px]',
+                      AUTO_FACTS.has(k) ? 'bg-ok-tint text-ok' : 'bg-canvas text-ink-muted',
+                    )}
+                  >
+                    {factChip(k, v)}
+                  </span>
+                ))}
+                {Object.keys(c.facts ?? {}).length === 0 && (
+                  <span className="text-[11.5px] text-ink-faint">No facts yet.</span>
+                )}
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              aria-label={`Remove ${c.name}`}
+              disabled={busy}
+              onClick={() => onRemove(c.id)}
+            >
+              Remove
+            </Button>
+          </li>
+        ))}
+        {competitors.length === 0 && (
+          <li className="px-5 py-4 text-[12px] text-ink-muted">
+            No competitors yet. The Competition section is left out of the report until you add one.
+          </li>
+        )}
+      </ul>
+
+      <div className="flex flex-wrap items-end gap-2 border-t border-line px-5 py-3">
+        <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
+          Name
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Chapel Gate Dental"
+            className="w-52 rounded-[8px] border border-line bg-canvas px-2 py-1 text-[12.5px]"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
+          Website (optional)
+          <input
+            value={domain}
+            onChange={(e) => setDomain(e.target.value)}
+            placeholder="chapelgate.com.au"
+            className="w-52 rounded-[8px] border border-line bg-canvas px-2 py-1 text-[12.5px]"
+          />
+        </label>
+        <label className="flex flex-col gap-1 text-[11px] text-ink-muted">
+          Threat
+          <input
+            type="number" min={1} max={10}
+            value={threat}
+            onChange={(e) => setThreat(e.target.value)}
+            className="w-16 rounded-[8px] border border-line bg-canvas px-2 py-1 text-[12.5px]"
+          />
+        </label>
+        <Button disabled={busy || !name.trim()} onClick={submit}>
+          {busy ? 'Adding…' : 'Add competitor'}
+        </Button>
+      </div>
+    </section>
+  )
+}
+
 export function ReviewDetailPage() {
   const { id = '' } = useParams()
   const [params, setParams] = useSearchParams()
@@ -355,6 +511,33 @@ export function ReviewDetailPage() {
   /* The export refuses a paragraph with an unfilled variable in it, so a 422
      here is the server protecting the practice from receiving
      "such as {{public_email}}". Show it rather than swallowing it. */
+  const addCompetitor = async (input: { name: string; domain: string | null; threat: number | null }) => {
+    setBusy('competitor')
+    try {
+      const res = await fetch(`/api/reviews/${id}/competitors`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+      if (!res.ok) throw new Error(((await res.json()) as { error?: string }).error ?? 'could not add')
+      await load()
+    } catch (err) {
+      setCollectNote((err as Error).message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const removeCompetitor = async (competitorId: string) => {
+    setBusy('competitor')
+    try {
+      await fetch(`/api/reviews/competitors/${competitorId}`, { method: 'DELETE' })
+      await load()
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const exportDocx = async () => {
     setBusy('export')
     try {
@@ -623,6 +806,14 @@ export function ReviewDetailPage() {
               </section>
             )
           })}
+
+          {/* ── competition: the one section with no automatic source ── */}
+          <CompetitorPanel
+            competitors={data.competitors ?? []}
+            busy={busy === 'competitor'}
+            onAdd={(input) => void addCompetitor(input)}
+            onRemove={(cid) => void removeCompetitor(cid)}
+          />
 
           {/* ── the raw evidence, for when a finding is disputed ── */}
           <details className="rounded-[14px] border border-line bg-surface shadow-card">
