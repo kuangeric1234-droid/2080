@@ -254,6 +254,7 @@ export function ReviewDetailPage() {
   const [scores, setScores] = useState<Record<string, number | null>>({})
   const [overall, setOverall] = useState<number | null>(null)
   const [dirty, setDirty] = useState(false)
+  const [exportError, setExportError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -321,6 +322,32 @@ export function ReviewDetailPage() {
     } finally { setBusy(null) }
   }
 
+  /* The export refuses a paragraph with an unfilled variable in it, so a 422
+     here is the server protecting the practice from receiving
+     "such as {{public_email}}". Show it rather than swallowing it. */
+  const exportDocx = async () => {
+    setBusy('export')
+    try {
+      const res = await fetch(`/api/reviews/${id}/export.docx`)
+      if (!res.ok) {
+        const { error } = (await res.json()) as { error: string }
+        setExportError(error)
+        return
+      }
+      setExportError(null)
+      const blob = await res.blob()
+      const name = /filename="([^"]+)"/.exec(res.headers.get('content-disposition') ?? '')?.[1]
+        ?? 'Online Presence Review.docx'
+      const href = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = href
+      a.download = name
+      a.click()
+      URL.revokeObjectURL(href)
+      await load()
+    } finally { setBusy(null) }
+  }
+
   const saveScores = async () => {
     setBusy('scores')
     try {
@@ -366,8 +393,19 @@ export function ReviewDetailPage() {
           <Button variant="outline" onClick={() => void collect()} disabled={busy === 'collect'}>
             {busy === 'collect' ? 'Collecting…' : r.collected_at ? 'Re-collect' : 'Collect evidence'}
           </Button>
+          {r.collected_at && (
+            <Button onClick={() => void exportDocx()} disabled={busy === 'export' || accepted.length === 0}>
+              {busy === 'export' ? 'Building…' : 'Export .docx'}
+            </Button>
+          )}
         </div>
       </div>
+
+      {exportError && (
+        <div className="rounded-[14px] border border-warn bg-warn-tint px-4 py-3 text-[12.3px] text-warn">
+          Not exported — {exportError}
+        </div>
+      )}
 
       {r.collect_error && (
         <div className="rounded-[14px] border border-crit bg-crit-tint px-4 py-3 text-[12.3px] text-crit">

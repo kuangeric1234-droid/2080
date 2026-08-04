@@ -13,6 +13,7 @@ import { can, createSession, issueCookie, type Principal, requireAuth, revokeSes
 import { runAudit } from './seo/audit.ts'
 import { runCheck } from './sitehealth/probe.ts'
 import { receiveIntake, unwrapJotformBody } from './review/intake.ts'
+import { exportReviewDocx } from './review/docx.ts'
 import { addManualFinding, collectReview, decideFinding, getReview, listReviews, manualBank, setScores } from './review/store.ts'
 import { WORKSPACE_ID } from './db/seed.ts'
 import {
@@ -495,6 +496,26 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
       }))
     } catch (err) {
       return c.json({ error: (err as Error).message }, 404)
+    }
+  })
+
+  /* The deliverable. Refuses rather than shipping a paragraph with an unfilled
+     variable in it — a practice must never receive "such as {{public_email}}". */
+  app.get('/api/reviews/:id/export.docx', async (c) => {
+    try {
+      const { filename, buffer } = await exportReviewDocx(
+        db, c.get('principal').workspaceId, c.req.param('id'))
+      await db.query(
+        `UPDATE reviews SET status = 'delivered', delivered_at = now() WHERE id = $1`,
+        [c.req.param('id')])
+      return new Response(new Uint8Array(buffer), {
+        headers: {
+          'content-type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'content-disposition': `attachment; filename="${filename}"`,
+        },
+      })
+    } catch (err) {
+      return c.json({ error: (err as Error).message }, 422)
     }
   })
 
