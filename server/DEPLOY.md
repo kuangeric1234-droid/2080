@@ -103,17 +103,20 @@ is killed.
 
 ## Step 2 · Checkout
 
-**HUMAN — check this before cloning.** The remote lags the dev machine badly at
-time of writing. `origin/main` is at `9a4646f` (Clients CRM, §10), while local
-`main` has three unpushed commits — the whole of Online Presence Review modules
-1.0, 1.1 and 1.2. Worse, the collector and engine themselves
-(`server/src/review/collect.ts`, `engine.ts`, `signals.ts`, `probe.ts`) are not
-committed at all; they are untracked working files.
+**HUMAN — check this before cloning.** The remote has historically lagged the dev
+machine, and a clone that runs ahead of a push produces the most confusing
+failure available: a dashboard that builds cleanly with no review module in it.
 
-A clone today gets a dashboard with no review module in it. Pushing the three
-commits is necessary but not sufficient — the crawler has to be committed too.
-Confirm on the dev machine that `git status` is clean and `git log origin/main..HEAD`
-is empty before cloning here.
+Before cloning, confirm **on the dev machine** that both of these are empty:
+
+```powershell
+git status --short                   # nothing uncommitted
+git log origin/main..HEAD --oneline  # nothing unpushed
+```
+
+Untracked files are the trap worth naming — the collector, engine and .docx
+export are ordinary working files until someone commits them, and `git push`
+says nothing about them.
 
 **Authentication.** If the repo is private, the clone needs credentials. Use
 `gh auth login`, or Git Credential Manager, or a fine-grained PAT with read
