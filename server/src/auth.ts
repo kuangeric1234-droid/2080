@@ -75,8 +75,15 @@ export async function revokeSession(db: pg.Client | pg.Pool, token: string | und
 }
 
 export function issueCookie(c: Context, token: string): void {
+  /* Secure once the box is reachable from the internet: without it the session
+     cookie will travel over plain http if anything ever reaches the API that
+     way. Off when the request itself is http so localhost and the tailnet keep
+     working — a cookie the browser refuses to store is an unusable dev setup.
+     No Domain attribute on purpose: the browser only ever sees the origin it
+     asked (Vercel rewrites server-side), so the cookie stays first-party. */
   setCookie(c, SESSION_COOKIE, token, {
     httpOnly: true, sameSite: 'Lax', path: '/', maxAge: ABSOLUTE_MS / 1000,
+    secure: new URL(c.req.url).protocol === 'https:',
   })
 }
 
