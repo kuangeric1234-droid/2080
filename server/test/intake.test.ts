@@ -114,9 +114,12 @@ describe('receiving an audit request', () => {
     expect(sent.body).toContain('stellarsmiles.com.au')
     expect(sent.body).toContain(r.reviewId)
 
+    // collection is queued the moment the request lands, so the box is already
+    // crawling by the time Wally opens it
+    expect(r.jobId).toMatch(/^job_/)
     const { rows } = await db.query(`SELECT domain, status::text, contact_email FROM reviews WHERE id = $1`, [r.reviewId])
     expect(rows[0]).toMatchObject({
-      domain: 'stellarsmiles.com.au', status: 'requested', contact_email: 'amy@stellarsmiles.com.au',
+      domain: 'stellarsmiles.com.au', status: 'collecting', contact_email: 'amy@stellarsmiles.com.au',
     })
   })
 
@@ -183,8 +186,9 @@ describe('auditing a URL by hand', () => {
     expect(r.notified).toBe(0)
     expect(mail.sent.length).toBe(before)
 
+    expect(r.jobId).toMatch(/^job_/)
     const { rows } = await db.query(`SELECT domain, status::text FROM reviews WHERE id = $1`, [r.reviewId])
-    expect(rows[0]).toMatchObject({ domain: 'trowsedental.com.au', status: 'requested' })
+    expect(rows[0]).toMatchObject({ domain: 'trowsedental.com.au', status: 'collecting' })
   })
 
   it('leaves the same evidence trail as a Jotform request', async () => {

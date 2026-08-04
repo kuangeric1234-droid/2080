@@ -256,6 +256,7 @@ export function ReviewDetailPage() {
   const [overall, setOverall] = useState<number | null>(null)
   const [dirty, setDirty] = useState(false)
   const [exportError, setExportError] = useState<string | null>(null)
+  const [collectNote, setCollectNote] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
@@ -297,15 +298,33 @@ export function ReviewDetailPage() {
     [data],
   )
 
+  /* Collection is a queued job, not a request that waits. Kick it off, then
+     poll the job until it lands — so a slow practice site cannot time the
+     browser out, and closing the tab does not abandon the crawl. */
   const collect = async () => {
     setBusy('collect')
+    setCollectNote(null)
     try {
       const res = await fetch(`/api/reviews/${id}/collect`, { method: 'POST' })
-      if (!res.ok) {
-        const e = (await res.json()) as { error: string }
-        window.alert(e.error)
+      const body = (await res.json()) as { jobId?: string; error?: string; alreadyQueued?: boolean }
+      if (!res.ok || !body.jobId) {
+        setCollectNote(body.error ?? 'Could not start collection.')
+        setBusy(null)
+        return
+      }
+      if (body.alreadyQueued) setCollectNote('Already collecting — watching that run.')
+
+      for (let i = 0; i < 240; i++) { // 4 minutes at 1s, past any sane crawl
+        await new Promise((r) => setTimeout(r, 1000))
+        const j = await fetch(`/api/jobs/${body.jobId}`)
+        if (!j.ok) break
+        const job = (await j.json()) as { state: string; error: string | null }
+        if (job.state === 'done') { setCollectNote(null); break }
+        if (job.state === 'dead') { setCollectNote(job.error ?? 'Collection failed.'); break }
       }
       await load()
+    } catch {
+      setCollectNote('Lost contact with the API while collecting.')
     } finally { setBusy(null) }
   }
 
@@ -412,6 +431,12 @@ export function ReviewDetailPage() {
         </div>
       </div>
 
+      {collectNote && (
+        <div className="rounded-[14px] border border-warn bg-warn-tint px-4 py-3 text-[12.3px] text-warn">
+          {collectNote}
+        </div>
+      )}
+
       {exportError && (
         <div className="rounded-[14px] border border-warn bg-warn-tint px-4 py-3 text-[12.3px] text-warn">
           Not exported — {exportError}
@@ -424,7 +449,17 @@ export function ReviewDetailPage() {
         </div>
       )}
 
-      {!r.collected_at && !r.collect_error && (
+      {!r.collected_at && !r.collect_error && r.status === 'collecting' && busy !== 'collect' && (
+        <div className="rounded-[14px] border border-line bg-surface px-5 py-10 text-center shadow-card">
+          <h2 className="font-display text-[13.5px] font-[650]">Collecting…</h2>
+          <p className="mx-auto mt-1 max-w-[440px] text-[12.3px] text-ink-muted">
+            A crawl is queued or running for {r.domain}. It keeps going whether or not this tab is
+            open — reload in a minute, or press Re-collect to watch it.
+          </p>
+        </div>
+      )}
+
+      {!r.collected_at && !r.collect_error && r.status !== 'collecting' && (
         <div className="rounded-[14px] border border-line bg-surface px-5 py-10 text-center shadow-card">
           <h2 className="font-display text-[13.5px] font-[650]">No evidence collected yet</h2>
           <p className="mx-auto mt-1 max-w-[440px] text-[12.3px] text-ink-muted">

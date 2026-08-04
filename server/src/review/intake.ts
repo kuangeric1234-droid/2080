@@ -2,6 +2,8 @@ import pg from 'pg'
 import { monotonicFactory } from 'ulid'
 import { route } from '../notify.ts'
 import type { MailSender } from '../inbox/connectors.ts'
+import { enqueue } from '../jobs/queue.ts'
+import { JOB_KINDS, collectDedupeKey } from '../jobs/handlers.ts'
 
 const ulid = monotonicFactory()
 const id = (p: string) => `${p}_${ulid()}`
@@ -124,6 +126,8 @@ export interface IntakeResult {
   parseError: string | null
   notified: number
   emailed: boolean
+  /** The queued collection, when there was a domain to crawl. */
+  jobId?: string | null
 }
 
 /** Record a submission, open a review, and tell Wally — dashboard and email. */
@@ -139,6 +143,8 @@ export async function receiveIntake(
     now?: Date
     /** Off when a human typed the domain in — they know it arrived. */
     notify?: boolean
+    /** Off in tests that assert on collection separately. */
+    autoCollect?: boolean
   },
 ): Promise<IntakeResult> {
   const { workspaceId, source, externalId, payload } = opts
@@ -160,6 +166,7 @@ export async function receiveIntake(
         parseError: null,
         notified: 0,
         emailed: false,
+        jobId: null,
       }
     }
   }
@@ -232,6 +239,27 @@ export async function receiveIntake(
     }
   }
 
+  /* Queue the crawl straight away when there is a domain to crawl. By the time
+     Wally opens the review the evidence is usually already there — the whole
+     point of the box being awake. */
+  let jobId: string | null = null
+  if (parsed.domain && opts.autoCollect !== false) {
+    try {
+      const { job } = await enqueue(db, {
+        workspaceId,
+        kind: JOB_KINDS.reviewCollect,
+        payload: { workspaceId, reviewId },
+        dedupeKey: collectDedupeKey(reviewId),
+      })
+      jobId = job.id
+      await db.query(`UPDATE reviews SET status = 'collecting' WHERE id = $1`, [reviewId])
+    } catch {
+      // a queue failure must not lose the lead — the review stays 'requested'
+      // and Wally can press Collect
+      jobId = null
+    }
+  }
+
   return {
     intakeRequestId: intakeId,
     reviewId,
@@ -240,6 +268,7 @@ export async function receiveIntake(
     parseError,
     notified: notified.length,
     emailed,
+    jobId,
   }
 }
 
@@ -293,6 +322,7 @@ export async function startManualReview(
       parseError: null,
       notified: 0,
       emailed: false,
+      jobId: null,
     }
   }
 

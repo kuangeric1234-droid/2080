@@ -14,7 +14,9 @@ import { runAudit } from './seo/audit.ts'
 import { runCheck } from './sitehealth/probe.ts'
 import { receiveIntake, startManualReview, unwrapJotformBody } from './review/intake.ts'
 import { exportReviewDocx } from './review/docx.ts'
-import { addManualFinding, collectReview, decideFinding, getReview, listReviews, manualBank, setScores } from './review/store.ts'
+import { addManualFinding, decideFinding, getReview, listReviews, manualBank, setScores } from './review/store.ts'
+import { enqueue, getJob, listJobs } from './jobs/queue.ts'
+import { JOB_KINDS, collectDedupeKey } from './jobs/handlers.ts'
 import { WORKSPACE_ID } from './db/seed.ts'
 import {
   MockActiveCollab, MockMailSender, type InboxConnectors, type RawEmail,
@@ -478,16 +480,46 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
     return found ? c.json(found) : c.json({ error: 'not found' }, 404)
   })
 
-  /* Crawling a live site takes tens of seconds. Kept synchronous while a
-     review is started by hand; the moment intake auto-collects this has to
-     become a job so the request is not holding the crawl open. */
+  /* Crawling a live site is tens of seconds and longer once a browser joins,
+     so it is queued rather than run inside the request. Returns the job to
+     poll; a second press while one is running returns the same job instead of
+     starting a second crawl of the client's site. */
   app.post('/api/reviews/:id/collect', async (c) => {
-    try {
-      return c.json(await collectReview(db, c.get('principal').workspaceId, c.req.param('id')))
-    } catch (err) {
-      return c.json({ error: (err as Error).message }, 422)
+    const workspaceId = c.get('principal').workspaceId
+    const reviewId = c.req.param('id')
+    const { rows } = await db.query(
+      `SELECT domain FROM reviews WHERE id = $1 AND workspace_id = $2`, [reviewId, workspaceId])
+    if (rows.length === 0) return c.json({ error: 'review not found' }, 404)
+    if (!rows[0].domain || rows[0].domain === '(not supplied)') {
+      return c.json({ error: 'this review has no domain yet' }, 422)
     }
+
+    const { job, alreadyQueued } = await enqueue(db, {
+      workspaceId,
+      kind: JOB_KINDS.reviewCollect,
+      payload: { workspaceId, reviewId },
+      dedupeKey: collectDedupeKey(reviewId),
+    })
+    if (!alreadyQueued) {
+      await db.query(`UPDATE reviews SET status = 'collecting', collect_error = NULL WHERE id = $1`,
+        [reviewId])
+    }
+    return c.json({ jobId: job.id, state: job.state, alreadyQueued })
   })
+
+  app.get('/api/jobs/:id', async (c) => {
+    const job = await getJob(db, c.req.param('id'))
+    if (!job || job.workspace_id !== c.get('principal').workspaceId) {
+      return c.json({ error: 'not found' }, 404)
+    }
+    return c.json({
+      id: job.id, kind: job.kind, state: job.state, attempts: job.attempts,
+      maxAttempts: job.max_attempts, error: job.last_error, result: job.result,
+      createdAt: job.created_at, finishedAt: job.finished_at,
+    })
+  })
+
+  app.get('/api/jobs', async (c) => c.json({ jobs: await listJobs(db) }))
 
   app.get('/api/reviews/:id/bank', async (c) => {
     try {
