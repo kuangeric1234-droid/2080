@@ -1034,7 +1034,18 @@
       "severity": "moderate",
       "weight": 1,
       "auto_safe": false,
-      "when": "manual",
+      "when": {
+        "all": [
+          {
+            "signal": "reputation.google_review_count",
+            "gt": 0
+          },
+          {
+            "signal": "reputation.google_review_count",
+            "lt": 20
+          }
+        ]
+      },
       "manual_prompt": "How many Google reviews and what average rating?",
       "conflicts": [
         "rep.reviews.good_diversify",
@@ -1057,7 +1068,14 @@
       "severity": "positive",
       "weight": 2,
       "auto_safe": false,
-      "when": "manual",
+      "when": {
+        "all": [
+          {
+            "signal": "reputation.google_review_count",
+            "gte": 20
+          }
+        ]
+      },
       "conflicts": [
         "rep.reviews.few",
         "rep.reviews.none"
@@ -1114,7 +1132,14 @@
       "severity": "moderate",
       "weight": 3,
       "auto_safe": false,
-      "when": "manual",
+      "when": {
+        "all": [
+          {
+            "signal": "reputation.google_review_count",
+            "eq": 0
+          }
+        ]
+      },
       "conflicts": [
         "rep.reviews.few",
         "rep.reviews.good_diversify",

@@ -131,7 +131,8 @@ export interface SerpFacts {
   serp_position?: number
   map_position?: number
   review_count?: number
-  review_rating?: number
+  /* Pre-formatted to one decimal — see the note where it is set. */
+  review_rating?: number | string
   sem?: boolean
 }
 

@@ -81,7 +81,11 @@ describe('researching a practice on Google', () => {
     const r = await researchPractice(new GooglePlacesProvider('k'),
       { practiceName: 'Me', domain: 'me.com.au', keyword: 'dentist' })
 
-    expect(r.competitors.map((c) => c.name)).toEqual(['Chapel Gate Dental', 'Camberwell Dental'])
+    /* Strongest first, by review count: 13 of the 17 references name two or
+       three competitors and never more, so which three is the whole decision.
+       Nearest-first would put a quiet single-chair clinic above the busiest
+       practice in the suburb. */
+    expect(r.competitors.map((c) => c.name)).toEqual(['Camberwell Dental', 'Chapel Gate Dental'])
     const med = r.signals.find((s) => s.key === 'reputation.competitor_review_median')!
     expect(med.value).toBe(51) // (23 + 79) / 2
   })

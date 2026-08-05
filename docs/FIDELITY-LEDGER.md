@@ -16,7 +16,7 @@ produce, and those are the queue.
 Zero at the ceiling would mean indistinguishable on everything this harness knows how to check,
 which is not the same as indistinguishable. The human pass is what catches the rest.
 
-- Generated: `ohdental.com.au` · unattended 37 paragraphs, ceiling 45 · 1 exhibit(s)
+- Generated: `ohdental.com.au` · unattended 35 paragraphs, ceiling 44 · 1 exhibit(s)
 - Reference set: 17 reports in `Downloads/presence` · canonical `Oh Dental Online Presence Review.docx`
 
 Structure only. What a *read* catches — a section that admits it has nothing to say, a

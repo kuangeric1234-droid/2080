@@ -245,8 +245,11 @@ export function varsFromSignals(signals: SignalMap, target: string): Record<stri
      — the line 15 of 17 real reports carry. Google Places supplies both. */
   const revCount = num('reputation.google_review_count')
   if (revCount !== undefined) v.count = revCount
+  /* One decimal, always: the references write "227x 5.0* on GMB", never
+     "5*". Google returns 5 for a clean five-star practice and the bare
+     integer reads as an approximation of the thing it is being precise about. */
   const revRating = num('reputation.google_rating')
-  if (revRating !== undefined) v.rating = revRating
+  if (revRating !== undefined) v.rating = revRating.toFixed(1)
 
   /* One bank, every trade (§13.2 1.15): the six paragraphs mined from a dental
      template carry these instead of hard-coded "dental". */

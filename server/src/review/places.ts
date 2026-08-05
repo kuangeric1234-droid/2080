@@ -135,7 +135,10 @@ export interface ResearchResult {
 
 /** How a competitor is described when nothing but Google knows about it. */
 export const COMPETITOR_RADIUS_M = 5000
-export const COMPETITOR_LIMIT = 5
+/* Three. Of the 13 reference reports that name competitors, the median is 3
+   and not one lists more — a competitor section is the two or three practices
+   a patient would actually choose instead, not a census of the suburb. */
+export const COMPETITOR_LIMIT = 3
 
 export async function researchPractice(
   provider: PlacesProvider,
@@ -205,7 +208,12 @@ export async function researchPractice(
 
   let competitors: PlaceRecord[] = []
   try {
+    /* "Top" by review count: the practices with the most reviews are the ones
+       a patient comparing options actually sees, and it is the only strength
+       measure available before a SERP provider exists. Nearest-first would put
+       a quiet single-chair clinic ahead of the busiest practice in the area. */
     competitors = (await provider.nearby(practice, input.keyword, COMPETITOR_RADIUS_M))
+      .sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0))
       .slice(0, COMPETITOR_LIMIT)
   } catch (err) {
     errors.push((err as Error).message)

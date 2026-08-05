@@ -197,10 +197,13 @@ describe('finding selection', () => {
   it('holds manual and judgement snippets back until the reviewer answers', async () => {
     const r = await collect(NEGLECTED, 'http://stellarsmiles.test')
     const s = signalsToMap(r.signals)
-    expect(selectFindings(s).map((c) => c.snippet.id)).not.toContain('rep.reviews.none')
+    /* `social.fb.dormant` is manual because nothing measures a Facebook page
+       without Meta PPCA. It used to be `rep.reviews.none`, which became
+       signal-triggered once the Places key made the review count exact. */
+    expect(selectFindings(s).map((c) => c.snippet.id)).not.toContain('social.fb.dormant')
 
-    const withManual = selectFindings(s, { manualAccepted: ['rep.reviews.none'] })
-    expect(withManual.map((c) => c.snippet.id)).toContain('rep.reviews.none')
+    const withManual = selectFindings(s, { manualAccepted: ['social.fb.dormant'] })
+    expect(withManual.map((c) => c.snippet.id)).toContain('social.fb.dormant')
   })
 
   it('flags variables the reviewer still has to supply', async () => {
@@ -318,6 +321,11 @@ describe('scoring', () => {
     const cats = groups.map((g) => g.category)
     expect(cats).toContain('reputation')
     expect(cats).toContain('visibility_sem')
-    expect(groups.find((g) => g.category === 'reputation')!.items.length).toBe(5)
+    /* Two, not five: the three count-based reputation paragraphs now fire from
+       the Google review count and no longer need a reviewer to raise them.
+       What is left is the judgement — replying to negatives, suspected fakes. */
+    expect(groups.find((g) => g.category === 'reputation')!.items.length).toBe(2)
+    expect(groups.find((g) => g.category === 'reputation')!.items.map((i) => i.id).sort())
+      .toEqual(['rep.reviews.negative_unanswered', 'rep.reviews.suspected_fake'])
   })
 })

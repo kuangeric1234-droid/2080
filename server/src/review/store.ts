@@ -269,7 +269,11 @@ export async function collectReview(
             c.website ? new URL(c.website).host.replace(/^www\./, '') : null,
             JSON.stringify({
               review_count: c.reviewCount ?? undefined,
-              review_rating: c.rating ?? undefined,
+              /* One decimal, matching the Reputation line and the template's
+                 own "23x 4.7* reviews" — Google returns a bare 5 for a clean
+                 five-star practice and "5*" reads as a rounding of the number
+                 it is quoting precisely. */
+              review_rating: c.rating !== null ? c.rating.toFixed(1) : undefined,
             }),
             i],
         )
