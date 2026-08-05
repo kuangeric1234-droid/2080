@@ -83,7 +83,7 @@ describe('1.36 · the summary catches up with what is shipping', () => {
     const candidate = full.findings.find((f: { state: string }) => f.state === 'candidate')
     expect(candidate, 'fixture produced no candidate to accept').toBeTruthy()
 
-    await decideFinding(db, WORKSPACE_ID, candidate.id, { state: 'accepted' }, 'wally')
+    await decideFinding(db, WORKSPACE_ID, candidate.id, { state: 'accepted', actor: 'wally' })
     const result = await resummariseIfStale(db, model, WORKSPACE_ID, reviewId)
     expect(result, 'the summary did not notice a newly accepted finding').not.toBeNull()
 
@@ -104,7 +104,7 @@ describe('1.36 · the summary catches up with what is shipping', () => {
        produced the N/A. A fixture change that removed them would otherwise
        turn this test green by making it test nothing. */
     expect(candidate, 'no website_business candidate — this test proves nothing').toBeTruthy()
-    await decideFinding(db, WORKSPACE_ID, candidate.id, { state: 'accepted' }, 'wally')
+    await decideFinding(db, WORKSPACE_ID, candidate.id, { state: 'accepted', actor: 'wally' })
     await resummariseIfStale(db, model, WORKSPACE_ID, reviewId)
 
     const comments = (await reviewRow()).category_comments as Record<string, string>

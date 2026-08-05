@@ -11,11 +11,21 @@ import {
 const realFetch = globalThis.fetch
 afterEach(() => { globalThis.fetch = realFetch; vi.restoreAllMocks() })
 
+/* Keys are matched against the request URL. A `details` value may be a single
+   response or a map of place_id → response: since 1.37 the top three
+   competitors are hydrated with their own Details call, so a stub that answers
+   every place_id with the same body would hand back three copies of one
+   business and hide exactly the mistake worth catching. */
 function stub(byPath: Record<string, unknown>) {
   globalThis.fetch = (async (url: string | URL) => {
     const u = String(url)
     const key = Object.keys(byPath).find((k) => u.includes(k))
-    return new Response(JSON.stringify(key ? byPath[key] : { status: 'ZERO_RESULTS' }),
+    let body = key ? byPath[key] : { status: 'ZERO_RESULTS' }
+    if (key === 'details' && body && !('status' in (body as object))) {
+      const placeId = new URL(u).searchParams.get('place_id') ?? ''
+      body = (body as Record<string, unknown>)[placeId] ?? { status: 'ZERO_RESULTS' }
+    }
+    return new Response(JSON.stringify(body),
       { status: 200, headers: { 'content-type': 'application/json' } })
   }) as typeof fetch
 }
@@ -61,12 +71,37 @@ describe('researching a practice on Google', () => {
     stub({
       textsearch: { status: 'OK', results: [{ place_id: 'me', name: 'Me' }] },
       details: {
-        status: 'OK',
         /* The website has to be here and has to match: since the wrong-city
            bug, a listing that cannot be tied to the domain is refused. */
-        result: {
-          place_id: 'me', name: 'Me', website: 'https://me.com.au/',
-          geometry: { location: { lat: -37.8, lng: 145.1 } },
+        me: {
+          status: 'OK',
+          result: {
+            place_id: 'me', name: 'Me', website: 'https://me.com.au/',
+            geometry: { location: { lat: -37.8, lng: 145.1 } },
+          },
+        },
+        /* §13.2 1.37. Nearby Search carries neither of these, so the facts a
+           competitor row is built from only exist after this call. */
+        c1: {
+          status: 'OK',
+          result: {
+            place_id: 'c1', name: 'Chapel Gate Dental', rating: 4.7, user_ratings_total: 23,
+            website: 'https://chapelgate.com.au/',
+            opening_hours: {
+              periods: [0, 1, 2, 3, 4, 5].map((day) => ({ open: { day } })),
+            },
+          },
+        },
+        c2: {
+          status: 'OK',
+          result: {
+            place_id: 'c2', name: 'Camberwell Dental', rating: 4.9, user_ratings_total: 79,
+            website: 'https://camberwelldental.com.au/',
+            // two blocks on one day must not read as two days
+            opening_hours: {
+              periods: [{ open: { day: 1 } }, { open: { day: 1 } }, { open: { day: 2 } }],
+            },
+          },
         },
       },
       nearbysearch: {
@@ -88,6 +123,38 @@ describe('researching a practice on Google', () => {
     expect(r.competitors.map((c) => c.name)).toEqual(['Camberwell Dental', 'Chapel Gate Dental'])
     const med = r.signals.find((s) => s.key === 'reputation.competitor_review_median')!
     expect(med.value).toBe(51) // (23 + 79) / 2
+
+    /* Hydrated: without the Details call every one of these is null, which is
+       why the Competition section printed a name and a review count. */
+    expect(r.competitors.map((c) => c.website))
+      .toEqual(['https://camberwelldental.com.au/', 'https://chapelgate.com.au/'])
+    expect(r.competitors.map((c) => c.daysOpen)).toEqual([2, 6])
+  })
+
+  it('keeps a competitor whose Details lookup fails, minus the extra facts', async () => {
+    stub({
+      textsearch: { status: 'OK', results: [{ place_id: 'me', name: 'Me' }] },
+      details: {
+        me: {
+          status: 'OK',
+          result: {
+            place_id: 'me', name: 'Me', website: 'https://me.com.au/',
+            geometry: { location: { lat: -37.8, lng: 145.1 } },
+          },
+        },
+        // c1 absent: the stub answers ZERO_RESULTS, so details() returns null
+      },
+      nearbysearch: {
+        status: 'OK',
+        results: [{ place_id: 'c1', name: 'Chapel Gate Dental', rating: 4.7, user_ratings_total: 23 }],
+      },
+    })
+    const r = await researchPractice(new GooglePlacesProvider('k'),
+      { practiceName: 'Me', domain: 'me.com.au', keyword: 'dentist' })
+
+    expect(r.competitors.map((c) => c.name)).toEqual(['Chapel Gate Dental'])
+    expect(r.competitors[0].reviewCount).toBe(23)
+    expect(r.competitors[0].website).toBeNull()
   })
 
   /* The bug this guards against actually happened and reached the page.

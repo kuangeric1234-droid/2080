@@ -21,6 +21,8 @@ export interface PlaceRecord {
   lat: number | null
   lng: number | null
   website: string | null
+  /** Distinct days the listing publishes opening hours for — comp.row's "open 6 days". */
+  daysOpen: number | null
 }
 
 export interface PlacesProvider {
@@ -30,6 +32,15 @@ export interface PlacesProvider {
   findPractice(query: string): Promise<PlaceRecord | null>
   /** The same-category businesses around it, nearest first, excluding itself. */
   nearby(place: PlaceRecord, keyword: string, radiusMetres: number): Promise<PlaceRecord[]>
+  /**
+   * Everything Details knows about one listing (§13.2 1.37).
+   *
+   * Nearby Search does not return `website` or `opening_hours` — so every
+   * competitor Google seeded arrived with a null domain, `collectCompetitorFacts`
+   * was never called on any of them, and `comp.row` dropped fourteen of its
+   * eighteen fragments. Details is the only call that has them.
+   */
+  details(placeId: string): Promise<PlaceRecord | null>
 }
 
 /* PROVISIONAL. Returns nothing — never a plausible rating.
@@ -41,13 +52,32 @@ export class NoPlacesProvider implements PlacesProvider {
   readonly provisional = true
   async findPractice(): Promise<PlaceRecord | null> { return null }
   async nearby(): Promise<PlaceRecord[]> { return [] }
+  async details(): Promise<PlaceRecord | null> { return null }
 }
 
-const FIELDS = 'place_id,name,rating,user_ratings_total,formatted_address,geometry,website'
+const FIELDS =
+  'place_id,name,rating,user_ratings_total,formatted_address,geometry,website,opening_hours'
+
+/* "open 6 days" in comp.row. Google publishes a `periods` array with one entry
+   per opening block, so a practice open twice on a Saturday appears twice —
+   count distinct days, not entries. `weekday_text` is the human-readable
+   fallback, where a closed day reads "Sunday: Closed". */
+function daysOpenFrom(hours: Record<string, unknown> | undefined): number | null {
+  if (!hours) return null
+  const periods = hours.periods as { open?: { day?: number } }[] | undefined
+  if (Array.isArray(periods) && periods.length > 0) {
+    const days = new Set(periods.map((p) => p.open?.day).filter((d) => typeof d === 'number'))
+    return days.size > 0 ? days.size : null
+  }
+  const text = hours.weekday_text as string[] | undefined
+  if (!Array.isArray(text) || text.length === 0) return null
+  return text.filter((line) => !/closed/i.test(line)).length || null
+}
 
 function toRecord(r: Record<string, unknown>): PlaceRecord {
   const geo = (r.geometry as { location?: { lat?: number; lng?: number } } | undefined)?.location
   return {
+    daysOpen: daysOpenFrom(r.opening_hours as Record<string, unknown> | undefined),
     placeId: String(r.place_id ?? ''),
     name: String(r.name ?? ''),
     rating: typeof r.rating === 'number' ? r.rating : null,
@@ -99,6 +129,12 @@ export class GooglePlacesProvider implements PlacesProvider {
     return ((found.results as Record<string, unknown>[]) ?? [])
       .map(toRecord)
       .filter((r) => r.placeId && r.placeId !== place.placeId)
+  }
+
+  async details(placeId: string): Promise<PlaceRecord | null> {
+    const det = await this.get('details', { place_id: placeId, fields: FIELDS })
+    const result = det.result as Record<string, unknown> | undefined
+    return result ? toRecord(result) : null
   }
 }
 
@@ -215,6 +251,22 @@ export async function researchPractice(
     competitors = (await provider.nearby(practice, input.keyword, COMPETITOR_RADIUS_M))
       .sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0))
       .slice(0, COMPETITOR_LIMIT)
+
+    /* Nearby Search carries neither `website` nor `opening_hours`, so the three
+       that survive the cut are looked up properly — three Details calls, the
+       same call `findPractice` already makes for the practice itself. Without
+       it every seeded competitor had a null domain, which meant
+       `collectCompetitorFacts` never ran on one and `comp.row` printed a name
+       and a review count where the template prints a paragraph (§13.2 1.37).
+       A lookup that fails costs that competitor its extra facts, not its row. */
+    competitors = await Promise.all(competitors.map(async (c) => {
+      try {
+        return (await provider.details(c.placeId)) ?? c
+      } catch (err) {
+        errors.push(`details for ${c.name}: ${(err as Error).message}`)
+        return c
+      }
+    }))
   } catch (err) {
     errors.push((err as Error).message)
   }

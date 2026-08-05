@@ -93,3 +93,41 @@ describe('serp provider', () => {
     expect(new NoSerpProvider().provisional).toBe(true)
   })
 })
+
+/* §13.2 step 1.37. The rows Google seeded carried a name and a review count
+   against a template with eighteen fragments, because Nearby Search returns
+   neither `website` nor `opening_hours` — so every seeded competitor had a null
+   domain and `collectCompetitorFacts` was never run on one of them. */
+describe('a seeded competitor row, once it has been looked up', () => {
+  const row = loadBank().byId.get('comp.row')!
+
+  it('reads like the template rather than like a database', () => {
+    const line = renderCompetitorRow(row, {
+      name: 'Flagstaff Hill Dental Care',
+      facts: {
+        // what we actually measure: their site, and Google's own numbers
+        https: true, booking: true, content_volume: '84 pages', days_open: 5,
+        review_count: 678, review_rating: '5.0',
+      },
+    })
+    expect(line).toBe(
+      'Flagstaff Hill Dental Care, secure, 84 pages, online booking, open 5 days, '
+      + 'Google: 678x 5.0* reviews')
+  })
+
+  /* The half nobody has bought. NoSerpProvider returns nothing on purpose and
+     there is no social data at all, so these fragments must stay dropped —
+     printing "#1 in Google search" about a named third party on 20-80
+     letterhead with nothing behind it is the worst thing this file could do. */
+  it('asserts no rank and no social reach, because neither was measured', () => {
+    const line = renderCompetitorRow(row, {
+      name: 'Hallett Cove Dental',
+      facts: { https: true, review_count: 87, review_rating: '4.6' },
+    })
+    expect(line).not.toContain('Google search')
+    expect(line).not.toContain('Google Map')
+    expect(line).not.toContain('FB Likes')
+    expect(line).not.toContain('Threat')
+    expect(line).not.toMatch(/\{\{/)
+  })
+})

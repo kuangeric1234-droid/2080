@@ -379,6 +379,35 @@ describe('exporting the review as .docx', () => {
     }
   })
 
+  /* §13.2 step 1.37. Seeding was a check-then-insert, so two collections of
+     one review that overlapped both read zero competitors and both wrote — the
+     section capped at three (1.31) printed six, each competitor twice. It
+     happened for real: `receiveIntake` queues a collect and the fidelity
+     harness also calls `collectReview` directly, so the harness raced itself
+     against the API's worker. 0014 puts the identity in the table. */
+  it('will not hold the same competitor twice, however the second write arrives', async () => {
+    const added = await addCompetitor(db, WORKSPACE_ID, reviewId, {
+      name: 'Chapel Gate Dental', facts: { https: true },
+    })
+    try {
+      await expect(addCompetitor(db, WORKSPACE_ID, reviewId, { name: 'chapel gate dental' }))
+        .rejects.toThrow(/already a competitor/i)
+
+      // and the raw path a concurrent collect takes is a no-op, not a duplicate
+      await db.query(
+        `INSERT INTO review_competitors (id, workspace_id, review_id, name, domain, facts, position)
+         VALUES ('cmp_dupe',$1,$2,'Chapel Gate Dental',NULL,'{}',9)
+         ON CONFLICT (review_id, lower(name)) DO NOTHING`,
+        [WORKSPACE_ID, reviewId])
+
+      const { rows } = await db.query(
+        `SELECT count(*)::int AS n FROM review_competitors WHERE review_id = $1`, [reviewId])
+      expect(rows[0].n, 'the competitor set was seeded twice').toBe(1)
+    } finally {
+      await removeCompetitor(db, WORKSPACE_ID, added.competitor.id)
+    }
+  })
+
   /* comp.intro and comp.row are scaffolding for the block this exporter
      assembles, not paragraphs of their own. addCompetitor writes the
      manual.competitors.count signal and re-runs the findings pass, so both land

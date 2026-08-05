@@ -55,6 +55,12 @@ async function main() {
       externalId: `fidelity:${domain}:${Date.now()}`,
       payload: { practice, website: domain, name: 'Fidelity Harness', email: 'noreply@2080solutions.com.au' },
       notify: false,
+      /* The harness collects synchronously on the next line. Queueing one as
+         well means that whenever an API worker is up it collects the same
+         review at the same time, and the two seedings of the competitor set
+         raced — which is how 1.37 found the check-then-insert. Measuring the
+         platform should not involve competing with it. */
+      autoCollect: false,
     })
     const collected = await collectReview(db, WORKSPACE_ID, reviewId, {})
     console.log(`  signals ${collected.signals ?? '?'} · findings ${collected.findings ?? '?'}`)

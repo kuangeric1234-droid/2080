@@ -5,7 +5,7 @@ import pathMod from 'node:path'
 import { collectRenderLayer, defaultExhibitDir } from './render.ts'
 import type { Signal } from './signals.ts'
 import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from './social.ts'
-import { collectCompetitorFacts, renderCompetitorRow } from './competitors.ts'
+import { type CompetitorFacts, collectCompetitorFacts, renderCompetitorRow } from './competitors.ts'
 import { defaultPlacesProvider, practiceKeyword, researchPractice, type PlacesProvider } from './places.ts'
 import { collectPageSpeed, defaultPageSpeedProvider, type PageSpeedProvider } from './pagespeed.ts'
 import { collectArchive, defaultArchiveProvider, type ArchiveProvider } from './archive.ts'
@@ -261,19 +261,39 @@ export async function collectReview(
       `SELECT count(*)::text AS n FROM review_competitors WHERE review_id = $1`, [reviewId])
     if (Number(existing[0].n) === 0) {
       for (const [i, c] of research.competitors.entries()) {
+        const domain = c.website ? new URL(c.website).host.replace(/^www\./, '') : null
+        /* §13.2 1.37. The manual path has collected a competitor's technical
+           facts since 1.12a — comp.row's own note describes that split — but
+           nothing ever ran it on the ones Google seeded, so they arrived as a
+           name and a review count against a row template with eighteen
+           fragments. Their site is as public as the practice's own. A crawl
+           that fails costs that competitor its extra facts, not its row. */
+        let siteFacts: CompetitorFacts = {}
+        if (domain && opts.networkProbes !== false) {
+          try {
+            siteFacts = (await collectCompetitorFacts(domain, opts)).facts
+          } catch { /* the row still has its name and its reviews */ }
+        }
+        /* ON CONFLICT, because the count above is a read and this is a write:
+           two collections of the same review that overlap both see zero and
+           both seed, and the section capped at three prints six. 0014 puts the
+           identity in the table so the loser of the race is a no-op rather
+           than a duplicate row. */
         await db.query(
           `INSERT INTO review_competitors
              (id, workspace_id, review_id, name, domain, facts, position)
-           VALUES ($1,$2,$3,$4,$5,$6,$7)`,
-          [id('cmp'), workspaceId, reviewId, c.name,
-            c.website ? new URL(c.website).host.replace(/^www\./, '') : null,
+           VALUES ($1,$2,$3,$4,$5,$6,$7)
+           ON CONFLICT (review_id, lower(name)) DO NOTHING`,
+          [id('cmp'), workspaceId, reviewId, c.name, domain,
             JSON.stringify({
+              ...siteFacts,
               review_count: c.reviewCount ?? undefined,
               /* One decimal, matching the Reputation line and the template's
                  own "23x 4.7* reviews" — Google returns a bare 5 for a clean
                  five-star practice and "5*" reads as a rounding of the number
                  it is quoting precisely. */
               review_rating: c.rating !== null ? c.rating.toFixed(1) : undefined,
+              days_open: c.daysOpen ?? undefined,
             }),
             i],
         )
@@ -646,11 +666,23 @@ export async function addCompetitor(
   const { rows: pos } = await db.query<{ n: string }>(
     `SELECT COALESCE(MAX(position) + 1, 0)::text AS n FROM review_competitors WHERE review_id = $1`,
     [reviewId])
-  const { rows } = await db.query(
-    `INSERT INTO review_competitors (id, workspace_id, review_id, name, domain, facts, threat, position)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, name, domain, facts, threat, position`,
-    [id('cmp'), workspaceId, reviewId, input.name.trim(), input.domain ?? null,
-      JSON.stringify(facts), input.threat ?? null, Number(pos[0].n)])
+  /* 0014 made (review_id, name) unique to stop two overlapping collections
+     seeding the set twice. A reviewer who types a name that is already there
+     hits the same index, and "duplicate key value violates unique constraint"
+     is not something to show them. */
+  let rows
+  try {
+    ({ rows } = await db.query(
+      `INSERT INTO review_competitors (id, workspace_id, review_id, name, domain, facts, threat, position)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, name, domain, facts, threat, position`,
+      [id('cmp'), workspaceId, reviewId, input.name.trim(), input.domain ?? null,
+        JSON.stringify(facts), input.threat ?? null, Number(pos[0].n)]))
+  } catch (err) {
+    if ((err as { code?: string }).code === '23505') {
+      throw new Error(`${input.name.trim()} is already a competitor on this review`)
+    }
+    throw err
+  }
 
   await refreshCompetitorCount(db, workspaceId, reviewId)
   await refreshFindingsFor(db, workspaceId, reviewId)
