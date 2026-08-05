@@ -4,6 +4,23 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## Fix — the competitor finding carried the bank's worked example — 2026-08-05
+
+**Reported from the UI**, not from a test: the Competition section showed *"Chapel Gate Dental - #1 in Google search, #1 in Google Map search, not secure, generic content, old website, lack personality, online booking, open 6 days, Google: 23x 4.7* reviews, FB Likes: 5, not active, mixed posts, no engagement - Threat: 7/10"* — a St Kilda practice, on a South Australian audit, with invented Facebook numbers and a threat score nobody assessed.
+
+**Cause.** `comp.row` is a row *template*: it carries `row_template` and a worked example in its `text`, and the example is documentation for whoever maintains the bank. `selectFindings` renders `snippet.text` for every snippet, so the finding was stored with that example as its text and auto-accepted.
+
+**Why it survived this long.** The exported document was always correct — `docx.ts` treats `comp.intro`/`comp.row` as assembled and rebuilds the Competition section from `review_competitors`, never reading the finding's text. There was even a test asserting "Chapel Gate Dental" never reaches the client. So the document was checked and the reviewer's screen was not, and **what the reviewer read and what the client received were different documents.**
+
+**Fixed** in `fillCompetitorRows`, called from both paths that materialise findings — `collectReview` (Places discovery) and `refreshFindingsFor` (the reviewer adding a competitor by hand). Either way the row template now renders against the stored competitors.
+
+**Evidence:** the existing test kept its document assertion and gained the one it was missing — the **stored finding text** must name the real competitor and must not contain the worked example. Full server suite 243/243, typecheck clean. Verified live: the finding now reads "Flagstaff Hill Dental Care, Google: 678x 5.0* reviews / Hillier Road Dental & Implant Centre, Google: 266x 4.8* reviews / Hallett Cove Dental, Google: 87x 4.6* reviews".
+
+**Files:** `server/src/review/store.ts`, `server/test/docx.test.ts`.
+
+**Decisions:** (1) Fixed where findings are materialised rather than in the export, because the export was already right — the defect was in what got stored. (2) One helper shared by both paths: the manual path is the one Wally uses, and it had the identical bug, which is what a duplicated fix would have missed. (3) The worked example stays in the bank. It documents the row format for whoever writes `row_template` next, and it is now unreachable from any output.
+
+
 ## §13.2 step 1.29 — The Comments cell walks the dimension list — 2026-08-05
 
 **Built:** asked for directly — the Comments column should carry the AI's analysis against the assessment framework, not one generic line. Measured before building: **7 of 17** reference reports write that cell as a walk through the category's own dimensions, naming each and giving it a two-to-five word verdict. Above the three-report threshold, so it is house style rather than one reviewer's habit.

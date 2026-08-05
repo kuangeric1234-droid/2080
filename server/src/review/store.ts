@@ -5,7 +5,7 @@ import pathMod from 'node:path'
 import { collectRenderLayer, defaultExhibitDir } from './render.ts'
 import type { Signal } from './signals.ts'
 import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from './social.ts'
-import { collectCompetitorFacts } from './competitors.ts'
+import { collectCompetitorFacts, renderCompetitorRow } from './competitors.ts'
 import { defaultPlacesProvider, practiceKeyword, researchPractice, type PlacesProvider } from './places.ts'
 import { collectPageSpeed, defaultPageSpeedProvider, type PageSpeedProvider } from './pagespeed.ts'
 import { collectArchive, defaultArchiveProvider, type ArchiveProvider } from './archive.ts'
@@ -304,6 +304,8 @@ export async function collectReview(
     manualAccepted: confirmed.map((r) => r.snippet_id as string),
   })
 
+  await fillCompetitorRows(db, reviewId, candidates)
+
   for (const [i, c] of candidates.entries()) {
     await db.query(
       `INSERT INTO review_findings
@@ -533,6 +535,36 @@ async function refreshCompetitorCount(
   return n
 }
 
+/* A row template is not a paragraph.
+
+   `comp.row` carries a worked example in its `text` — "Chapel Gate Dental - #1
+   in Google search, ... FB Likes: 5, ... Threat: 7/10" — which is documentation
+   for whoever maintains the bank, not a claim about the practice being audited.
+   Storing it as the finding's text put a St Kilda practice's details, complete
+   with invented Facebook numbers and a threat score, in front of a reviewer
+   auditing South Australia.
+
+   The exported document looked right the whole time, because it rebuilds the
+   Competition section from `review_competitors` and never reads this text —
+   which is exactly why it went unnoticed. What the reviewer reads and what the
+   client receives have to be the same thing. */
+async function fillCompetitorRows(
+  db: pg.Client | pg.Pool, reviewId: string,
+  candidates: { snippet: Snippet; renderedText: string }[],
+): Promise<void> {
+  if (!candidates.some((c) => c.snippet.row_template)) return
+  const { rows } = await db.query(
+    `SELECT name, facts, threat FROM review_competitors WHERE review_id = $1 ORDER BY position`,
+    [reviewId],
+  )
+  for (const c of candidates) {
+    if (!c.snippet.row_template) continue
+    c.renderedText = rows
+      .map((r) => renderCompetitorRow(c.snippet, r as { name: string; threat?: number | null }))
+      .join('\n')
+  }
+}
+
 /** Re-run the findings pass so comp.intro/comp.row appear or disappear. */
 async function refreshFindingsFor(
   db: pg.Client | pg.Pool, workspaceId: string, reviewId: string,
@@ -547,6 +579,7 @@ async function refreshFindingsFor(
   const candidates = selectFindings(signals, {
     vars, manualAccepted: confirmed.map((r) => r.snippet_id as string),
   })
+  await fillCompetitorRows(db, reviewId, candidates)
   for (const [i, c] of candidates.entries()) {
     await db.query(
       `INSERT INTO review_findings

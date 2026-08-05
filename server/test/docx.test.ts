@@ -406,6 +406,19 @@ describe('exporting the review as .docx', () => {
       expect(count(bank.byId.get('comp.intro')!.text), 'the competitor intro printed twice').toBe(1)
       expect(text).toContain('Elwood Dental Group')
       expect(text, 'comp.row’s worked example reached the client').not.toContain('Chapel Gate Dental')
+
+      /* And what the REVIEWER reads, which is where this actually went wrong.
+         The document was always right because it rebuilds Competition from
+         `review_competitors` and never reads the finding's text — so the stored
+         text sat there naming a St Kilda practice, with invented Facebook
+         numbers and a threat score, for anyone opening the review. */
+      const row = scaffolding.find((f) => f.snippet_id === 'comp.row')!
+      const stored = (await getReview(db, WORKSPACE_ID, reviewId))!
+        .findings.find((f) => f.id === row.id)!
+      expect(stored.rendered_text, 'the bank’s worked example is still the finding text')
+        .not.toContain('Chapel Gate Dental')
+      expect(stored.rendered_text, 'the finding does not name the real competitor')
+        .toContain('Elwood Dental Group')
     } finally {
       await db.query(
         `DELETE FROM review_findings WHERE review_id = $1 AND snippet_id IN ('comp.intro','comp.row')`,
