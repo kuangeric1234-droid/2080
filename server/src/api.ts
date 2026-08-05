@@ -14,6 +14,7 @@ import { runAudit } from './seo/audit.ts'
 import { runCheck } from './sitehealth/probe.ts'
 import { receiveIntake, startManualReview, unwrapJotformBody } from './review/intake.ts'
 import { exportReviewDocx } from './review/docx.ts'
+import { resummariseIfStale } from './review/summarise.ts'
 import { addCompetitor, addManualFinding, attachExhibit, decideFinding, exhibitFile, getReview, listCompetitors, listReviews, manualBank, removeCompetitor, setScores, updateCompetitor } from './review/store.ts'
 import { enqueue, getJob, listJobs } from './jobs/queue.ts'
 import { JOB_KINDS, collectDedupeKey } from './jobs/handlers.ts'
@@ -622,6 +623,22 @@ export function buildApp(db: pg.Client | pg.Pool, model: ModelClient, connectors
      variable in it — a practice must never receive "such as {{public_email}}". */
   app.get('/api/reviews/:id/export.docx', async (c) => {
     try {
+      /* §13.2 1.36. The summary was written at collect time over whatever 1.9
+         auto-accepted, so everything the reviewer accepted afterwards was
+         invisible to it. This is the last moment the accepted set can change,
+         so it is where the opening paragraph and the Comments column catch up.
+         No-ops when nothing has moved, so exporting twice gives one document. */
+      const summary = await resummariseIfStale(
+        db, model, c.get('principal').workspaceId, c.req.param('id'))
+      /* Refuse rather than repair, the same as 1.10: a summary that could not
+         be grounded must not be quietly replaced by the stale one that
+         described a different report. */
+      if (summary && summary.unsourced.length > 0) {
+        return c.json({
+          error: `the summary could not be re-written from the accepted findings — `
+            + `${summary.unsourced.join(', ')} is not in the evidence`,
+        }, 422)
+      }
       const { filename, buffer } = await exportReviewDocx(
         db, c.get('principal').workspaceId, c.req.param('id'))
       await db.query(

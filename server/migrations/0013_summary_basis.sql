@@ -1,0 +1,12 @@
+-- §13.2 step 1.36. The summary was written once, at collect time, from the
+-- findings auto-accepted at that moment. Anything a reviewer accepted after
+-- that never reached it, so a report whose Website (Business) section carried
+-- two bullets still printed "N/A" in that row of the summary table, and the
+-- Recommendations paragraph described a thinner report than the one it opened.
+--
+-- This records what the stored summary was written from, so the export can
+-- tell a current summary from a stale one and re-run only when it has to. A
+-- reviewer who exports twice without changing anything should get the same
+-- document both times, which is why this is a fingerprint rather than an
+-- unconditional re-run.
+ALTER TABLE reviews ADD COLUMN IF NOT EXISTS summary_basis text;
