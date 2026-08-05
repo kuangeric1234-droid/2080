@@ -4,6 +4,20 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.22 — Severity ink on the bullet — 2026-08-05
+
+**Built:** the severity colour moved from the finding's `TextRun` to the paragraph mark (`run:` on the `Paragraph`), which is what Word paints the list bullet with. The finding text is black again. Before this, a report with thirty findings came out as thirty paragraphs of orange and red body text — it reads as a warning notice rather than a professional document, and moderate orange on white is genuinely hard to read at body size. The legend is now bulleted the same way, so it is a sample of the thing it explains instead of a differently-styled description of it.
+
+**On the `<3 of 17` rule.** Strictly applied it would retire this: Oh Dental is the only reference report that colours findings. But the colour itself is in the product by explicit request, and *given that it exists*, Oh Dental is the only evidence for where it goes — 36 coloured bullets over black text. Copying that is implementing the requested feature the way the sole example does it, not overfitting to it. The typography argument stands independently of the reference count, which is what makes it safe to keep.
+
+**Evidence:** the 1.17 test now also asserts placement — every coloured finding carries a `bulletColor`, **no** finding's text is coloured, and the three legend items carry `00FF00` / `FF9900` / `FF0000` on their bullets in that order. The assertion reads the document back through `docx-read.ts` rather than grepping the XML, so it distinguishes ink in `w:pPr` from ink on a run, which a substring search cannot. docx suite 20/20, full server suite 235/235, typecheck clean. **Harness: score 9 → 5.** All three major gaps are now closed; what remains is one minor formatting difference and four thin sections.
+
+**Files:** `server/src/review/docx.ts`, `server/test/docx.test.ts`, `docs/FIDELITY-LEDGER.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) `SEVERITY_INK` is unchanged — this is where the colour is applied, not which colour. (2) The legend gained bullets, which is a visual change beyond the stated gap; it is included because a legend whose swatches are styled differently from the thing they index is not a legend. Called out here rather than slipped in.
+
+---
+
 ## §13.2 step 1.21 — N/A, never the writer's prompt — 2026-08-05
 
 **Built:** the Comments cell fell back to the category's dimension list — "UVP, Content, Personal, Frequency, AHPRA, Original, Authority" — whenever the summariser had written nothing for that category. That string is the blank template's prompt *to the writer*. Printing it in a client's report puts the question where the answer belongs, and it is the one thing in that column no real report ever does. **13 of the 17 references print `N/A` there, 15 cells in total, and not one of their 153 Comments cells is empty.** The fallback is now `N/A`. `mockReviewSummary` also returns a comment for every category rather than only the ones with findings, matching what SKILL.md already tells the real skill — a mock that answers for fewer categories than the real skill leaves the export's fallback carrying the difference, so the tests never exercise the real path.

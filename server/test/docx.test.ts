@@ -486,9 +486,11 @@ describe('exporting the review as .docx', () => {
     }
   })
 
-  /* §13.2 step 1.17. Every real report colours its findings and prints a legend
-     saying what the colours mean — Oh Dental's is Positive 00FF00, Negative
-     (Moderate) FF9900, Negative (Critical) FF0000. */
+  /* §13.2 steps 1.17 and 1.22. Oh Dental — the one reference report that
+     colours its findings — prints a legend saying what the colours mean:
+     Positive 00FF00, Negative (Moderate) FF9900, Negative (Critical) FF0000.
+     The ink belongs on the list bullet, leaving the text black; see the
+     bullet-ink assertion at the end. */
   it('prints the legend and colours each finding by severity', async () => {
     const { execFileSync } = await import('node:child_process')
     const { writeFileSync, readFileSync } = await import('node:fs')
@@ -531,6 +533,23 @@ describe('exporting the review as .docx', () => {
     const ink = INK[bank.byId.get(green.snippet_id)!.severity]
     expect(paras.some((p) => p.includes(`w:val="${ink}"`)),
       `the ${green.snippet_id} bullet carries no severity ink`).toBe(true)
+
+    /* §13.2 step 1.22: on the BULLET, not the text. The colour must sit in the
+       paragraph mark's run properties — inside w:pPr — and the finding's own
+       runs must be black. Thirty paragraphs of orange body text reads as a
+       warning notice, not a report. */
+    const doc = await readDocx(out.buffer)
+    const findings = doc.paragraphs.filter((p) => p.listed && p.text.length > 40)
+    const coloured = findings.filter((p) => p.bulletColor)
+    expect(coloured.length, 'no finding carries a coloured bullet').toBeGreaterThan(0)
+    for (const p of findings) {
+      expect(p.uniformColor, `finding text is coloured: "${p.text.slice(0, 50)}"`).toBeNull()
+    }
+    /* And the legend samples the same thing it explains. */
+    const legendItems = doc.paragraphs.filter((p) =>
+      /^(Positive|Negative \((Moderate|Critical)\))$/.test(p.text.trim()))
+    expect(legendItems.length, 'legend is not three items').toBe(3)
+    expect(legendItems.map((p) => p.bulletColor)).toEqual(['00FF00', 'FF9900', 'FF0000'])
   })
 
   /* §13.2 step 1.18. The Comments column is a verdict per category in every

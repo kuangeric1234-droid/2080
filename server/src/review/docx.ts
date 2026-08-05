@@ -96,29 +96,38 @@ const SEVERITY_LABEL: Record<Severity, string> = {
   critical: 'Negative (Critical)',
 }
 
+/* The severity colour goes on the paragraph mark (`run:`), which is what Word
+   paints the list BULLET with. The finding itself stays black.
+
+   Oh Dental is the only reference report that colours its findings at all, and
+   this is how it does it — 36 coloured bullets over black text. Colouring the
+   text instead turns thirty paragraphs of a client's report orange and red,
+   which reads as a warning notice rather than a professional document, and
+   makes the moderate findings genuinely harder to read. The dot carries the
+   signal; the sentence carries the meaning. */
 function bullet(text: string, severity?: Severity) {
   return new Paragraph({
     bullet: { level: 0 },
     spacing: { after: 120, line: 276 },
-    children: [new TextRun({
-      text, font: BODY_FONT, size: SZ.body,
-      color: severity ? SEVERITY_INK[severity] : undefined,
-    })],
+    run: severity ? { color: SEVERITY_INK[severity], font: BODY_FONT, size: SZ.body } : undefined,
+    children: [new TextRun({ text, font: BODY_FONT, size: SZ.body })],
   })
 }
 
-/** Prints between Recommendations and the first section, as the template does. */
+/** Prints between Recommendations and the first section, as Oh Dental does. */
 function legend(): Paragraph[] {
   const out = [new Paragraph({
     spacing: { before: 240, after: 60 },
     children: [new TextRun({ text: 'Legend:', font: HEAD_FONT, bold: true, size: SZ.body })],
   })]
+  /* Bulleted, with the ink on the bullet, so the legend is a sample of the
+     thing it explains rather than a differently-styled description of it. */
   for (const sev of ['positive', 'moderate', 'critical'] as Severity[]) {
     out.push(new Paragraph({
+      bullet: { level: 0 },
       spacing: { after: 40 },
-      children: [new TextRun({
-        text: SEVERITY_LABEL[sev], font: BODY_FONT, size: SZ.body, color: SEVERITY_INK[sev],
-      })],
+      run: { color: SEVERITY_INK[sev], font: BODY_FONT, size: SZ.body },
+      children: [new TextRun({ text: SEVERITY_LABEL[sev], font: BODY_FONT, size: SZ.body })],
     }))
   }
   return out
