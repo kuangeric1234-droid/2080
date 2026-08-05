@@ -262,7 +262,11 @@ describe('exporting the review as .docx', () => {
     const text = await documentText(out.buffer)
 
     expect(text).toContain('Review of stellarsmiles.test:')
-    expect(text).toContain('Date: 4 August 2026')
+    /* §13.2 step 1.25: dd/mm/yyyy, zero-padded — all 17 references date this
+       way. "4 August 2026" is correct Australian English and is not what any
+       of them writes. */
+    expect(text).toContain('Date: 04/08/2026')
+    expect(text, 'the long form is back').not.toMatch(/Date: \d+ [A-Z][a-z]+ \d{4}/)
     expect(text).toContain('Attention: Amy Nguyen')
     expect(text).toContain('Summary:')
 

@@ -351,8 +351,11 @@ export function compareToReference(gen: DocxDoc, ref: ReferenceProfile): Gap[] {
     /* Thin is the failure mode that matters: a section with one line in it
        reads as a section the writer had nothing to say about. */
     if (med >= 3 && got < Math.ceil(med / 2)) {
+      const blocker = BLOCKED_SECTIONS[h]
       add({
-        id: `thin-section:${h}`, severity: got === 0 ? 'major' : 'minor', status: 'buildable',
+        id: `thin-section:${h}`, severity: got === 0 ? 'major' : 'minor',
+        status: blocker ? 'blocked' : 'buildable',
+        blocker,
         title: `"${h}" is thin`,
         observed: `${got} finding${got === 1 ? '' : 's'}`,
         expected: `median ${med} across the references that filled it`,
@@ -361,6 +364,22 @@ export function compareToReference(gen: DocxDoc, ref: ReferenceProfile): Gap[] {
   }
 
   return gaps
+}
+
+/* Which sections cannot be filled without something from outside this repo.
+   A ledger that labels every gap "buildable" is telling the reader to go and
+   build something that no amount of code will produce, and it hides the fact
+   that the real next step is a purchase or an application. Each of these
+   points at the BLOCKERS.md entry that would release it. */
+const BLOCKED_SECTIONS: Record<string, string> = {
+  'Social Media': 'Meta Page Public Content Access — App Review + Business Verification.'
+    + ' A token alone does not unblock it; tested live 2026-08-04.',
+  'Visibility (SEO)': 'SERP provider (SerpAPI or DataForSEO, ~USD $50-100/mo).'
+    + ' Reopens the free-sources-only decision of 2026-08-03.',
+  'Visibility (SEM)': 'SERP provider, or SEMrush access as the template\'s own margin notes describe.',
+  Competition: 'Google Maps Platform key (Places API) for competitor discovery,'
+    + ' and a SERP provider for their rankings.',
+  Reputation: 'Google Maps Platform key (Places API) — rating and review count.',
 }
 
 function countPerSection(doc: DocxDoc): Map<string, number> {

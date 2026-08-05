@@ -162,6 +162,8 @@ function ledger(a: {
   L.push('## Open gaps at the reviewer ceiling — the queue')
   L.push('')
   L.push('What the platform cannot produce even with every candidate finding accepted.')
+  L.push('`blocked` means no amount of code closes it — the next step is a purchase or an application,')
+  L.push('named in the last column and in `BLOCKERS.md`.')
   L.push('')
   const ceilingSorted = a.ceilingGaps.filter((g) => g.status !== 'wontfix')
     .sort((x, y) => rank[x.severity] - rank[y.severity])
@@ -175,15 +177,20 @@ function ledger(a: {
   L.push('')
   L.push('## Gaps a reviewer closes')
   L.push('')
-  L.push('Present in the unattended document, gone once the candidates are accepted. Not defects —')
-  L.push('this is the work §13.4 deliberately keeps in human hands.')
+  L.push('Gone — or smaller — once the candidates are accepted. Not defects: this is the work §13.4')
+  L.push('deliberately keeps in human hands. A gap that only shrinks still counts here, because most')
+  L.push('of what a reviewer adds to a thin section does not make the section disappear.')
   L.push('')
-  const humanOnly = sorted.filter((g) => !a.ceilingGaps.some((c) => c.id === g.id))
-  if (humanOnly.length === 0) L.push('_None._')
+  const improved = sorted
+    .map((g) => ({ g, at: a.ceilingGaps.find((c) => c.id === g.id) }))
+    .filter(({ g, at }) => !at || at.severity !== g.severity || at.observed !== g.observed)
+  if (improved.length === 0) L.push('_None — the reviewer has nothing to add that the harness can see._')
   else {
-    L.push('| Severity | Gap | Unattended |')
+    L.push('| Gap | Unattended | At the ceiling |')
     L.push('|---|---|---|')
-    for (const g of humanOnly) L.push(`| ${g.severity} | ${g.title} | ${g.observed} |`)
+    for (const { g, at } of improved) {
+      L.push(`| ${g.title} | ${g.severity}, ${g.observed} | ${at ? `${at.severity}, ${at.observed}` : '**closed**'} |`)
+    }
   }
   L.push('')
   L.push('## Uncovered recurring paragraphs')

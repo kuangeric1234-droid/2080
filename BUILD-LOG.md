@@ -4,6 +4,22 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.25 — dd/mm/yyyy, and gaps that admit they are blocked — 2026-08-05
+
+**Built:** two honesty fixes, both small.
+
+**The date.** It printed "5 August 2026" — correct Australian English, and not what any reference writes. **All 17 date dd/mm**: eleven with a four-digit year, six with two, every one zero-padded. Now `04/08/2026`, with `2-digit` rather than `numeric` so a folder of reports lines up in a column.
+
+**The `buildable` label was a lie on four of the five queue rows.** Every gap the harness emitted said `buildable`, including "Social Media is thin" — which needs Meta Page Public Content Access, an App Review plus Business Verification that Meta grants narrowly, tested live and refused on 2026-08-04. A ledger that says `buildable` there is telling whoever reads it to go and write code that cannot exist. Thin sections now carry `blocked` and name the specific credential: PPCA for Social Media, a SERP provider for SEO and SEM, the Places key for Reputation, and both for Competition. Each points at the `BLOCKERS.md` entry that would release it.
+
+**Evidence:** the existing layout test now pins `Date: 04/08/2026` **and** asserts the long form appears nowhere, so a future `Intl` change cannot quietly restore it. docx 20/20, fidelity 11/11, full server suite 235/235, typecheck clean. **Ceiling 8 → 7, unattended 14 → 13.**
+
+**Files:** `server/src/review/docx.ts`, `server/src/review/fidelity.ts`, `server/src/review/fidelity-run.ts`, `server/test/docx.test.ts`, `docs/FIDELITY-LEDGER.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) `dd/mm/yyyy` over `dd/mm/yy` because the four-digit form is the majority (11 of 17) and a two-digit year in a document that may be read years later is a small cruelty. (2) The blocked list is a constant in `fidelity.ts` keyed by section label rather than derived from provider state at runtime — a provider that is merely *unconfigured on this machine* is a different thing from one that cannot be configured at all, and only the second belongs in a ledger read by a human deciding what to spend money on.
+
+---
+
 ## §13.2 step 1.24 — The reviewer ceiling — 2026-08-05
 
 **The diagnosis, which is the point of this entry.** Going after observation O1 (the report is a third the length of a real one), I expected to find Website (Business) empty because the bank was missing paragraphs or the collector was missing signals. Neither. The bank fired **two correct findings** there — `biz.booking.present` and `biz.email.public_domain` — and both are `auto_safe: false`, so they stayed candidates and never reached the export. Four of the six remaining business paragraphs are `judgement` triggers, which exist precisely because a human has to make that call.

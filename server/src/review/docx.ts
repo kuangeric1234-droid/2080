@@ -317,8 +317,12 @@ export async function exportReviewDocx(
   const scores: Record<string, number | null> = review.category_scores ?? {}
   const categoryComments: Record<string, string> = review.category_comments ?? {}
   const when = opts.date ?? new Date()
+  /* dd/mm/yyyy, zero-padded — all 17 reference reports date this way (11 with a
+     four-digit year, 6 with two). "5 August 2026" is correct Australian English
+     and is not what any of them writes. `2-digit` rather than `numeric` so the
+     column of dates in a folder of reports lines up. */
   const dateText = new Intl.DateTimeFormat('en-AU', {
-    day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Melbourne',
+    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Australia/Melbourne',
   }).format(when)
 
   /* ── header block ──
