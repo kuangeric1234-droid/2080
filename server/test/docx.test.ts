@@ -499,6 +499,24 @@ describe('exporting the review as .docx', () => {
         .toBeGreaterThan(withOdd.indexOf('Competition:'))
       await db.query(`DELETE FROM review_exhibits WHERE id = 'exh_odd'`)
 
+      /* §13.2 step 1.34. The speed test is the one image all 17 references
+         carry, and it belongs under Website (Technical). Nothing had ever
+         asserted that end to end — 1.27 built the placement, and the exhibit
+         that exercises it only appears when PageSpeed answers. */
+      await db.query(
+        `INSERT INTO review_exhibits (id, workspace_id, review_id, kind, label, path, width, height, position)
+         VALUES ('exh_perf',$1,$2,'performance_report','Speed test','shot.png',412,823,2)`,
+        [WORKSPACE_ID, reviewId])
+      const withPerf = await documentText(
+        (await exportReviewDocx(db, WORKSPACE_ID, reviewId, { exhibitDir: exDir })).buffer)
+      const speed = withPerf.indexOf('Speed test')
+      expect(speed, 'the speed test vanished').toBeGreaterThan(-1)
+      expect(speed, 'the speed test is not under Website (Technical)')
+        .toBeGreaterThan(withPerf.indexOf('Website (Technical):'))
+      expect(speed, 'the speed test fell past Website (Technical)')
+        .toBeLessThan(withPerf.indexOf('Website (Usability):'))
+      await db.query(`DELETE FROM review_exhibits WHERE id = 'exh_perf'`)
+
       // attached: it moves up beside the paragraph it proves
       await attachExhibit(db, WORKSPACE_ID, 'exh_att', target.id)
       text = await documentText(

@@ -155,6 +155,7 @@ export async function collectFetchLayer(input: string, opts: CrawlOptions = {}):
   // ── DNS + TLS ──
   if (opts.networkProbes !== false) {
     signals.push(...(await emailHostingSignals(target, finalHost, errors)))
+    signals.push(...(await hostingSignals(finalHost)))
     if (secure) {
       const cert = await tlsInfo(finalHost, errors)
       if (cert) {
@@ -577,6 +578,46 @@ async function emailHostingSignals(domain: string, webHost: string, errors: stri
     errors.push(`mail/web host comparison failed: ${(e as Error).message}`)
   }
   return out
+}
+
+/* Australian city codes as they appear in a hosting provider's PTR names, and
+   the .au ccTLD. Delimited, so "super" cannot match "per" and "melbourne" can
+   still match "mel". Deliberately a small list of things that are certain
+   rather than a large list of things that are likely. */
+const AU_HOST_MARKER =
+  /(?:^|[.\-])((?:syd|sydney|mel|melbourne|bne|brisbane|per|perth|adl|adelaide|cbr|canberra|hba|hobart|drw|darwin)\d*)(?:[.\-]|$)|(\.au)$/i
+
+/** The token in a PTR name that places a server in Australia, or null. */
+export function australianHostMarker(ptr: string): string | null {
+  const m = AU_HOST_MARKER.exec(ptr)
+  return m ? (m[1] ?? m[2]) : null
+}
+
+/**
+ * What country the origin server sits in, read off its reverse DNS.
+ *
+ * `site.host.country` has been in the catalogue since 1.3a with nothing ever
+ * emitting it, so `tech.hosting.speed`'s `{{host_country}}` never filled, the
+ * export refused the paragraph for holding a variable, and 1.9 never accepted
+ * it. The paragraph 14 of 17 references carry has never once reached a
+ * document (§13.2 1.34).
+ *
+ * This is the free source the reference reviewer used themselves: Oh Dental's
+ * report quotes `syn03ge.syd5.hostyourservices.net` in the sentence, and read
+ * "syd5" the same way. No key, no third party — DNS, which §13.2 already
+ * allows. When the PTR carries no marker we publish nothing: a site behind
+ * Cloudflare genuinely cannot be placed this way, and a guess about where a
+ * practice's server lives is not worth having.
+ */
+async function hostingSignals(webHost: string): Promise<Signal[]> {
+  const ips = await resolveAny(webHost)
+  if (ips.length === 0) return []
+  const ptr = await dns.reverse(ips[0]).catch(() => [] as string[])
+  if (ptr.length === 0) return []
+  const marker = australianHostMarker(ptr[0])
+  if (!marker) return []
+  return [sig('site.host.country', 'Australia', 'dns',
+    `Reverse DNS for ${ips[0]} is ${ptr[0]} — "${marker}" places the origin in Australia`)]
 }
 
 async function resolveAny(host: string): Promise<string[]> {

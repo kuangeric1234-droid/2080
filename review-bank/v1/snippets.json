@@ -611,6 +611,10 @@
         "all": [
           {
             "signal": "site.load_seconds",
+            "gt": 2
+          },
+          {
+            "signal": "site.host.country",
             "exists": true
           }
         ]
@@ -622,6 +626,34 @@
       "requires_exhibit": true,
       "exhibit_kind": "performance_report",
       "text": "The website is hosted in {{host_country}} which is good, as it should improve website performance. A website should load within 2 seconds to reduce the chance of losing a patient. Your website took {{load_seconds}} seconds to load which isn’t ideal."
+    },
+    {
+      "id": "tech.hosting.speed_ok",
+      "category": "website_technical",
+      "dimension": "Performance",
+      "variant": "positive",
+      "severity": "positive",
+      "weight": 0,
+      "auto_safe": true,
+      "when": {
+        "all": [
+          {
+            "signal": "site.load_seconds",
+            "lte": 2
+          },
+          {
+            "signal": "site.host.country",
+            "exists": true
+          }
+        ]
+      },
+      "vars": [
+        "host_country",
+        "load_seconds"
+      ],
+      "requires_exhibit": true,
+      "exhibit_kind": "performance_report",
+      "text": "The website is hosted in {{host_country}} which is good, as it should improve website performance. A website should load within 2 seconds to reduce the chance of losing a patient. Your website took {{load_seconds}} seconds to load which is great."
     },
     {
       "id": "use.mobile.ok",

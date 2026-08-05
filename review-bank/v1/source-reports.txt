@@ -1,0 +1,17 @@
+# Paragraphs quoted from completed reports, not from the blank template.
+#
+# The blank template ships one half of some pairs. Where a completed report
+# carries the other half, and carries it in three or more of the seventeen
+# (§13.2 1.32's threshold), the wording is quoted here rather than written.
+# Every line names the reports it came from and the count, so the claim that
+# this is house copy stays arguable.
+#
+# Lines beginning with # are notes. Blank lines are ignored.
+
+# tech.hosting.speed_ok — the fast half of the hosting paragraph. 6/17 as a
+# whole paragraph: Advanced Chiropractic, Camberwell Dental Group, Chiropractic
+# Symphony, Holistic Dental Donvale, Oh Dental, Paladin. Wording taken from
+# Advanced Chiropractic ("which is great", also Camberwell and Chiropractic
+# Symphony); "losing a patient" rather than that report's "losing a visitor",
+# which is the wording of the other nine and of the template's own negative.
+The website is hosted in Australia which is good, as it should improve website performance. A website should load within 2 seconds to reduce the chance of losing a patient. Your website took 0.47 seconds to load which is great.

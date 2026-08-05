@@ -6,6 +6,13 @@ import { loadBank, literalSegments, render, variablesOf } from '../src/review/ba
 
 const HERE = path.dirname(fileURLToPath(import.meta.url))
 const SOURCE = path.join(HERE, '../../review-bank/v1/source-paragraphs.txt')
+/* §13.2 1.34. The blank template ships only one half of some pairs — it has
+   "took 4.4 seconds to load which isn't ideal" and nothing for a site that is
+   fast. Where a completed report carries the other half in three or more of
+   the seventeen, the wording is quoted from that report rather than written,
+   and recorded here with its count. A second source, not a looser one: the
+   file names where every line came from. */
+const REPORTS = path.join(HERE, '../../review-bank/v1/source-reports.txt')
 
 /** Straight quotes/dashes/spacing differences must not fail a match. */
 function norm(s: string): string {
@@ -32,7 +39,11 @@ function covers(snippetText: string, paragraph: string): boolean {
 }
 
 const bank = loadBank()
-const sourceParagraphs = readFileSync(SOURCE, 'utf8').split('\n').map((l) => l.trim()).filter(Boolean)
+const lines = (file: string) =>
+  readFileSync(file, 'utf8').split('\n').map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('#'))
+const sourceParagraphs = lines(SOURCE)
+const reportParagraphs = lines(REPORTS)
 
 describe('snippet bank v1', () => {
   it('loads with no duplicate ids, unknown categories or dangling conflicts', () => {
@@ -56,13 +67,28 @@ describe('snippet bank v1', () => {
     for (const p of uncovered) expect(p).toMatch(/Threat: \d+\/10\.$/)
   })
 
-  it('every snippet text traces back to the source template', () => {
+  it('every snippet text traces back to the template or to a named report', () => {
     const GENERATED = new Set(['summary.opening'])
+    const sources = [...sourceParagraphs, ...reportParagraphs]
     const orphans = bank.snippets
       .filter((s) => !GENERATED.has(s.id))
-      .filter((s) => !sourceParagraphs.some((p) => covers(s.text, p)))
+      .filter((s) => !sources.some((p) => covers(s.text, p)))
       .map((s) => s.id)
     expect(orphans, `snippets with invented wording: ${orphans.join(', ')}`).toEqual([])
+  })
+
+  /* The second source is the narrower one, so it must not become a place to
+     put anything that will not fit the template: every line has to be a
+     paragraph some snippet actually says, and has to name where it came from. */
+  it('quotes nothing from a report that no snippet uses', () => {
+    const unused = reportParagraphs.filter((p) => !bank.snippets.some((s) => covers(s.text, p)))
+    expect(unused, `quoted but unused:\n${unused.join('\n')}`).toEqual([])
+  })
+
+  it('attributes every quoted report paragraph to its reports', () => {
+    const raw = readFileSync(REPORTS, 'utf8')
+    // each quoted line is preceded by a comment block naming reports and count
+    expect(raw).toMatch(/#.*\d+\/17/)
   })
 
   it('pairs both halves of every conflict', () => {
@@ -148,13 +174,20 @@ describe('snippet bank v1', () => {
     /* Pinned on purpose. Widening auto_safe is a decision about what reaches a
        client unread, so it should require editing this number and saying why —
        not fall out of an unrelated bank edit. */
-    it('covers exactly the 18 measurements signed off in 1.8', () => {
+    it('covers exactly the 19 measurements signed off in 1.8 and 1.34', () => {
       const safe = bank.snippets.filter((s) => s.auto_safe).map((s) => s.id).sort()
       expect(safe).toEqual([
         'tech.analytics.absent', 'tech.analytics.present',
         'tech.cms.squarespace', 'tech.cms.static_html', 'tech.cms.wordpress',
         'tech.email.same_server', 'tech.email.separate_server', 'tech.email.unknown',
-        'tech.hosting.speed', 'tech.https.absent', 'tech.https.present',
+        /* 1.34 added the fast half. Its twin has been auto_safe since 1.8 and
+           it is the same measurement read the other way round — the load event
+           in a real browser and the practice's own server in reverse DNS. A
+           list that will ship "took 4.4 seconds, which isn't ideal" unread and
+           holds back "took 1.6 seconds, which is great" is not being careful,
+           it is being pessimistic. */
+        'tech.hosting.speed', 'tech.hosting.speed_ok',
+        'tech.https.absent', 'tech.https.present',
         'use.captcha.legacy', 'use.contrast.fail', 'use.cta.not_tappable',
         'use.font.small', 'use.mobile.absent', 'use.mobile.ok', 'use.nav.not_sticky',
       ])
