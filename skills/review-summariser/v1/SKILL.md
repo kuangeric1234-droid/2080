@@ -6,7 +6,7 @@ You are summarising findings a human has already accepted. You are not auditing 
 
 ## Input
 
-`{ "practice_name": string, "domain": string, "overall_score": number | null, "category_scores": { [category: string]: number | null }, "findings": [{ "category": string, "variant": "positive" | "negative" | "neutral", "text": string }] }`
+`{ "practice_name": string, "domain": string, "overall_score": number | null, "category_scores": { [category: string]: number | null }, "categories": [{ "key": string, "label": string, "dimensions": string[] }], "findings": [{ "category": string, "variant": "positive" | "negative" | "neutral", "text": string }] }`
 
 ## The one rule that matters
 
@@ -42,21 +42,45 @@ A validator checks this and rejects the run. A rejected summary costs a retry; a
 
 ## The Comments column
 
-You also write one short verdict per category — the Comments column of the summary table, beside the stars. These are not sentences from the report; they are the line a partner reads to know where the practice stands before reading anything else.
+You also write the Comments cell for each category — the column beside the stars. It is the line a
+partner reads to know where the practice stands before reading anything else.
 
-Telegraphic, three to twelve words, no full stop needed. Say the state, and where it is bad say what is needed. Real examples:
+**Write it as a walk through that category's `dimensions`.** You are given them in the input. Name a
+dimension, give it a two-to-five word verdict, comma, next dimension. That is how these reports are
+written. Real examples, verbatim:
 
-> Great performance and diversified email/server
-> Need more service, conditions and reasons for new patients visit content
-> Minor visual updates needed with navigation and calls to action
-> Abandoned social media
-> Good number of reviews, need diversification
-> Strong competition but no one dominates the area
-> Rank #1 for local suburb, but not for surrounding
+> **Website (Business)** — UVP needs to be added, Need more content, Good photos, Online booking is missing.
+> **Website (Business)** — UVP can be improved, Content is good, Can use more real images of the practice and the team, Would benefit from conditions content
+> **Website (Technical)** — Performance needs improvement, Analytics is active, Hosted in Australia and emails are hosted on Outlook.
+> **Website (Technical)** — Performance is good, analytics is present, local hosting, emails on a separate server, default login url needs to change.
+> **Website (Usability)** — Layout is mobile friendly, CTA are clickable, Font are good.
+> **Reputation** — Reviews on Google are great, need to diversify now.
+> **Social Media** — Okay number of fans, relatively low engagement and good frequency of posts
+> **Competition** — 1 main competitor in same locality, nearest other competition is in Victor Harbor
 
-Write one for each category you were given findings for. **Write `N/A` for a category with no findings** — that is what the reports do, and it is honest: nothing was assessed, so there is nothing to report. Do not pad it into a sentence.
+A shorter free-standing verdict is also fine where the findings only support one point — "Abandoned
+social media", "Strong competition but no one dominates the area". Do not pad to fill the list.
 
-The grounding rule applies here too. "Rank #1 for local suburb" is only allowed if a finding says so.
+**The rule that matters most here: only name a dimension the findings actually speak to.**
+
+The dimension list is what the category *could* be assessed on, not what *was* assessed. If nothing
+in the findings touches AHPRA, you do not write "AHPRA fine" — you do not mention AHPRA at all.
+Writing a verdict on something nobody checked is inventing a measurement, and it is worse in this
+column than anywhere else in the report, because it reads as a checklist that was completed.
+
+So: walk the dimensions in the order given, skip every one the findings are silent on, and write a
+verdict for the rest.
+
+**Write `N/A` for a category with no findings at all.** That is what the reports do and it is honest.
+Do not pad it into a sentence.
+
+**Overall Score** is different — not a dimension walk. One forward-looking sentence about what the
+practice should do, in the register of: "Overall the website needs to be optimised for performance
+and SEO with a focus on surrounding areas and treatments." That is `overall_comment`, not a
+`category_comments` entry.
+
+The grounding rule applies here as everywhere: "Ranking #1 for primary keywords" is only allowed if
+a finding says so.
 
 ## Output
 

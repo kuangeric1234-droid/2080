@@ -4,6 +4,27 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.29 — The Comments cell walks the dimension list — 2026-08-05
+
+**Built:** asked for directly — the Comments column should carry the AI's analysis against the assessment framework, not one generic line. Measured before building: **7 of 17** reference reports write that cell as a walk through the category's own dimensions, naming each and giving it a two-to-five word verdict. Above the three-report threshold, so it is house style rather than one reviewer's habit.
+
+The register, verbatim from the references:
+
+> **Website (Business)** — UVP needs to be added, Need more content, Good photos, Online booking is missing.
+> **Website (Technical)** — Performance is good, analytics is present, local hosting, emails on a separate server, default login url needs to change.
+> **Website (Usability)** — Layout is mobile friendly, CTA are clickable, Font are good.
+
+`summariseReview` now passes `categories: [{key, label, dimensions}]` into the skill — it had `category_scores` but never the dimensions themselves, so the model could not have written this even if asked. SKILL.md carries eight verbatim examples and the rules.
+
+**The rule that matters, and it is instruction-enforced only.** The dimension list is what a category *could* be assessed on, not what *was*. If nothing in the findings touches AHPRA, the cell must not say "AHPRA fine" — it must not mention AHPRA at all. Writing a verdict on something nobody checked is inventing a measurement, and it is worse in this column than anywhere else in the report because the cell reads as a completed checklist. **The grounding validator cannot catch this** — it checks numbers and domains, and "AHPRA fine" contains neither. So this is a sentence in a prompt, not a gate, and it is one more reason `review-summariser` stays in shadow until Wally's past reports exist to score against.
+
+**Evidence:** regenerated sample now reads *"Performance needs work, Analytics good, Hosting good"* for Website (Technical) — the reference shape. Categories with no findings still print `N/A`; Overall Score is still a forward-looking sentence. docx 20/20, inbox 15/15, full server suite 241/241, typecheck clean.
+
+**Files:** `skills/review-summariser/v1/SKILL.md`, `server/src/review/summarise.ts`, `server/src/inbox/mockResponders.ts`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) The mock writes without a copula — "Analytics good", not "Analytics is good" — because a template cannot know whether a dimension is singular or plural, and "Banners is good" in the sample document trains the reader to skim it. A real model reads the finding text and has no such problem. (2) At most three dimensions per cell in the mock, so the cell stays a verdict instead of becoming the section again. (3) Overall Score deliberately excluded from the dimension walk: the references write it as a recommendation, and it is `overall_comment`, not a `category_comments` entry.
+
+
 ## Fix — the exported document did not look like the reference — 2026-08-05
 
 **Reported from a real export**, not from a test: the legend was missing and the bullets were "big block dots". Three causes, two of them mine.

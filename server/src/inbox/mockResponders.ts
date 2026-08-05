@@ -150,6 +150,7 @@ export function mockCompletion(input: {
 export function mockReviewSummary(input: {
   findings?: { category: string; variant: string; text: string }[]
   category_scores?: Record<string, number | null>
+  categories?: { key: string; label: string; dimensions: string[] }[]
 }): { summary_text: string; overall_comment: string; category_comments: { category: string; comment: string }[] } {
   const findings = input.findings ?? []
   const weak = [...new Set(findings.filter((f) => f.variant === 'negative').map((f) => f.category))]
@@ -188,27 +189,38 @@ export function mockReviewSummary(input: {
   }
   if (!parts.length) parts.push('Your online presence is broadly in good order.')
 
-  /* One telegraphic verdict per category — the register the real reports use
-     in the Comments column.
-
-     Every category gets one, not just the ones with findings. SKILL.md tells
-     the real skill to write `N/A` where nothing was assessed, and 13 of the 17
-     reference reports do exactly that; not one of their 153 Comments cells is
-     empty. A mock that answers only for the categories it has material for
-     lets the export's fallback carry the rest, which means the tests never
-     exercise what the real skill will actually return. */
+  /* The Comments cell, written as a walk through the category's dimensions —
+     "Performance needs improvement, Analytics is active, Hosted in Australia"
+     — which is how 7 of the 17 real reports write it. The mock can only work
+     from finding variants, so it names the dimensions the findings speak to
+     and says nothing about the rest. A real model reads the finding text and
+     does this properly; the shape is the point here. */
   const seen = [...new Set(findings.map((f) => f.category))]
+  const cats = input.categories ?? []
   const categories = [...new Set([...Object.keys(input.category_scores ?? {}), ...seen])]
   const category_comments = categories.map((category) => {
     const mine = findings.filter((f) => f.category === category)
     if (mine.length === 0) return { category, comment: 'N/A' }
+    const dims = cats.find((c) => c.key === category)?.dimensions ?? []
     const bad = mine.filter((f) => f.variant === 'negative').length
-    return {
-      category,
-      comment: bad === 0 ? 'In good order'
-        : bad === mine.length ? 'Needs work across the board'
-        : 'Some improvement needed',
+    const good = mine.length - bad
+    /* One dimension per finding, at most three, so the cell stays a verdict
+       rather than becoming the section over again. */
+    const named = dims.filter((d) => d.toLowerCase() !== 'n/a').slice(0, Math.min(3, mine.length))
+    if (named.length === 0) {
+      return {
+        category,
+        comment: bad === 0 ? 'In good order'
+          : good === 0 ? 'Needs work across the board'
+          : 'Some improvement needed',
+      }
     }
+    /* No copula: the mock cannot know whether a dimension is singular
+       ("Layout is good") or plural ("Font are good"), and "Banners is good"
+       in the sample document trains the reader to skim it. A real model reads
+       the finding text and has no such problem. */
+    const verdicts = named.map((d, i) => (i < bad ? `${d} needs work` : `${d} good`))
+    return { category, comment: `${verdicts.join(', ')}.` }
   })
 
   return {

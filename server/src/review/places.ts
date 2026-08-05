@@ -139,7 +139,7 @@ export const COMPETITOR_LIMIT = 5
 
 export async function researchPractice(
   provider: PlacesProvider,
-  input: { practiceName: string | null; domain: string; keyword: string },
+  input: { practiceName: string | null; domain: string; keyword: string; locality?: string | null },
 ): Promise<ResearchResult> {
   const signals: Signal[] = []
   const errors: string[] = []
@@ -147,16 +147,45 @@ export async function researchPractice(
     return { practice: null, competitors: [], signals, errors: ['no places provider configured'] }
   }
 
-  const query = [input.practiceName, input.domain].filter(Boolean).join(' ')
+  /* Text Search returns the best match for a string, not the right business.
+     Searching "Oh Dental ohdental.com.au" returned a practice in Melbourne
+     while the client is in O'Halloran Hill, South Australia — and its five
+     Melbourne neighbours printed on the report as the client's competitors.
+     Nothing caught it, because nothing checked.
+
+     `website` is already in the Details fields for exactly this purpose. Use
+     it: a listing whose website is not the domain being audited is a different
+     business, and a competitor set built around the wrong business is the most
+     damaging thing this collector could produce. Two queries, then silence. */
+  const queries = [
+    /* Name plus the suburb from the practice's own footer. This is the one
+       that works: "Oh Dental" alone matched "One Week Dental" in Melbourne,
+       "Oh Dental O'Halloran Hill" found the right clinic first hit. */
+    [input.practiceName, input.locality].filter(Boolean).join(' '),
+    [input.practiceName, input.domain].filter(Boolean).join(' '),
+    input.domain,
+  ].filter((q, i, all) => q && all.indexOf(q) === i)
+
   let practice: PlaceRecord | null = null
-  try {
-    practice = await provider.findPractice(query)
-  } catch (err) {
-    errors.push((err as Error).message)
-    return { practice: null, competitors: [], signals, errors }
+  let query = queries[0]
+  const rejected: string[] = []
+  for (const q of queries) {
+    let candidate: PlaceRecord | null
+    try {
+      candidate = await provider.findPractice(q)
+    } catch (err) {
+      errors.push((err as Error).message)
+      return { practice: null, competitors: [], signals, errors }
+    }
+    if (!candidate) continue
+    if (sameSite(candidate.website, input.domain)) { practice = candidate; query = q; break }
+    rejected.push(`${candidate.name} (${candidate.website ?? 'no website listed'})`)
   }
+
   if (!practice) {
-    errors.push(`no Google listing found for "${query}"`)
+    errors.push(rejected.length > 0
+      ? `no Google listing matches ${input.domain} — rejected ${rejected.join('; ')}`
+      : `no Google listing found for "${queries.join('" or "')}"`)
     return { practice: null, competitors: [], signals, errors }
   }
 
@@ -192,6 +221,22 @@ export async function researchPractice(
   }
 
   return { practice, competitors, signals, errors }
+}
+
+/** Is this Google listing's website the site being audited? */
+export function sameSite(listed: string | null, domain: string): boolean {
+  if (!listed) return false
+  const host = (s: string) => {
+    try {
+      return new URL(s.includes('://') ? s : `https://${s}`).hostname.toLowerCase().replace(/^www\./, '')
+    } catch { return '' }
+  }
+  const a = host(listed)
+  const b = host(domain)
+  if (!a || !b) return false
+  /* A practice often lists a booking subdomain or the bare apex against the
+     www; treat one as a suffix of the other rather than demanding equality. */
+  return a === b || a.endsWith(`.${b}`) || b.endsWith(`.${a}`)
 }
 
 function median(xs: number[]): number | null {

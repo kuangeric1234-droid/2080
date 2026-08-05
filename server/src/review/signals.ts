@@ -45,6 +45,7 @@ export const SIGNAL_CATALOG: Record<string, { desc: string; layer: 'fetch' | 're
   // ── email ──
   'site.email.mx_host': { desc: 'Primary MX hostname', layer: 'fetch' },
   'site.email.same_server': { desc: 'Mail exchanger resolves to the same IP as the website', layer: 'fetch' },
+  'site.contact.locality': { desc: 'Suburb, state and postcode from the address on the site', layer: 'fetch' },
   'site.contact.email': { desc: 'First contact address found on the site', layer: 'fetch' },
   'site.contact.email_domain_public': { desc: 'Contact address is on gmail/yahoo/hotmail/bigpond etc', layer: 'fetch' },
 

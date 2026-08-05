@@ -94,6 +94,13 @@ export async function summariseReview(
       domain: review.domain,
       overall_score: review.overall_score ?? null,
       category_scores: review.category_scores ?? {},
+      /* The dimensions each category is assessed against. 7 of the 17 real
+         reports write the Comments cell as a walk through this list — "UVP
+         needs to be added, Need more content, Good photos, Online booking is
+         missing" — so the skill needs to know what the list is. */
+      categories: data.categories.map((c: { key: string; label: string; dimensions: string[] }) => ({
+        key: c.key, label: c.label, dimensions: c.dimensions,
+      })),
       findings: accepted.map((f: Record<string, unknown>) => ({
         category: f.category,
         variant: f.variant,

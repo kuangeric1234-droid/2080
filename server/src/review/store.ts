@@ -221,6 +221,10 @@ export async function collectReview(
       practiceName: (meta[0]?.practice_name as string | null) ?? null,
       domain,
       keyword: trade,
+      locality: (() => {
+        const s = result.signals.find((x) => x.key === 'site.contact.locality')
+        return typeof s?.value === 'string' ? s.value : null
+      })(),
     })
   }
 

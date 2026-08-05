@@ -62,7 +62,12 @@ describe('researching a practice on Google', () => {
       textsearch: { status: 'OK', results: [{ place_id: 'me', name: 'Me' }] },
       details: {
         status: 'OK',
-        result: { place_id: 'me', name: 'Me', geometry: { location: { lat: -37.8, lng: 145.1 } } },
+        /* The website has to be here and has to match: since the wrong-city
+           bug, a listing that cannot be tied to the domain is refused. */
+        result: {
+          place_id: 'me', name: 'Me', website: 'https://me.com.au/',
+          geometry: { location: { lat: -37.8, lng: 145.1 } },
+        },
       },
       nearbysearch: {
         status: 'OK',
@@ -79,6 +84,69 @@ describe('researching a practice on Google', () => {
     expect(r.competitors.map((c) => c.name)).toEqual(['Chapel Gate Dental', 'Camberwell Dental'])
     const med = r.signals.find((s) => s.key === 'reputation.competitor_review_median')!
     expect(med.value).toBe(51) // (23 + 79) / 2
+  })
+
+  /* The bug this guards against actually happened and reached the page.
+     Searching "Oh Dental ohdental.com.au" returned One Week Dental in
+     Melbourne — Google Text Search matches a string, not a business — and its
+     five Melbourne neighbours printed on a South Australian practice's report
+     as that practice's competitors. `website` was already being fetched for
+     exactly this check and nothing was checking it. */
+  it('refuses a listing whose website is not the site being audited', async () => {
+    stub({
+      textsearch: { status: 'OK', results: [{ place_id: 'wrong', name: 'One Week Dental' }] },
+      details: {
+        status: 'OK',
+        result: {
+          place_id: 'wrong', name: 'One Week Dental', rating: 4.8, user_ratings_total: 300,
+          geometry: { location: { lat: -37.8, lng: 145.0 } },
+          website: 'https://www.oneweekdental.com.au/',
+        },
+      },
+      nearbysearch: { status: 'OK', results: [{ place_id: 'n1', name: 'A Melbourne practice' }] },
+    })
+    const r = await researchPractice(new GooglePlacesProvider('k'),
+      { practiceName: 'Oh Dental', domain: 'ohdental.com.au', keyword: 'dentist' })
+
+    expect(r.practice, 'accepted a listing for a different business').toBeNull()
+    expect(r.competitors, 'competitors from the wrong city reached the report').toEqual([])
+    expect(r.signals, 'a rating for the wrong practice was published').toEqual([])
+    expect(r.errors.join(' '), 'the rejection was silent').toMatch(/One Week Dental/)
+  })
+
+  it('anchors the search on the suburb from the practice website', async () => {
+    const queries: string[] = []
+    globalThis.fetch = (async (url: string | URL) => {
+      const u = new URL(String(url))
+      if (u.pathname.includes('textsearch')) {
+        const q = u.searchParams.get('query') ?? ''
+        queries.push(q)
+        /* Only the query carrying the suburb finds the right clinic — which is
+           exactly how Google behaved on the real lookup. */
+        return new Response(JSON.stringify(q.includes('Halloran')
+          ? { status: 'OK', results: [{ place_id: 'right', name: "O'Halloran Hill Dental Clinic" }] }
+          : { status: 'OK', results: [{ place_id: 'wrong', name: 'One Week Dental' }] }),
+        { status: 200 })
+      }
+      if (u.pathname.includes('details')) {
+        const id = u.searchParams.get('place_id')
+        return new Response(JSON.stringify({
+          status: 'OK',
+          result: id === 'right'
+            ? { place_id: 'right', name: "O'Halloran Hill Dental Clinic", rating: 5, user_ratings_total: 228,
+                geometry: { location: { lat: -35.06, lng: 138.55 } }, website: 'https://ohdental.com.au/' }
+            : { place_id: 'wrong', name: 'One Week Dental', website: 'https://www.oneweekdental.com.au/' },
+        }), { status: 200 })
+      }
+      return new Response(JSON.stringify({ status: 'OK', results: [] }), { status: 200 })
+    }) as typeof fetch
+
+    const r = await researchPractice(new GooglePlacesProvider('k'), {
+      practiceName: 'Oh Dental', domain: 'ohdental.com.au', keyword: 'dentist',
+      locality: 'Halloran Hill SA 5158',
+    })
+    expect(queries[0], 'the suburb was not tried first').toContain('Halloran Hill')
+    expect(r.practice?.reviewCount).toBe(228)
   })
 
   it('says so when Google has no listing rather than inventing one', async () => {

@@ -132,6 +132,16 @@ export async function collectFetchLayer(input: string, opts: CrawlOptions = {}):
   signals.push(...linkSignals(pages, origin))
   signals.push(...socialSignals(pages))
 
+  /* Where the practice is. Google's Text Search fuzzy-matches a name to any
+     business that sounds similar — "Oh Dental" returned "One Week Dental" in
+     Melbourne for a practice in South Australia — so the Places lookup needs a
+     place to anchor on, and the site's own footer is where it says. */
+  const locality = postalLocality(pages)
+  if (locality) {
+    signals.push(sig('site.contact.locality', locality, 'crawl',
+      `Address found in the page content: "${locality}"`))
+  }
+
   const contact = contactEmail(pages)
   if (contact) {
     const domain = contact.split('@')[1].toLowerCase()
@@ -477,6 +487,30 @@ function socialSignals(pages: Page[]): Signal[] {
   if (fb) out.push(sig('social.facebook_url', fb, 'crawl', `Facebook page linked from the site: ${fb}`))
   if (ig) out.push(sig('social.instagram_url', ig, 'crawl', `Instagram profile linked from the site: ${ig}`))
   return out
+}
+
+/* "O'Halloran Hill SA 5158" — suburb, state, postcode. Australian addresses
+   end this way and practice sites put one in the footer of every page. Take
+   the whole tail rather than just the suburb: two suburbs share a name across
+   states often enough to matter, and the postcode settles it. */
+const AU_LOCALITY = /([A-Z][A-Za-z'\-]*(?:[ ][A-Z][A-Za-z'\-]*){0,3}),?\s+(VIC|NSW|QLD|SA|WA|TAS|NT|ACT)\s+(\d{4})\b/
+
+function postalLocality(pages: Page[]): string | null {
+  for (const p of pages) {
+    /* Not `root.text`: the parser concatenates text nodes with no separator,
+       so a footer of `<span>O'Halloran Hill</span><span>SA 5158</span>` comes
+       out as "O'Halloran HillSA 5158" and no address regex will ever match it.
+       Strip the tags to spaces the way a browser renders them. */
+    const text = p.html
+      .replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&#0?39;|&apos;|&rsquo;/g, "'")
+      .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ')
+      .replace(/\s+/g, ' ')
+    const m = text.match(AU_LOCALITY)
+    if (m) return `${m[1]} ${m[2]} ${m[3]}`
+  }
+  return null
 }
 
 function contactEmail(pages: Page[]): string | null {
