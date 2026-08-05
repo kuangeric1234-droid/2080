@@ -12,6 +12,8 @@ import { receiveIntake } from '../src/review/intake.ts'
 import { addCompetitor, attachExhibit, collectReview, decideFinding, getReview, removeCompetitor, setScores } from '../src/review/store.ts'
 import { exportReviewDocx } from '../src/review/docx.ts'
 import { loadBank } from '../src/review/bank.ts'
+import { readDocx } from '../src/review/docx-read.ts'
+import { summaryTable } from '../src/review/fidelity.ts'
 import { summariseReview } from '../src/review/summarise.ts'
 import { MockModelClient } from '../src/skills/model.ts'
 import { mockReviewSummary } from '../src/inbox/mockResponders.ts'
@@ -87,6 +89,13 @@ async function docxParts(buf: Buffer): Promise<{ parts: string[]; header: string
   const out = { parts, header: read(headerName), footer: read(footerName) }
   rmSync(dir, { recursive: true, force: true })
   return out
+}
+
+/** The raw word/document.xml, for assertions about ink rather than text. */
+async function documentXml(buf: Buffer): Promise<string> {
+  const JSZip = (await import('jszip')).default
+  const zip = await JSZip.loadAsync(buf)
+  return await zip.file('word/document.xml')!.async('string')
 }
 
 /** Pull the document body text out without a full OOXML parse. */
@@ -188,6 +197,31 @@ describe('exporting the review as .docx', () => {
     expect(out.filename).toBe('Online Presence Review - Stellar-Smiles-Dental.docx')
     expect(isDocx(out.buffer)).toBe(true)
     expect(out.buffer.length).toBeGreaterThan(3000)
+  })
+
+  /* §13.2 step 1.20. A score is five glyphs in 16 of the 17 real reports —
+     earned ones black, the remainder tinted — so the column can be read down
+     at a glance. Printing three asterisks for a 3 gives a ragged column and
+     hides the denominator. */
+  it('prints five star glyphs and tints the unearned ones', async () => {
+    const out = await exportReviewDocx(db, WORKSPACE_ID, reviewId, { date: new Date('2026-08-04T00:00:00Z') })
+    const doc = await readDocx(out.buffer)
+    const table = summaryTable(doc)!
+
+    for (const row of table.rows.slice(1)) {
+      const cellText = row[1] ?? ''
+      if (!cellText.includes('*')) {
+        expect(cellText, `${row[0]}: an unscored row should print a dash`).toBe('—')
+        continue
+      }
+      expect(cellText.replace(/[^*]/g, '').length, `${row[0]}: not five glyphs`).toBe(5)
+    }
+
+    /* website_technical is 1, so four glyphs in that row must be tinted —
+       assert the ink itself, since the glyph count alone would pass if every
+       star were black. */
+    const xml = await documentXml(out.buffer)
+    expect(xml, 'no tinted run — every star is black').toContain('B8CCE4')
   })
 
   it('lays the document out like the template', async () => {

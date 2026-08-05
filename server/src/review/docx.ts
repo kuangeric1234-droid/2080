@@ -139,8 +139,29 @@ function heading(text: string, level: 1 | 2) {
 /* The template prints scores as literal asterisks, so that is what ships. An
    unscored row prints an em dash rather than five stars — the same rule the
    engine and the workspace hold to. */
-function stars(score: number | null): string {
-  return score === null ? '—' : '*'.repeat(score)
+/* A score is five glyphs, always — the earned ones black, the rest tinted.
+   Every reference report does this (16 of 17 exactly; the seventeenth has one
+   four-glyph cell, a slip rather than a different convention), and the reason
+   is legibility: five cells of equal width let a reader compare rows down the
+   column at a glance. Printing three asterisks for a 3 gives a ragged column
+   and hides the denominator — three out of what?
+
+   b8cce4 is the tint in 122 of the 141 pale runs across the references; the
+   other 19 are c6d9f1, one row of one template generation that got copied
+   forward. Use the one they actually settled on. */
+const STAR_UNEARNED = 'B8CCE4'
+const STAR_MAX = 5
+
+function stars(score: number | null): TextRun[] {
+  const common = { font: BODY_FONT, size: SZ.small, bold: true }
+  if (score === null) return [new TextRun({ ...common, text: '—' })]
+  const earned = Math.max(0, Math.min(STAR_MAX, Math.round(score)))
+  return [
+    new TextRun({ ...common, text: '*'.repeat(earned) }),
+    ...(earned < STAR_MAX
+      ? [new TextRun({ ...common, text: '*'.repeat(STAR_MAX - earned), color: STAR_UNEARNED })]
+      : []),
+  ]
 }
 
 function cell(children: Paragraph[], opts: { width?: number; fill?: string } = {}) {
@@ -283,12 +304,12 @@ export async function exportReviewDocx(
      horizontal banding, and the first column is bold in every row (its
      `firstCol` conditional format). The Overall row is a data row like the
      rest — the template gives it no fill of its own. */
-  const dataRow = (label: string, score: string, comment: string, index: number) =>
+  const dataRow = (label: string, score: TextRun[], comment: string, index: number) =>
     new TableRow({
       children: [
         cell([tableCellText(label, { bold: true })],
           { width: COL.category, fill: index % 2 === 0 ? BAND_FILL : undefined }),
-        cell([tableCellText(score, { bold: true })],
+        cell([new Paragraph({ spacing: { after: 0 }, children: score })],
           { width: COL.score, fill: index % 2 === 0 ? BAND_FILL : undefined }),
         cell([tableCellText(comment)],
           { width: COL.comments, fill: index % 2 === 0 ? BAND_FILL : undefined }),

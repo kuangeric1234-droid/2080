@@ -4,6 +4,20 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.20 — Five star glyphs — 2026-08-05
+
+**Built:** the first gap closed off the 1.19 ledger. `stars()` returned `'*'.repeat(score)`, so a 1 printed one character and a 5 printed five — a ragged column. **16 of 17 reference reports print five glyphs in every score cell**, the earned ones black and the remainder tinted, which is what lets a partner read the column down and compare rows. It also restores the denominator: three asterisks alone do not say three out of what. `stars()` now returns two runs and the score cell takes runs rather than a string.
+
+**Quantified before building, as the loop requires.** Across all 141 pale runs in the reference set the tint is `B8CCE4` 122 times and `C6D9F1` 19 times — the latter clustered in one row of one template generation that got copied forward, so `B8CCE4` is the one they settled on. The single report that fails the five-glyph check is DentalArt, which has one four-glyph cell; a reviewer's slip, not a different convention, and it is quoted as such rather than treated as a second style.
+
+**Evidence:** new test in `docx.test.ts` — every scored row holds exactly five glyphs, an unscored row still prints an em dash, and the tint is asserted **by ink** (`B8CCE4` in the XML), because a glyph count alone would pass a table where every star is black. docx suite 19/19, full server suite 234/234, typecheck clean. **Harness: score 17 → 13**, `star-glyph-count` gone, no other gap moved.
+
+**Files:** `server/src/review/docx.ts`, `server/test/docx.test.ts`, `docs/FIDELITY-LEDGER.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) `Math.round` and a clamp to 0–5 on the way in, so a score outside the range prints a full or empty row rather than throwing at export time — the export is the last step of a long pipeline and is the worst place to discover bad data. (2) The tint is a constant next to the other table colours, not inlined, since the summary table's palette is already a set that has to stay consistent.
+
+---
+
 ## §13.2 step 1.19 — The fidelity harness, and a correction it forced — 2026-08-05
 
 **Built:** something that can answer "does this read like one of ours" with a number instead of an opinion. `server/src/review/docx-read.ts` parses a `.docx` back out of OOXML — paragraphs with their style and ink, tables, header/footer, body images. `server/src/review/fidelity.ts` reduces the 17 completed reports in `Downloads/presence` to a comparable profile and diffs a generated report against it: letterhead, footer page numbers, the eight sections and their order, summary-table shape, star rendering, where the severity colour sits, exhibits, findings per section, and which reference paragraphs the bank can already say. `fidelity-run.ts` (`npm run review:fidelity`) audits **ohdental.com.au** unattended — the same practice the canonical reference report is about, so no difference can be waved away as "different site" — and writes `docs/FIDELITY-LEDGER.md`. Every gap carries its reference count, so it can be argued with.
