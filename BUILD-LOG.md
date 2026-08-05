@@ -4,6 +4,24 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.24 — The reviewer ceiling — 2026-08-05
+
+**The diagnosis, which is the point of this entry.** Going after observation O1 (the report is a third the length of a real one), I expected to find Website (Business) empty because the bank was missing paragraphs or the collector was missing signals. Neither. The bank fired **two correct findings** there — `biz.booking.present` and `biz.email.public_domain` — and both are `auto_safe: false`, so they stayed candidates and never reached the export. Four of the six remaining business paragraphs are `judgement` triggers, which exist precisely because a human has to make that call.
+
+**Nothing was broken. The measurement was asking the wrong question.** §13.4 guarantees the unattended document is thin; a harness that reads only that document reports gaps no amount of building can close, and mixes them in with gaps that are real. Worse, the obvious way to "fix" a thin section under that measurement is to widen `auto_safe` — which the loop forbids by name, and rightly: `biz.email.public_domain` would pass the 1.8 criterion on paper (deterministic signal, no AHPRA exposure), and I would have been reaching for it because the section looked empty rather than because the gate was wrong. **I did not widen it.**
+
+**Built:** the harness now exports twice — unattended, and again with every candidate accepted (unfilled-variable findings excluded, since those are not shippable at any gate) — and reports both numbers. **Unattended 14 · reviewer ceiling 8.** The ledger's queue table is now drawn from the ceiling, with a separate table for gaps a reviewer closes by doing the job.
+
+**What survives at the ceiling, and so is genuinely the platform's:** Social Media at **0 findings** against a reference median of 3 — the Meta PPCA blocker, not something a reviewer can type their way out of. Then Website (Business) 2, Visibility (SEO) 1, Competition 1, all minor, all short of the reference medians for reasons already in BLOCKERS.md. Plus the date format.
+
+**Evidence:** `compareToReference` is unchanged and already covered by 11 tests; this step changes only what it is pointed at. Full server suite 235/235, typecheck clean. Both documents are written to `docs/fidelity/` for reading side by side.
+
+**Files:** `server/src/review/fidelity-run.ts`, `docs/FIDELITY-LEDGER.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) The ceiling accepts candidates by direct UPDATE rather than through `decideFinding`, because it is a measurement of the document and must not write audit rows implying a human approved anything — `decided_by` is stamped `fidelity-harness` so the row is never mistaken for a real decision. (2) Findings holding an unfilled `{{variable}}` are excluded from the ceiling: they cannot ship at any gate, so counting them would overstate what the platform can produce. (3) The unattended number is kept rather than dropped — it is the honest measure of the 1.13 promise, and the distance between the two numbers is the reviewer's workload, which is worth watching on its own.
+
+---
+
 ## §13.2 step 1.23 — No section announces its own emptiness — 2026-08-05
 
 **Built:** observation O2 from the human pass. An empty section printed *"Not assessed in this review."* in the body, in the same voice as the findings around it. **0 of 17 reference reports contain any such sentence** — they fill all eight sections, and where there is little to say they say something substantive about the absence ("The website currently doesn't have Adwords setup (or we are unable to see it)…", which is in the bank already). A section that announces its own emptiness is the document telling the reader it was assembled rather than written.
