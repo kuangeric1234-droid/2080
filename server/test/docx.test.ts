@@ -445,13 +445,20 @@ describe('exporting the review as .docx', () => {
 
     /* Instead the document says once, at the top, that it is not finished, and
        names what is missing. No provider and no competitor typed, so these
-       four have nothing to say yet. */
+       three have nothing to say yet. */
     const head = text.slice(0, text.indexOf('Summary:'))
     expect(head, 'no draft notice on an incomplete report').toContain('DRAFT — not ready to send')
-    for (const key of ['visibility_sem', 'reputation', 'social_media', 'competition']) {
+    for (const key of ['visibility_sem', 'reputation', 'competition']) {
       const cat = bank.categories.find((c) => c.key === key)!
       expect(head, `${cat.label} is empty but unnamed in the draft notice`).toContain(cat.label)
     }
+    /* §13.2 step 1.35. Social Media used to be the fourth name on that line.
+       `social.video.opportunity` is 13/17 house copy and now fires on every
+       review, so once a reviewer accepts it — this scenario accepts everything
+       fillable — the section has a line and stops being declared missing. It
+       is still not auto-accepted: on an unattended run it is named here. */
+    expect(head, 'Social Media carries an accepted finding and is still called missing')
+      .not.toContain('Social Media')
     // …and a section that does have findings is not named as missing
     expect(head, 'a filled section was named as missing').not.toContain('Website (Technical)')
   })

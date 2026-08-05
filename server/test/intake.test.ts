@@ -13,6 +13,7 @@ import { parseJotform, receiveIntake, startManualReview, unwrapJotformBody } fro
 import { HEALTHY, NEGLECTED, fixtureFetch } from './fixtures/practice-site.ts'
 import { collectReview, decideFinding, getReview, listReviews, setScores } from '../src/review/store.ts'
 import { authed, freePort, stopPg } from './helpers.ts'
+import { loadBank } from '../src/review/bank.ts'
 
 let PORT: number
 let server: EmbeddedPostgres
@@ -342,9 +343,14 @@ describe('review lifecycle', () => {
     expect(full.signals.length).toBeGreaterThanOrEqual(24)
     expect(full.categories).toHaveLength(8)
 
-    // every stored finding names the evidence that earned it
+    /* Every stored finding names the evidence that earned it — except the
+       unconditional ones, which are house copy that goes in every report and
+       have no signal to name. That was exempted by id when there was one of
+       them; 1.35 made `social.video.opportunity` the second, so ask the bank
+       what is unconditional rather than keeping a list here. */
+    const bank = loadBank()
     for (const f of full.findings) {
-      if (f.snippet_id === 'summary.closer.optimistic') continue
+      if (bank.byId.get(f.snippet_id as string)?.when === 'always') continue
       expect((f.triggered_by as string[]).length, f.snippet_id).toBeGreaterThan(0)
     }
   })
