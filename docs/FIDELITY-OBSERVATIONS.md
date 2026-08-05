@@ -135,6 +135,25 @@ be the honest boundary of what this platform automates.
 
 ---
 
+## Pass 2 — 2026-08-05, from a real export by the user
+
+### O8 · The harness reads text and structure; it never looks at how the page renders — **critical**
+
+Reported directly: "the legend is missing", "the dotpoints are all just big block dots", "the exported
+document looks nowhere like the example". All three passed every check in the ledger.
+
+Causes were a stale API process (see BUILD-LOG), the bullet glyph `●` specified in Cambria, which
+does not contain it — Word draws a substitution box — and body text at 11pt where **17 of 17**
+references are Cambria 12pt.
+
+The lesson is not the individual bugs, it is that **appearance is measurable in the same XML the
+harness already parses and is not being measured.** `docDefaults` font and size, bullet `lvlText`
+and its font, heading style definitions, table borders and fills are all sitting in `styles.xml`
+and `numbering.xml`. A check that compared ours against the references' would have caught every one
+of these before a human opened the file. That is the next thing worth building.
+
+---
+
 ## How to use this file
 
 Entries here are candidates for §13.2 steps, ranked by the same severity words the ledger uses.

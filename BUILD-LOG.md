@@ -4,6 +4,23 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## Fix — the exported document did not look like the reference — 2026-08-05
+
+**Reported from a real export**, not from a test: the legend was missing and the bullets were "big block dots". Three causes, two of them mine.
+
+**1 · The API was running yesterday's code.** It had been up since 4 Aug 16:37 and `tsx` does not hot-reload, so every export since then predated the legend, the five-star scores, the N/A fallback, dd/mm dates, the draft notice and inline exhibits. I noted this exact trap earlier in the build and then walked into it. Restarted.
+
+**2 · The bullet glyph is `●` and Cambria does not contain it.** Word finds the font present, cannot find the character, and draws a substitution box — which is what a "big block dot" is. **All 17 references set the bullet font explicitly to Noto Sans Symbols**; the font belongs on the paragraph mark, which is what styles the bullet, and the text runs are unaffected because they carry their own. Introduced by 1.22, which set `font: BODY_FONT` on the mark to go with the colour.
+
+**3 · Body text was 11pt against the references' 12pt.** `SZ.body` was 22 half-points; **17 of 17 references are Cambria 24** in `docDefaults`. Unanimous, and wrong in every paragraph of every document exported so far.
+
+**Evidence:** regenerated and read back out of the XML — `docDefaults` Cambria 24, bullet mark font Noto Sans Symbols, legend present, 17 coloured bullets. Full server suite 241/241.
+
+**Files:** `server/src/review/docx.ts`.
+
+**What this says about the harness.** Every one of these passed it. The ledger reads text and structure out of OOXML and never looks at how the page renders — its own header says as much ("zero at the ceiling is not the same as indistinguishable"), but that caveat clearly was not enough. Font size, glyph coverage and typeface are checkable in the same XML the harness already parses, and are not checked. Recorded as observation O8.
+
+
 ## §13.2 step 1.28 — The sample summary stops contradicting itself — 2026-08-05
 
 **Built:** observation O4. `mockReviewSummary` built its "weak" and "strong" lists independently, so a category with both a problem and a strength was named in both sentences of the same paragraph — *"particularly around website usability … your website usability already works in your favour"*. A category with a problem is now simply weak. It also printed raw category keys as prose ("website technical" is a database column) and comma-spliced its lists; both fixed, so the sample now reads *"particularly around the technical setup and how the site reads and behaves"*.

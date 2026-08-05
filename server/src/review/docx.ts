@@ -36,7 +36,16 @@ const HEADER_INK = 'FFFFFF'
 const BAND_FILL = 'D3DFEE'
 
 /** Half-points, matching the template's w:sz values. */
-const SZ = { body: 22, small: 20, h1: 32, h2: 26 }
+const SZ = { body: 24, small: 20, h1: 32, h2: 26 }
+
+/* The bullet glyph is `●` and it is NOT in Cambria. Word finds the font
+   present, cannot find the character, and draws a substitution box — which is
+   what "big block dots" looks like on the page. All 17 references set the
+   bullet font explicitly to Noto Sans Symbols, and Word falls back cleanly to
+   something that has the glyph when that font is absent. The font goes on the
+   paragraph mark, which is what styles the bullet; the text runs carry their
+   own font and are unaffected. */
+const BULLET_FONT = 'Noto Sans Symbols'
 
 /* The template's own w:gridCol widths — 2518 / 1559 / 4439 of 8516 twips. */
 const COL = { category: 30, score: 18, comments: 52 }
@@ -109,7 +118,7 @@ function bullet(text: string, severity?: Severity) {
   return new Paragraph({
     bullet: { level: 0 },
     spacing: { after: 120, line: 276 },
-    run: severity ? { color: SEVERITY_INK[severity], font: BODY_FONT, size: SZ.body } : undefined,
+    run: { font: BULLET_FONT, ...(severity ? { color: SEVERITY_INK[severity] } : {}) },
     children: [new TextRun({ text, font: BODY_FONT, size: SZ.body })],
   })
 }
@@ -161,7 +170,7 @@ function legend(): Paragraph[] {
     out.push(new Paragraph({
       bullet: { level: 0 },
       spacing: { after: 40 },
-      run: { color: SEVERITY_INK[sev], font: BODY_FONT, size: SZ.body },
+      run: { font: BULLET_FONT, color: SEVERITY_INK[sev] },
       children: [new TextRun({ text: SEVERITY_LABEL[sev], font: BODY_FONT, size: SZ.body })],
     }))
   }
