@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -12,7 +12,7 @@ import { MockModelClient } from '../src/skills/model.ts'
 import { parseJotform, receiveIntake, startManualReview, unwrapJotformBody } from '../src/review/intake.ts'
 import { HEALTHY, NEGLECTED, fixtureFetch } from './fixtures/practice-site.ts'
 import { collectReview, decideFinding, getReview, listReviews, setScores } from '../src/review/store.ts'
-import { authed, freePort } from './helpers.ts'
+import { authed, freePort, stopPg } from './helpers.ts'
 
 let PORT: number
 let server: EmbeddedPostgres
@@ -26,7 +26,8 @@ beforeAll(async () => {
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080itk-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir, user: 'postgres', password: 'postgres', port: PORT,
-    persistent: false, initdbFlags: ['--encoding=UTF8', '--locale=C'],
+    // stopPg removes the directory; see helpers.ts
+    persistent: true, initdbFlags: ['--encoding=UTF8', '--locale=C'],
   })
   await server.initialise()
   await server.start()
@@ -41,8 +42,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db?.end()
-  await server?.stop()
-  try { rmSync(dataDir, { recursive: true, force: true }) } catch { /* win file locks */ }
+  await stopPg(server, dataDir)
 }, 60_000)
 
 /* A real Jotform delivery: form-encoded, answers as a JSON string in

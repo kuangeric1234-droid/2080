@@ -1,10 +1,10 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import EmbeddedPostgres from 'embedded-postgres'
 import pg from 'pg'
-import { freePort } from './helpers.ts'
+import { freePort, stopPg } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed } from '../src/db/seed.ts'
 import { buildApp } from '../src/api.ts'
@@ -20,7 +20,8 @@ beforeAll(async () => {
   dataDir = mkdtempSync(path.join(tmpdir(), 'pg2080au-'))
   server = new EmbeddedPostgres({
     databaseDir: dataDir, user: 'postgres', password: 'postgres', port: PORT,
-    persistent: false, initdbFlags: ['--encoding=UTF8', '--locale=C'],
+    // stopPg removes the directory; see helpers.ts
+    persistent: true, initdbFlags: ['--encoding=UTF8', '--locale=C'],
   })
   await server.initialise()
   await server.start()
@@ -33,8 +34,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db?.end()
-  await server?.stop()
-  try { rmSync(dataDir, { recursive: true, force: true }) } catch { /* win file locks */ }
+  await stopPg(server, dataDir)
 }, 60_000)
 
 const login = (app: ReturnType<typeof buildApp>, email = 'wally@2080.dental', password = 'demo2080') =>

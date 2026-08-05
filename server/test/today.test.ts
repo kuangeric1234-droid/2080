@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
@@ -9,7 +9,7 @@ import { seed } from '../src/db/seed.ts'
 import { rankFlags, resolveFlag, snoozeFlag, todayTiles } from '../src/flags.ts'
 import { buildApp } from '../src/api.ts'
 import { MockModelClient } from '../src/skills/model.ts'
-import { authed, freePort } from './helpers.ts'
+import { authed, freePort, stopPg } from './helpers.ts'
 
 let PORT: number
 let server: EmbeddedPostgres
@@ -24,7 +24,8 @@ beforeAll(async () => {
     user: 'postgres',
     password: 'postgres',
     port: PORT,
-    persistent: false,
+    // stopPg removes the directory; see helpers.ts
+    persistent: true,
     initdbFlags: ['--encoding=UTF8', '--locale=C'],
   })
   await server.initialise()
@@ -40,8 +41,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db?.end()
-  await server?.stop()
-  try { rmSync(dataDir, { recursive: true, force: true }) } catch { /* win file locks */ }
+  await stopPg(server, dataDir)
 }, 60_000)
 
 describe('flag ranking', () => {

@@ -1,11 +1,11 @@
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import EmbeddedPostgres from 'embedded-postgres'
 import pg from 'pg'
-import { freePort } from './helpers.ts'
+import { freePort, stopPg } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed } from '../src/db/seed.ts'
 import { matchInbound, ingestEvent, resolveMatch, type InboundRefs } from '../src/matcher.ts'
@@ -43,7 +43,8 @@ beforeAll(async () => {
     user: 'postgres',
     password: 'postgres',
     port: PORT,
-    persistent: false,
+    // stopPg removes the directory; see helpers.ts
+    persistent: true,
     initdbFlags: ['--encoding=UTF8', '--locale=C'],
   })
   await server.initialise()
@@ -89,8 +90,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db?.end()
-  await server?.stop()
-  try { rmSync(dataDir, { recursive: true, force: true }) } catch { /* win file locks */ }
+  await stopPg(server, dataDir)
 }, 60_000)
 
 describe('entity matcher golden set (SPEC-SPINE §3/§7)', () => {

@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -12,7 +12,7 @@ import { MockModelClient, costCents } from '../src/skills/model.ts'
 import { runSkill } from '../src/skills/runner.ts'
 import { approve, reject, graduationStreak, inputHash } from '../src/skills/gates.ts'
 import { buildApp } from '../src/api.ts'
-import { authed, freePort } from './helpers.ts'
+import { authed, freePort, stopPg } from './helpers.ts'
 
 let PORT: number
 const FIXTURES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'fixtures/skills')
@@ -49,7 +49,8 @@ beforeAll(async () => {
     user: 'postgres',
     password: 'postgres',
     port: PORT,
-    persistent: false,
+    // stopPg removes the directory; see helpers.ts
+    persistent: true,
     initdbFlags: ['--encoding=UTF8', '--locale=C'],
   })
   await server.initialise()
@@ -67,8 +68,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await db?.end()
-  await server?.stop()
-  try { rmSync(dataDir, { recursive: true, force: true }) } catch { /* win file locks */ }
+  await stopPg(server, dataDir)
 }, 60_000)
 
 describe('skill loader', () => {

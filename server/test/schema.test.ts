@@ -1,10 +1,10 @@
-import { mkdtempSync, rmSync } from 'node:fs'
+import { mkdtempSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import EmbeddedPostgres from 'embedded-postgres'
 import pg from 'pg'
-import { freePort } from './helpers.ts'
+import { freePort, stopPg } from './helpers.ts'
 import { migrate } from '../src/db/migrate.ts'
 import { seed, WORKSPACE_ID } from '../src/db/seed.ts'
 
@@ -21,7 +21,8 @@ beforeAll(async () => {
     user: 'postgres',
     password: 'postgres',
     port: PORT,
-    persistent: false,
+    // stopPg removes the directory; see helpers.ts
+    persistent: true,
     initdbFlags: ['--encoding=UTF8', '--locale=C'],
   })
   await server.initialise()
@@ -37,8 +38,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await client?.end()
-  await server?.stop()
-  try { rmSync(dataDir, { recursive: true, force: true }) } catch { /* win file locks */ }
+  await stopPg(server, dataDir)
 }, 60_000)
 
 describe('spine schema (SPEC-SPINE §7)', () => {
