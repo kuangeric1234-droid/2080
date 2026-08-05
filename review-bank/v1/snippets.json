@@ -1309,7 +1309,7 @@
       "severity": "moderate",
       "weight": 1,
       "auto_safe": false,
-      "when": "manual",
+      "when": "always",
       "links": [
         "https://www.facebook.com/watch/?v=563389824329717"
       ],
