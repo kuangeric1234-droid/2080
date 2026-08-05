@@ -74,6 +74,13 @@ const GROUPS: Group[] = [
     { id: 'social.video.opportunity',
       text: 'Consider doing some short educational videos to increase the dental IQ of your patients (as well as attract new higher quality patients via social media).' },
   ] },
+  /* Read these three with Oh Dental discounted. Its Competition section
+     carries **all three** verdicts at once — they contradict each other — which
+     is what an untouched template block looks like, and is why the section was
+     excluded from the report comparison that produced 1.32–1.38 in the first
+     place. Counting it as a vote credits every verdict with a report that
+     chose none of them: `leading` is 3/17 with it and 2/17 without, which is
+     the difference between clearing the threshold and not (§13.2 1.38). */
   { name: 'competition verdict', variants: [
     { id: 'comp.verdict.open_field',
       text: 'The good news is that they don’t dominate the local market yet, according to their online presence, social media followers and online reputation which means your practice has a real chance at being the leader if the cards are played right with the right type of guidance.' },
