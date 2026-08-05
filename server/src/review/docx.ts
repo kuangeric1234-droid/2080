@@ -114,6 +114,41 @@ function bullet(text: string, severity?: Severity) {
   })
 }
 
+/* A report with an empty section is not a finished report.
+
+   All 17 references fill all eight sections — not one of them contains a
+   sentence like "Not assessed in this review", which is what this export used
+   to print under an empty heading. That sentence is the single most
+   machine-written thing a reader could find: it is the document admitting it
+   was assembled rather than written, in the middle of the page, in the same
+   voice as the findings around it.
+
+   Incompleteness is a fact about the document's *status*, not a finding. So it
+   is stated once, at the top, in a form no one could mistake for part of the
+   report — and it disappears the moment a reviewer fills the gaps. A client who
+   receives this by accident sees a loud warning instead of a quiet hole. */
+function draftNotice(empty: { label: string }[]): Paragraph[] {
+  if (empty.length === 0) return []
+  const names = empty.map((c) => c.label).join(', ')
+  return [
+    new Paragraph({
+      spacing: { after: 60 },
+      border: { bottom: { style: BorderStyle.SINGLE, size: 12, color: SEVERITY_INK.critical, space: 4 } },
+      children: [new TextRun({
+        text: 'DRAFT — not ready to send', font: HEAD_FONT, bold: true,
+        size: SZ.body, color: SEVERITY_INK.critical,
+      })],
+    }),
+    new Paragraph({
+      spacing: { after: 320 },
+      children: [new TextRun({
+        text: `${empty.length} section${empty.length === 1 ? '' : 's'} still need a reviewer: ${names}.`,
+        font: BODY_FONT, size: SZ.small, italics: true, color: MUTED,
+      })],
+    }),
+  ]
+}
+
 /** Prints between Recommendations and the first section, as Oh Dental does. */
 function legend(): Paragraph[] {
   const out = [new Paragraph({
@@ -417,10 +452,10 @@ export async function exportReviewDocx(
   }
 
   /* ── one section per category, in the template's order ──
-     All eight print, every time. A section the review has nothing for says so
-     under its own heading instead of disappearing — the summary table above
-     lists all eight rows, and a document whose table promises a section its
-     body never delivers is the one that stops looking like the template. */
+     All eight print, every time. The summary table above lists all eight rows,
+     and a document whose table promises a section its body never delivers is
+     the one that stops looking like the template. */
+  const empty: typeof categories = []
   const sections: Paragraph[] = []
   for (const cat of categories) {
     sections.push(heading(`${cat.label}:`, 2))
@@ -441,9 +476,12 @@ export async function exportReviewDocx(
       sections.push(bullet(textOf(f), bank.byId.get(f.snippet_id as string)?.severity))
       for (const ex of byFinding.get(f.id as string) ?? []) sections.push(...exhibit(ex, exhibitDir))
     }
-    if (ordered.length === 0 && assembled.length === 0) {
-      sections.push(body(cat.empty_note, { italics: true, color: MUTED }))
-    }
+    /* A section with nothing in it used to print "Not assessed in this
+       review." — see the draft notice at the top of the document for why it
+       no longer does. The heading stays: all eight are in every reference
+       report, and a missing heading reads as a report that never considered
+       the category, which is a different and worse claim. */
+    if (ordered.length === 0 && assembled.length === 0) empty.push(cat)
   }
 
   /* An exhibit nobody attached to a finding still earned its place — the
@@ -472,6 +510,7 @@ export async function exportReviewDocx(
       headers: { default: letterhead() },
       footers: { default: pageFooter() },
       children: [
+        ...draftNotice(empty),
         ...children,
         new Paragraph({ text: '', spacing: { after: 120 } }),
         heading('Summary:', 2),

@@ -413,25 +413,30 @@ describe('exporting the review as .docx', () => {
   /* The summary table lists all eight categories in every report. A section the
      review has nothing for used to vanish from the body, leaving the table
      promising eight and the document delivering three. */
-  it('prints all eight sections, saying so where there is nothing to report', async () => {
+  it('prints all eight sections and declares the empty ones at the top, not inside', async () => {
     const bank = loadBank()
     const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
 
     for (const cat of bank.categories) {
       expect(text, `${cat.label} section missing from the body`).toContain(`${cat.label}:`)
     }
-    // no provider, no competitor typed — these four have nothing to say yet
+
+    /* §13.2 step 1.23. No reference report contains a sentence like this —
+       0 of 17 — and it is the clearest tell a reader could find. */
+    expect(text, 'a section still announces its own emptiness in the body')
+      .not.toMatch(/not assessed|no competitors were identified/i)
+
+    /* Instead the document says once, at the top, that it is not finished, and
+       names what is missing. No provider and no competitor typed, so these
+       four have nothing to say yet. */
+    const head = text.slice(0, text.indexOf('Summary:'))
+    expect(head, 'no draft notice on an incomplete report').toContain('DRAFT — not ready to send')
     for (const key of ['visibility_sem', 'reputation', 'social_media', 'competition']) {
       const cat = bank.categories.find((c) => c.key === key)!
-      const section = text.slice(text.indexOf(`${cat.label}:`))
-      expect(section.slice(0, 400), `${cat.label} rendered empty and silent`)
-        .toContain(cat.empty_note)
+      expect(head, `${cat.label} is empty but unnamed in the draft notice`).toContain(cat.label)
     }
-    // …while a section that does have findings never carries the note
-    const tech = bank.categories.find((c) => c.key === 'website_technical')!
-    const techSection = text.slice(
-      text.indexOf('Website (Technical):'), text.indexOf('Website (Usability):'))
-    expect(techSection).not.toContain(tech.empty_note)
+    // …and a section that does have findings is not named as missing
+    expect(head, 'a filled section was named as missing').not.toContain('Website (Technical)')
   })
 
   /* §13.2 step 1.5b. The exporter has placed a picture beside its finding since

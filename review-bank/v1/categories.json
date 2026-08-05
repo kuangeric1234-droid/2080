@@ -8,64 +8,56 @@
       "label": "Website (Business)",
       "dimensions": ["UVP", "Content", "Personal", "Frequency", "AHPRA", "Original", "Authority"],
       "automation": "semi",
-      "automation_note": "Crawl finds the structural gaps (no service pages, no bio pages, no blog, public email domain, testimonials present). The taste calls — dated, generic, hiding behind the brand — need screenshots and a human or vision pass.",
-      "empty_note": "Not assessed in this review."
+      "automation_note": "Crawl finds the structural gaps (no service pages, no bio pages, no blog, public email domain, testimonials present). The taste calls — dated, generic, hiding behind the brand — need screenshots and a human or vision pass."
     },
     {
       "key": "website_technical",
       "label": "Website (Technical)",
       "dimensions": ["Performance", "Analytics", "Hosting", "Email"],
       "automation": "full",
-      "automation_note": "Every snippet in this category triggers off a deterministic signal: TLS, CMS fingerprint, MX vs A record, analytics tags, /wp-admin reachability, host geo, measured load time.",
-      "empty_note": "Not assessed in this review."
+      "automation_note": "Every snippet in this category triggers off a deterministic signal: TLS, CMS fingerprint, MX vs A record, analytics tags, /wp-admin reachability, host geo, measured load time."
     },
     {
       "key": "website_usability",
       "label": "Website (Usability)",
       "dimensions": ["Layout", "Navigation", "Banners", "CTA", "Font", "Mobile Friendly", "Colour", "Link to 3P"],
       "automation": "full",
-      "automation_note": "Playwright renders the page and reads computed styles, nav item counts, sticky behaviour, link targets, tap-target sizes; axe-core supplies contrast violations.",
-      "empty_note": "Not assessed in this review."
+      "automation_note": "Playwright renders the page and reads computed styles, nav item counts, sticky behaviour, link targets, tap-target sizes; axe-core supplies contrast violations."
     },
     {
       "key": "visibility_seo",
       "label": "Visibility (SEO)",
       "dimensions": ["SERP Rankings (Practitioner, Profession, Location, Condition & Services)"],
       "automation": "manual",
-      "automation_note": "On-page optimisation is automatic. Actual SERP positions need a rank provider — until one is connected, positions are entered by hand and the snippet fills from them.",
-      "empty_note": "Not assessed in this review."
+      "automation_note": "On-page optimisation is automatic. Actual SERP positions need a rank provider — until one is connected, positions are entered by hand and the snippet fills from them."
     },
     {
       "key": "visibility_sem",
       "label": "Visibility (SEM)",
       "dimensions": ["N/A"],
       "automation": "manual",
-      "automation_note": "Whether the practice or its competitors are running ads is only visible from a live SERP. Manual entry until a SERP provider is connected.",
-      "empty_note": "Not assessed in this review."
+      "automation_note": "Whether the practice or its competitors are running ads is only visible from a live SERP. Manual entry until a SERP provider is connected."
     },
     {
       "key": "reputation",
       "label": "Reputation",
       "dimensions": ["Reviews on Google and other channels"],
       "automation": "manual",
-      "automation_note": "Review count, rating and negative-review handling need the Places API. Manual entry until then.",
-      "empty_note": "Not assessed in this review."
+      "automation_note": "Review count, rating and negative-review handling need the Places API. Manual entry until then."
     },
     {
       "key": "social_media",
       "label": "Social Media",
       "dimensions": ["Fans", "Engagement", "Post Frequency"],
       "automation": "semi",
-      "automation_note": "The crawl finds which social profiles the site links to. Follower counts and post cadence are hostile to scraping — entered by hand, roughly five minutes.",
-      "empty_note": "Not assessed in this review."
+      "automation_note": "The crawl finds which social profiles the site links to. Follower counts and post cadence are hostile to scraping — entered by hand, roughly five minutes."
     },
     {
       "key": "competition",
       "label": "Competition",
       "dimensions": ["Quantity", "Strength"],
       "automation": "manual",
-      "automation_note": "Competitor discovery needs a SERP provider. Once a competitor domain is named, the collectors run the same technical and usability checks against it automatically and fill the row.",
-      "empty_note": "No competitors were identified for this review."
+      "automation_note": "Competitor discovery needs a SERP provider. Once a competitor domain is named, the collectors run the same technical and usability checks against it automatically and fill the row."
     }
   ],
   "scoring": {

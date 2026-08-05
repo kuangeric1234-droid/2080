@@ -88,7 +88,6 @@ export interface CategoryDef {
       The template carries all eight sections in every report, so a section with
       no findings still appears — saying so, rather than vanishing and leaving
       the summary table promising a section the document never delivers. */
-  empty_note: string
 }
 
 export interface Bank {

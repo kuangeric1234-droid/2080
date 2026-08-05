@@ -4,6 +4,22 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.23 — No section announces its own emptiness — 2026-08-05
+
+**Built:** observation O2 from the human pass. An empty section printed *"Not assessed in this review."* in the body, in the same voice as the findings around it. **0 of 17 reference reports contain any such sentence** — they fill all eight sections, and where there is little to say they say something substantive about the absence ("The website currently doesn't have Adwords setup (or we are unable to see it)…", which is in the bank already). A section that announces its own emptiness is the document telling the reader it was assembled rather than written.
+
+Incompleteness is a fact about the document's **status**, not a finding, so it is now stated once at the top — `DRAFT — not ready to send`, with the empty sections named — and it disappears the moment a reviewer fills them. All eight headings still print, because a missing heading is a worse claim than an empty one: it says the category was never considered. `empty_note` is gone from `categories.json` and `CategoryDef`; my change orphaned it, and a field nothing reads is worse than no field. **Flagging it because it was added by hand, not by me.**
+
+**The score went UP, 5 → 14, and that is the honest number.** The thin-section check counts paragraphs, and the placeholder sentence was a paragraph — so four sections that contain nothing were scoring as sections that contain one thing. Removing the padding moved them from `minor` (1 finding) to `major` (0 findings). The report is not worse than it was this morning; it was never as close as 5 suggested, and the harness is now measuring substance instead of counting apologies. I did not touch the thin-section check to make this look better: `got === 0 ? 'major' : 'minor'` is right, an empty section *is* worse than a thin one.
+
+**Evidence:** the existing eight-sections test was rewritten rather than deleted, to a strictly stronger contract — all eight headings still present, the body matches no "not assessed"/"no competitors were identified" anywhere, the notice names exactly the six empty sections, and Website (Technical), which has findings, is **not** named. docx suite 20/20, full server suite 235/235, typecheck clean.
+
+**Files:** `server/src/review/docx.ts`, `server/src/review/bank.ts`, `review-bank/v1/categories.json`, `server/test/docx.test.ts`, `docs/FIDELITY-LEDGER.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) A banner is not something the references have, because a reference is a *finished* report and this is a draft — different artefact, different rules. That distinction is the whole justification, so it is written down rather than assumed. (2) The trigger is the presence of holes, not `reviews.status`, because a status field is something a human forgets to set and a hole is a fact about the document in hand. (3) The bank's absence paragraphs (`sem.ads.absent`, `rep.reviews.none`, `social.campaigns.none`) stay `when: "manual"` — firing them unattended would assert "you have no Google Ads" on the strength of never having looked.
+
+---
+
 ## Human pass 1 — reading the document, not the checks — 2026-08-05
 
 **No code changed.** Every fifth iteration is a read rather than a build: generate the report, read it end to end beside `Oh Dental Online Presence Review.docx`, and write down what reads as machine-written. Recorded in the new `docs/FIDELITY-OBSERVATIONS.md`, which is hand-written and — unlike the ledger — not overwritten by the generator.
