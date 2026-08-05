@@ -4,6 +4,20 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.28 — The sample summary stops contradicting itself — 2026-08-05
+
+**Built:** observation O4. `mockReviewSummary` built its "weak" and "strong" lists independently, so a category with both a problem and a strength was named in both sentences of the same paragraph — *"particularly around website usability … your website usability already works in your favour"*. A category with a problem is now simply weak. It also printed raw category keys as prose ("website technical" is a database column) and comma-spliced its lists; both fixed, so the sample now reads *"particularly around the technical setup and how the site reads and behaves"*.
+
+**This is the mock, not the product — and the real point of O4 is not fixed, because it cannot be fixed here.** That paragraph passed the grounding validator, correctly: every claim in it traced to an accepted finding. **A summary can be fully grounded and still be nonsense.** Nothing in the pipeline would have caught it; a human pass did. Scoring "does this read like Wally wrote it" needs Wally's past reports, which is the `review-summariser golden set` entry in BLOCKERS.md and the reason the skill stays in shadow.
+
+**Evidence:** docx 20/20, inbox and fidelity suites green, full server suite 241/241, typecheck clean. Ceiling unchanged at 10 — this changes prose the harness does not score, which is exactly why it took a read to find.
+
+**Files:** `server/src/inbox/mockResponders.ts`, `docs/FIDELITY-OBSERVATIONS.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) Fixed in the mock rather than left ugly, because the mock is what the human pass reads — a sample document with an obvious contradiction in the opening paragraph trains the reader to skim it. (2) The category labels are written out rather than derived from `categories.json` labels, because "Website (Technical)" is a table heading and "the technical setup" is what belongs mid-sentence; they are different registers and conflating them is how the raw keys leaked in the first place.
+
+---
+
 ## §13.2 step 1.27 — Exhibits inside sections, and two observations struck — 2026-08-05
 
 **Built:** the homepage capture landed after Competition, under no heading — the old comment defended that as "guessing a category would be worse than a bare plate". The references settle it: **every image in all 17 sits inside a section**, never after the last one. A picture after the final heading is not an appendix, it is a picture that fell off the end. Placement is not a guess either — a homepage capture is under Website (Business) in **12 of 17**, and Website (Technical) carries an image in **17 of 17** (the speed test, which is exactly what `performance_report` is). Loose exhibits are now placed by kind, and a kind with no precedent still falls to the back rather than being invented a home.

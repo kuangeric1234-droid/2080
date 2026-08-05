@@ -58,7 +58,7 @@ is in the bank with `when: always`, and it ships at the reviewer ceiling. It is 
 pass must read `ceiling-<domain>.docx`, not `generated-<domain>.docx` — otherwise every candidate
 finding looks like a hole in the platform.
 
-### O4 · The summary paragraph names the same category as both weak and strong — **major**
+### ~~O4 · The summary paragraph names the same category as both weak and strong~~ — **FIXED in §13.2 1.28**
 
 Generated, verbatim:
 
@@ -72,6 +72,13 @@ security, usability and sem". This is `mockReviewSummary`, so it is not what a c
 today, but the grounding validator would pass it: every claim traces to a finding. **A summary can
 be fully grounded and still be nonsense**, which is the argument for the golden set in
 BLOCKERS.md rather than an argument against the validator.
+
+**Fixed in the mock** — the weak and strong sets overlapped, so a category with both a problem and
+a strength landed in both sentences; a category with a problem is now simply weak. Category keys no
+longer print raw ("the technical setup", not "website technical") and the list joins with "and".
+**The deeper point stands and is not fixed:** nothing in the pipeline would have caught a grounded
+paragraph that reads as nonsense. Only Wally's past reports can score that — see BLOCKERS.md,
+`review-summariser golden set`.
 
 ### ~~O5 · Findings ship with their evidence stripped out~~ — **STRUCK 2026-08-05, 1 of 17**
 

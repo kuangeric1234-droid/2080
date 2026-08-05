@@ -153,15 +153,38 @@ export function mockReviewSummary(input: {
 }): { summary_text: string; overall_comment: string; category_comments: { category: string; comment: string }[] } {
   const findings = input.findings ?? []
   const weak = [...new Set(findings.filter((f) => f.variant === 'negative').map((f) => f.category))]
+  /* A category with both a problem and a strength is a category with a
+     problem. Without this the same name lands in both sentences and the
+     paragraph contradicts itself — "particularly around website usability …
+     your website usability already works in your favour" — which is what the
+     first human pass caught in the sample document. */
   const strong = [...new Set(findings.filter((f) => f.variant === 'positive').map((f) => f.category))]
-  const label = (k: string) => k.replace(/_/g, ' ')
+    .filter((c) => !weak.includes(c))
+  /* Category keys are database columns. A person writes "your website's
+     technical setup", never "website technical". */
+  const LABELS: Record<string, string> = {
+    website_business: 'your website content',
+    website_technical: 'the technical setup',
+    website_usability: 'how the site reads and behaves',
+    visibility_seo: 'search visibility',
+    visibility_sem: 'paid search',
+    reputation: 'your online reputation',
+    social_media: 'social media',
+    competition: 'the competitive picture',
+  }
+  const label = (k: string) => LABELS[k] ?? k.replace(/_/g, ' ')
+  /* "a, b and c" — the comma-spliced list reads as a machine emptying an array. */
+  const list = (ks: string[]) => {
+    const n = ks.map(label)
+    return n.length < 2 ? (n[0] ?? '') : `${n.slice(0, -1).join(', ')} and ${n[n.length - 1]}`
+  }
 
   const parts: string[] = []
   if (weak.length) {
-    parts.push(`There are a number of areas of improvement with your online presence, particularly around ${weak.map(label).join(', ')}.`)
+    parts.push(`There are a number of areas of improvement with your online presence, particularly around ${list(weak)}.`)
   }
   if (strong.length) {
-    parts.push(`Your ${strong.map(label).join(' and ')} already work in your favour and are worth building on.`)
+    parts.push(`Your ${list(strong)} already work in your favour and are worth building on.`)
   }
   if (!parts.length) parts.push('Your online presence is broadly in good order.')
 
