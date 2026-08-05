@@ -330,13 +330,18 @@ export async function exportReviewDocx(
     }),
     /* The Comments column is a verdict, not a contents list. Every real report
        writes a short line per category — "Great performance and diversified
-       email/server", "Abandoned social media"; the dimension list is only what
-       the *blank* template carries as a placeholder, so it is the fallback for
-       a review the summariser has not run over yet. "N/A" is what the reports
-       print for a category nothing was assessed in. */
+       email/server", "Abandoned social media" — and where nothing was assessed
+       it prints "N/A": 13 of the 17 do, and not one of their 153 Comments cells
+       is left empty.
+
+       The dimension list ("UVP, Content, Personal, Frequency, AHPRA…") is what
+       the *blank* template carries as a prompt to the writer. It used to be the
+       fallback here, which meant a review the summariser had not covered went
+       out with the question printed where the answer belongs. N/A is the honest
+       fallback: nothing was assessed, so there is nothing to report. */
     ...categories.map((cat, i) =>
       dataRow(cat.label, stars(scores[cat.key] ?? null),
-        categoryComments[cat.key] ?? cat.dimensions.join(', '), i)),
+        categoryComments[cat.key] ?? 'N/A', i)),
     dataRow('Overall Score', stars(review.overall_score ?? null),
       review.overall_comment ?? '', categories.length),
   ]

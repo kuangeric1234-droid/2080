@@ -4,6 +4,20 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.21 — N/A, never the writer's prompt — 2026-08-05
+
+**Built:** the Comments cell fell back to the category's dimension list — "UVP, Content, Personal, Frequency, AHPRA, Original, Authority" — whenever the summariser had written nothing for that category. That string is the blank template's prompt *to the writer*. Printing it in a client's report puts the question where the answer belongs, and it is the one thing in that column no real report ever does. **13 of the 17 references print `N/A` there, 15 cells in total, and not one of their 153 Comments cells is empty.** The fallback is now `N/A`. `mockReviewSummary` also returns a comment for every category rather than only the ones with findings, matching what SKILL.md already tells the real skill — a mock that answers for fewer categories than the real skill leaves the export's fallback carrying the difference, so the tests never exercise the real path.
+
+**The first re-run did not move the score, and the reason was my own measurement.** `isDimensionList` matched a Comments cell against every category's dimension list — and Visibility (SEM)'s dimension list in the blank template is, literally, the string `N/A`, because there is nothing to prompt a writer with when no campaign is running. So every deliberate `N/A` was being counted as an unfilled placeholder. The check was flagging the reference reports themselves. Fixed in the harness rather than worked around in the export.
+
+**Evidence:** new test — every category's Comments cell is non-empty and is not that category's dimension list, and Visibility (SEM), which has nothing to measure without a SERP provider, lands on `N/A`. The SEM row is skipped in the dimension-list half of that assertion for the same reason the harness had to be fixed, with the reason written at the assertion. docx suite 20/20, fidelity 11/11, full server suite 235/235, typecheck clean. **Harness: score 13 → 9**, `summary-comments-prose` gone, no other gap moved.
+
+**Files:** `server/src/review/docx.ts`, `server/src/inbox/mockResponders.ts`, `server/src/review/fidelity.ts`, `server/test/docx.test.ts`, `docs/FIDELITY-LEDGER.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) The dimension list is now unreachable from the export. It stays in `categories.json` because the reviewer-facing UI is the right place for a writer's prompt; the client-facing document is not. (2) When a fix does not move the score, the first suspect is the measurement — but the measurement is only allowed to change when it is provably wrong about the *references*, which this one was. Loosening a check because it inconveniences a change would make the ledger worthless.
+
+---
+
 ## §13.2 step 1.20 — Five star glyphs — 2026-08-05
 
 **Built:** the first gap closed off the 1.19 ledger. `stars()` returned `'*'.repeat(score)`, so a 1 printed one character and a 5 printed five — a ragged column. **16 of 17 reference reports print five glyphs in every score cell**, the earned ones black and the remainder tinted, which is what lets a partner read the column down and compare rows. It also restores the denominator: three asterisks alone do not say three out of what. `stars()` now returns two runs and the score cell takes runs rather than a string.

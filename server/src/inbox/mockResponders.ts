@@ -149,6 +149,7 @@ export function mockCompletion(input: {
    mock rather than about the skill. */
 export function mockReviewSummary(input: {
   findings?: { category: string; variant: string; text: string }[]
+  category_scores?: Record<string, number | null>
 }): { summary_text: string; overall_comment: string; category_comments: { category: string; comment: string }[] } {
   const findings = input.findings ?? []
   const weak = [...new Set(findings.filter((f) => f.variant === 'negative').map((f) => f.category))]
@@ -164,11 +165,20 @@ export function mockReviewSummary(input: {
   }
   if (!parts.length) parts.push('Your online presence is broadly in good order.')
 
-  /* One telegraphic verdict per category that actually had findings — the
-     register the real reports use in the Comments column. */
+  /* One telegraphic verdict per category — the register the real reports use
+     in the Comments column.
+
+     Every category gets one, not just the ones with findings. SKILL.md tells
+     the real skill to write `N/A` where nothing was assessed, and 13 of the 17
+     reference reports do exactly that; not one of their 153 Comments cells is
+     empty. A mock that answers only for the categories it has material for
+     lets the export's fallback carry the rest, which means the tests never
+     exercise what the real skill will actually return. */
   const seen = [...new Set(findings.map((f) => f.category))]
-  const category_comments = seen.map((category) => {
+  const categories = [...new Set([...Object.keys(input.category_scores ?? {}), ...seen])]
+  const category_comments = categories.map((category) => {
     const mine = findings.filter((f) => f.category === category)
+    if (mine.length === 0) return { category, comment: 'N/A' }
     const bad = mine.filter((f) => f.variant === 'negative').length
     return {
       category,

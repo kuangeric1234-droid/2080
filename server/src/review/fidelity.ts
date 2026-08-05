@@ -81,6 +81,13 @@ export function normalise(s: string): string {
 function isDimensionList(cell: string): boolean {
   const bank = loadBank()
   const n = normalise(cell)
+  /* "N/A" is the honest answer for a category nothing was assessed in, and 13
+     of the 17 references print it — but it is also, literally, Visibility
+     (SEM)'s entire dimension list in the blank template, because there is
+     nothing to prompt a writer with when no campaign is running. Matching on
+     the text alone therefore counted every deliberate N/A as an unfilled
+     placeholder, which flagged the reference reports themselves. */
+  if (n === 'n a') return false
   return bank.categories.some((c) => normalise(c.dimensions.join(', ')) === n)
     || n === 'overall comment'
 }

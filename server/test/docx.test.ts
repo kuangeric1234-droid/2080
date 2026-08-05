@@ -199,6 +199,39 @@ describe('exporting the review as .docx', () => {
     expect(out.buffer.length).toBeGreaterThan(3000)
   })
 
+  /* §13.2 step 1.21. The dimension list is the blank template's prompt to the
+     writer. Printing it in a client's report puts the question where the
+     answer belongs, and it is the one thing in the Comments column that no
+     real report ever does. */
+  it('never prints the dimension list, and says N/A where nothing was assessed', async () => {
+    const model = new MockModelClient((req) =>
+      mockReviewSummary(req.input as Parameters<typeof mockReviewSummary>[0]))
+    await summariseReview(db, model, WORKSPACE_ID, reviewId)
+
+    const doc = await readDocx((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
+    const table = summaryTable(doc)!
+    const bank = loadBank()
+
+    for (const cat of bank.categories) {
+      const row = table.rows.find((r) => r[0] === cat.label)
+      expect(row, `${cat.label} has no row`).toBeTruthy()
+      const comment = (row![2] ?? '').trim()
+      const prompt = cat.dimensions.join(', ')
+      expect(comment, `${cat.label}: Comments cell is empty`).not.toBe('')
+      /* Visibility (SEM)'s dimension list in the blank template is the string
+         "N/A" — there is nothing to prompt the writer with when no campaign is
+         running. So for that one category the prompt and the honest fallback
+         are the same text, and there is nothing to distinguish. */
+      if (prompt === 'N/A') continue
+      expect(comment, `${cat.label}: the writer's prompt reached the client`).not.toBe(prompt)
+    }
+
+    /* Visibility (SEM) has nothing to measure without a SERP provider, so it
+       is the category that must land on N/A rather than on silence. */
+    const sem = table.rows.find((r) => /Visibility \(SEM\)/.test(r[0] ?? ''))
+    expect(sem?.[2]).toBe('N/A')
+  })
+
   /* §13.2 step 1.20. A score is five glyphs in 16 of the 17 real reports —
      earned ones black, the remainder tinted — so the column can be read down
      at a glance. Printing three asterisks for a 3 gives a ragged column and
