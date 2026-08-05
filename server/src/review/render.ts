@@ -37,6 +37,35 @@ declare function getComputedStyle(el: El): { fontSize: string }
 const DESKTOP = { width: 1440, height: 900 }
 const MOBILE = { width: 390, height: 844 } // iPhone 14 logical viewport
 
+/** How far `nav_sticky` scrolls before it looks again. */
+export const NAV_SCROLL_BY = 900
+
+/**
+ * Is the navigation still there after the page has scrolled under it?
+ *
+ * The first rule asked whether the nav held its exact offset, within 8px.
+ * That is not what a sticky header does: the near-universal pattern on this
+ * generation of themes is a bar that *condenses* — the top strip collapses and
+ * the menu rises into its place — so the nav that is plainly still on screen
+ * has moved 40-odd pixels and failed the test. ohdental.com.au went 83px → 41px
+ * and was reported as "scrolled away with the page" while sitting, fixed, at
+ * the top of the window (§13.2 1.33).
+ *
+ * So ask the question the paragraph actually asks: after scrolling, is the nav
+ * still in the top band of the viewport, and did it stay behind while the page
+ * moved? A nav that scrolls away travels the full scroll distance and leaves;
+ * one that condenses travels a fraction of it and stays.
+ */
+export function navIsSticky(
+  box: { beforeTop: number; afterTop: number; afterBottom: number },
+  scrolledBy = NAV_SCROLL_BY,
+): boolean {
+  const travelled = box.beforeTop - box.afterTop
+  return box.afterBottom > 0
+    && box.afterTop < 150
+    && travelled < scrolledBy / 2
+}
+
 export interface RenderOptions {
   timeoutMs?: number
   /** Interior page for the banner measurement. Homepage banners are expected
@@ -115,16 +144,20 @@ export async function collectRenderLayer(url: string, opts: RenderOptions = {}):
     })
 
     await step(errors, 'nav_sticky', async () => {
-      const sticky = await page.evaluate(() => {
+      const box = await page.evaluate(async () => {
         const nav = document.querySelector('header nav, nav, header, [role="navigation"]')
         if (!nav) return null
         const before = nav.getBoundingClientRect()
         window.scrollTo(0, 900)
+        /* Sticky headers are animated on this generation of themes — the top
+           bar collapses and the menu rises into its place. Measuring in the
+           same frame as the scroll catches the header mid-transition. */
+        await new Promise((r) => setTimeout(r, 600))
         const after = nav.getBoundingClientRect()
         window.scrollTo(0, 0)
-        // Still occupying its original band of the viewport after scrolling.
-        return after.bottom > 0 && Math.abs(after.top - before.top) < 8
+        return { beforeTop: before.top, afterTop: after.top, afterBottom: after.bottom }
       })
+      const sticky = box === null ? null : navIsSticky(box)
       if (sticky !== null) {
         signals.push(sig('render.nav_sticky', sticky,
           sticky

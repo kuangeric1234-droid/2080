@@ -444,8 +444,31 @@ function onPageSignals(home: HTMLElement, pages: Page[]): Signal[] {
   ]
 }
 
+/* Where a same-tab external link goes, not how many anchors point there.
+
+   Two things were wrong with counting anchors. A social icon and a footer
+   credit sit in the header and footer of every page, so one destination was
+   counted once per page crawled — ohdental.com.au scored 60 against four
+   distinct destinations, and the number would have grown with the crawl rather
+   than with the problem. And the booking system was in that count: the
+   paragraph warns the visitor will "not come back to your website to make the
+   necessary inquiry", but sending them to the booking page *is* that inquiry,
+   and the template treats third-party booking in a paragraph of its own. Its
+   own examples are social profiles and footer vendor links (§13.2 1.33). */
+function sameTabDestinations(pages: Page[], base: string): Set<string> {
+  const hosts = new Set<string>()
+  for (const p of pages) {
+    for (const a of p.root.querySelectorAll('a[href]')) {
+      const href = a.getAttribute('href') ?? ''
+      if (!isExternal(href, base) || (a.getAttribute('target') ?? '') === '_blank') continue
+      if (BOOKING_HINTS.some((h) => href.toLowerCase().includes(h))) continue
+      try { hosts.add(new URL(href, base).host.replace(/^www\./, '')) } catch { /* not a URL */ }
+    }
+  }
+  return hosts
+}
+
 function linkSignals(pages: Page[], base: string): Signal[] {
-  let externalSameTab = 0
   let tel = 0
   let mailto = 0
   let legacyCaptcha = false
@@ -454,14 +477,16 @@ function linkSignals(pages: Page[], base: string): Signal[] {
       const href = a.getAttribute('href') ?? ''
       if (href.startsWith('tel:')) tel++
       else if (href.startsWith('mailto:')) mailto++
-      else if (isExternal(href, base) && (a.getAttribute('target') ?? '') !== '_blank') externalSameTab++
     }
     const html = p.root.toString()
     if (/captcha/i.test(html) && !/recaptcha|hcaptcha|turnstile/i.test(html)) legacyCaptcha = true
   }
+  const sameTab = sameTabDestinations(pages, base)
   return [
-    sig('render.external_links_same_tab', externalSameTab, 'crawl',
-      `${externalSameTab} third-party links open in the same tab`),
+    sig('render.external_links_same_tab', sameTab.size, 'crawl',
+      sameTab.size
+        ? `${sameTab.size} third-party destination${sameTab.size === 1 ? '' : 's'} open in the same tab (${[...sameTab].join(', ')})`
+        : 'Every third-party link opens in a new tab'),
     sig('render.tel_links', tel, 'crawl',
       tel ? `${tel} tappable tel: links found` : 'No tappable tel: links — phone numbers are plain text'),
     sig('render.mailto_links', mailto, 'crawl',
