@@ -4,6 +4,24 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.26 — Archive signals, and a gap that did not close — 2026-08-05
+
+**Built:** `WaybackProvider` over the Internet Archive's CDX API — free, official, no credential, no terms-of-service problem. `collapse=digest` returns one row per content change rather than one per crawl, so the last row is when the homepage last became what it is now. Produces `archive.last_change_months` and `archive.snapshot_url` always, and `archive.last_major_update_year` **only** past 24 months — the report's own standard is "refreshed every 2 to 3 years". `varsFromSignals` fills `{{year}}` and `{{web_archive}}`, so `biz.website.stale` ships with the year and a capture a reader can open, which is better than the two references that paste the URL and the four that leave `[web archive]` unfilled.
+
+**It did not close the gap it was aimed at, and I am not ticking it as though it did.** Signals went 36 → 38; the ceiling stayed at **7**. Website (Business) is still 2 findings against a reference median of 10.
+
+**Why, and this is the part worth keeping.** Camberwell Dental Group's report says the site *"hasn't been updated since 2018"*. The archive says its HTML last changed **8 months ago**. Both are true: the reviewer means the design, the brand, the structure — what a visitor perceives — and the archive measures bytes, which move whenever a plugin updates or a footer prints the current year. Tested live: `ohdental.com.au` 16 months, `camberwelldentalgroup.com.au` 8 months, so the paragraph fires on neither. **That is the safe direction** — telling a practice their website has been frozen since 2017 when it has not is exactly the kind of checkable false claim this build refuses to make — but it means the collector is evidence handed to a reviewer, not the automation of that paragraph. Recorded as observation O7.
+
+**Also checked and deliberately not built:** `biz.blog.abandoned` appears in **2 of 17** and `biz.blog.active` in **0 of 17**. Both are below the three-report threshold, so they are WONTFIX rather than a missing collector — `blog.last_post_months` would have been a reasonable-looking half-day that the evidence does not support.
+
+**Evidence:** 6 new tests. The ones that matter are the refusals: nothing published when the archive has never seen the site (absence of data must not become a claim about the practice), a 503 surfaced as an error rather than looking identical to a fresh website, and no year published for a site refreshed four months ago. Plus the positive case end to end — a nine-year-old site fires the paragraph with no unfilled `{{variable}}`, carrying both the year and the capture URL. Full server suite 241/241, typecheck clean.
+
+**Files:** `server/src/review/archive.ts`, `server/test/archive.test.ts` (new) · `server/src/review/{store,engine}.ts`, `docs/FIDELITY-OBSERVATIONS.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) Kept despite not moving the score: `archive.last_change_months` and the capture URL are real evidence a reviewer would otherwise gather by hand, and the paragraph does fire correctly on a genuinely frozen site. (2) The year is withheld rather than published-and-ignored, because the trigger is `exists` — publishing it for a fresh site would fire a false paragraph. (3) The threshold is 24 months, taken from the sentence the snippet itself prints, not chosen by me.
+
+---
+
 ## §13.2 step 1.25 — dd/mm/yyyy, and gaps that admit they are blocked — 2026-08-05
 
 **Built:** two honesty fixes, both small.

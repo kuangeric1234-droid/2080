@@ -94,6 +94,30 @@ pasted inline where the point is being made.
 
 ---
 
+## Pass 1a — 2026-08-05, follow-up while building §13.2 1.26
+
+### O7 · "Hasn't been updated since 2018" is a judgement about *design*, not about HTML — **major**
+
+Building the Wayback collector for `biz.website.stale` (7 of 17 reports) turned up a mismatch worth
+recording, because it will bite anything else that tries to automate a "looks dated" judgement.
+
+Camberwell Dental Group's report says the website *"hasn't been updated since 2018"*. The Internet
+Archive says its homepage HTML last changed **8 months ago**. Both are true. The reviewer means the
+design, the brand, the structure — the things a visitor perceives. The archive measures bytes, and
+bytes move whenever a plugin updates, a testimonial rotates, or a footer prints the current year.
+
+So the collector fires far less often than a human would, and on the two sites tested live
+(`ohdental.com.au` 16 months, `camberwelldentalgroup.com.au` 8 months) it does not fire at all.
+**That is the safe direction** — silence rather than telling a practice their site has been frozen
+since 2017 when it has not — but it means the signal is not the automation of that paragraph, only
+evidence handed to the reviewer who writes it.
+
+Anything that tries to close the Website (Business) gap by measurement will hit the same wall:
+of its nine reference findings, most are judgement about content and presentation. That section may
+be the honest boundary of what this platform automates.
+
+---
+
 ## How to use this file
 
 Entries here are candidates for §13.2 steps, ranked by the same severity words the ledger uses.

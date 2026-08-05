@@ -8,6 +8,7 @@ import { collectSocialSignals, defaultSocialProvider, type SocialProvider } from
 import { collectCompetitorFacts } from './competitors.ts'
 import { defaultPlacesProvider, practiceKeyword, researchPractice, type PlacesProvider } from './places.ts'
 import { collectPageSpeed, defaultPageSpeedProvider, type PageSpeedProvider } from './pagespeed.ts'
+import { collectArchive, defaultArchiveProvider, type ArchiveProvider } from './archive.ts'
 import { selectFindings, signalsToMap, suggestOverall, suggestScores, varsFromSignals } from './engine.ts'
 import { loadBank, render, type Snippet } from './bank.ts'
 
@@ -121,7 +122,7 @@ export async function collectReview(
   opts: {
     fetchImpl?: typeof fetch; networkProbes?: boolean
     socialProvider?: SocialProvider; placesProvider?: PlacesProvider
-    pageSpeedProvider?: PageSpeedProvider
+    pageSpeedProvider?: PageSpeedProvider; archiveProvider?: ArchiveProvider
   } = {},
 ) {
   const { rows } = await db.query(
@@ -166,6 +167,15 @@ export async function collectReview(
       result.finalUrl,
       { exhibitDir: defaultExhibitDir(), reviewId },
     )
+  }
+
+  /* When the homepage last changed, from the Internet Archive (§13.2 1.26).
+     `biz.website.stale` is in 7 of the 17 real reports and its trigger has had
+     nothing to read since the bank was written. Free, official, no credential
+     — but a network call, so gated with the rest. */
+  let archive: Awaited<ReturnType<typeof collectArchive>> = { signals: [], errors: [] }
+  if (opts.networkProbes !== false) {
+    archive = await collectArchive(opts.archiveProvider ?? defaultArchiveProvider(), domain)
   }
 
   /* Social audience and engagement come from a credentialed third-party API,
@@ -216,7 +226,7 @@ export async function collectReview(
 
   /* Render after fetch: toMap() is last-wins, so where both layers measure the
      same key the browser's answer is the one that survives. */
-  const allSignals = [tradeSignal, ...result.signals, ...renderResult.signals, ...perf.signals, ...socialResult.signals, ...research.signals]
+  const allSignals = [tradeSignal, ...result.signals, ...renderResult.signals, ...perf.signals, ...socialResult.signals, ...research.signals, ...archive.signals]
 
   for (const s of allSignals) {
     await db.query(
@@ -341,7 +351,7 @@ export async function collectReview(
     sitemap: result.sitemap.length,
     exhibits: renderResult.exhibits.length,
     findings: candidates.length,
-    errors: [...result.errors, ...renderResult.errors, ...socialResult.errors, ...perf.errors, ...research.errors],
+    errors: [...result.errors, ...renderResult.errors, ...socialResult.errors, ...perf.errors, ...research.errors, ...archive.errors],
     scores,
   }
 }

@@ -257,6 +257,16 @@ export function varsFromSignals(signals: SignalMap, target: string): Record<stri
   v.condition_examples = prof.condition_examples
   v.treatment_example = prof.treatment_example
 
+  /* biz.website.stale prints "hasn't been updated since {{year}}, according to
+     {{web_archive}}" — 7 of 17 real reports carry it, and two of those paste
+     the capture URL in full while others leave "[web archive]" as an unfilled
+     placeholder. The URL is strictly better: it is the evidence, and a reader
+     can open it. */
+  const staleYear = num('archive.last_major_update_year')
+  if (staleYear !== undefined) v.year = staleYear
+  const snapshot = str('archive.snapshot_url')
+  if (snapshot !== undefined) v.web_archive = snapshot
+
   const email = str('site.contact.email')
   if (email && signals.get('site.contact.email_domain_public')?.value === true) {
     v.public_email = email
