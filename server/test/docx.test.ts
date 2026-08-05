@@ -460,12 +460,31 @@ describe('exporting the review as .docx', () => {
       [WORKSPACE_ID, reviewId])
 
     try {
-      /* Unattached: it falls to the back, behind the last section. The template
-         has no Evidence heading, so position is the only thing that says so. */
+      /* §13.2 step 1.27. Unattached, but not homeless: every image in all 17
+         reference reports sits inside a section, and a homepage capture is
+         under Website (Business) in 12 of them. It used to fall behind the last
+         section, which is not an appendix — it is a picture that fell off the
+         end of the document. */
       let text = await documentText(
         (await exportReviewDocx(db, WORKSPACE_ID, reviewId, { exhibitDir: exDir })).buffer)
       expect(text).not.toContain('Evidence:')
-      expect(text.indexOf('Homepage capture')).toBeGreaterThan(text.indexOf('Competition:'))
+      const shot = text.indexOf('Homepage capture')
+      expect(shot, 'the homepage capture vanished').toBeGreaterThan(-1)
+      expect(shot, 'still stranded after the last section').toBeLessThan(text.indexOf('Competition:'))
+      expect(shot, 'not inside Website (Business)').toBeGreaterThan(text.indexOf('Website (Business):'))
+      expect(shot).toBeLessThan(text.indexOf('Website (Technical):'))
+
+      /* A kind with no precedent in the references still goes to the back
+         rather than being guessed into a section. */
+      await db.query(
+        `INSERT INTO review_exhibits (id, workspace_id, review_id, kind, label, path, width, height, position)
+         VALUES ('exh_odd',$1,$2,'serp_screenshot','Unplaceable plate','shot.png',1440,900,1)`,
+        [WORKSPACE_ID, reviewId])
+      const withOdd = await documentText(
+        (await exportReviewDocx(db, WORKSPACE_ID, reviewId, { exhibitDir: exDir })).buffer)
+      expect(withOdd.indexOf('Unplaceable plate'), 'an unprecedented kind was guessed into a section')
+        .toBeGreaterThan(withOdd.indexOf('Competition:'))
+      await db.query(`DELETE FROM review_exhibits WHERE id = 'exh_odd'`)
 
       // attached: it moves up beside the paragraph it proves
       await attachExhibit(db, WORKSPACE_ID, 'exh_att', target.id)

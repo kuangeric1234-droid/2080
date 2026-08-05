@@ -455,6 +455,31 @@ export async function exportReviewDocx(
     return out
   }
 
+  /* An exhibit nobody attached to a finding still earned its place. It used to
+     go at the back, under no heading, on the reasoning that guessing a category
+     was worse than a bare plate — but the seventeen references settle it:
+     **every image in every one of them sits inside a section**, never after the
+     last one. A screenshot after Competition is not an appendix, it is a
+     picture that fell off the end of the document.
+
+     Where they sit is not a guess either. A homepage capture appears under
+     Website (Business) in 12 of 17, and Website (Technical) carries an image in
+     17 of 17 — the speed test, which is exactly what `performance_report` is.
+     Anything of a kind that has no such precedent still goes to the back. */
+  const HOME_FOR: Record<string, string> = {
+    screenshot: 'website_business',
+    performance_report: 'website_technical',
+  }
+  const loose = allExhibits.filter((ex) => !ex.finding_id)
+  const placed = new Map<string, typeof loose>()
+  const homeless: typeof loose = []
+  for (const ex of loose) {
+    const cat = HOME_FOR[ex.kind as string]
+    if (cat) placed.set(cat, [...(placed.get(cat) ?? []), ex])
+    else homeless.push(ex)
+  }
+  const appendix: Paragraph[] = homeless.flatMap((ex) => exhibit(ex, exhibitDir))
+
   /* ── one section per category, in the template's order ──
      All eight print, every time. The summary table above lists all eight rows,
      and a document whose table promises a section its body never delivers is
@@ -485,15 +510,16 @@ export async function exportReviewDocx(
        no longer does. The heading stays: all eight are in every reference
        report, and a missing heading reads as a report that never considered
        the category, which is a different and worse claim. */
-    if (ordered.length === 0 && assembled.length === 0) empty.push(cat)
+    /* Verified above: every reference image sits inside a section. It goes
+       after the findings rather than before, so the heading is never separated
+       from the first thing it says. */
+    for (const ex of placed.get(cat.key) ?? []) sections.push(...exhibit(ex, exhibitDir))
+
+    if (ordered.length === 0 && assembled.length === 0 && !(placed.get(cat.key) ?? []).length) {
+      empty.push(cat)
+    }
   }
 
-  /* An exhibit nobody attached to a finding still earned its place — the
-     homepage capture is collected for every review. It goes at the back, under
-     no heading of its own: the template has no Evidence section, and guessing
-     it into a category it may not belong to would be worse than a bare plate. */
-  const loose = allExhibits.filter((ex) => !ex.finding_id)
-  const appendix: Paragraph[] = loose.flatMap((ex) => exhibit(ex, exhibitDir))
 
   const doc = new Document({
     styles: {

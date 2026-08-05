@@ -4,6 +4,27 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.27 — Exhibits inside sections, and two observations struck — 2026-08-05
+
+**Built:** the homepage capture landed after Competition, under no heading — the old comment defended that as "guessing a category would be worse than a bare plate". The references settle it: **every image in all 17 sits inside a section**, never after the last one. A picture after the final heading is not an appendix, it is a picture that fell off the end. Placement is not a guess either — a homepage capture is under Website (Business) in **12 of 17**, and Website (Technical) carries an image in **17 of 17** (the speed test, which is exactly what `performance_report` is). Loose exhibits are now placed by kind, and a kind with no precedent still falls to the back rather than being invented a home.
+
+**Two observations struck after quantifying, both mine:**
+
+- **O5** — quote the mail host in `tech.email.same_server`. The paragraph appears in 3 reports and **exactly 1 of 17** quotes the host. Bracketing evidence is 7 of 17 *in aggregate*, but no single paragraph does it three times, so adding `{{mail_host}}` copies one reviewer's thoroughness on one report. Struck, not deleted, so it is not proposed again.
+- **O3** — the optimistic closing paragraph. Not a defect: `summary.closer.optimistic` is already in the bank with `when: always` and already ships **at the ceiling**. It is missing only from the unattended document. **The pass read the wrong file.** `FIDELITY-OBSERVATIONS.md` now says at the top to read `ceiling-<domain>.docx`, because reading the unattended run makes every candidate finding look like a hole in the platform.
+
+**Website (Business) is confirmed not buildable, and the check is in the bank already.** Its four core paragraphs are house copy — uvp generic **14/17**, banner generic **13/17**, bio pages **12/17**, conditions content **11/17** — and all four are `judgement` triggers. The three backed by page counts already carry `hint_signal`, and `bank.ts` records why: page-type classification from URLs is "too unreliable to accuse on its own". Every one also has a `judgement_prompt`. The design is complete; converting those triggers would overturn a documented decision to make a number move.
+
+**Ceiling 7 → 10, and again the count was flattered.** The exhibit caption had been sitting under Competition and counting as its one "finding" — moving it revealed Competition has always been at zero. `countPerSection` now counts **list items only**: findings are bulleted in the references and in what this platform writes; captions and section intros are not. That is the second time a placeholder has been padding this measure.
+
+**Evidence:** the old exhibit test asserted the behaviour the evidence overturned, so it was rewritten rather than deleted, and gained a case it never had — an exhibit of an unprecedented kind must still fall to the back. docx 20/20, full server suite 241/241, typecheck clean.
+
+**Files:** `server/src/review/docx.ts`, `server/src/review/fidelity.ts`, `server/test/docx.test.ts`, `docs/FIDELITY-OBSERVATIONS.md`, `docs/FIDELITY-LEDGER.md`, `MASTER-BUILD-PLAN.md` (edited).
+
+**Decisions:** (1) Placement by exhibit kind, from counted precedent, with an explicit fallback for kinds that have none — the old objection to guessing was right, it just was not a reason to guess *nothing*. (2) A section holding only an exhibit no longer counts as empty for the draft notice; a picture is content. (3) Struck observations stay in the file with their counts. An idea that looked good twice will look good a third time.
+
+---
+
 ## §13.2 step 1.26 — Archive signals, and a gap that did not close — 2026-08-05
 
 **Built:** `WaybackProvider` over the Internet Archive's CDX API — free, official, no credential, no terms-of-service problem. `collapse=digest` returns one row per content change rather than one per crawl, so the last row is when the homepage last became what it is now. Produces `archive.last_change_months` and `archive.snapshot_url` always, and `archive.last_major_update_year` **only** past 24 months — the report's own standard is "refreshed every 2 to 3 years". `varsFromSignals` fills `{{year}}` and `{{web_archive}}`, so `biz.website.stale` ships with the year and a capture a reader can open, which is better than the two references that paste the URL and the four that leave `[web archive]` unfilled.

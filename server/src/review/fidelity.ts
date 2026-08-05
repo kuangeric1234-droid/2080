@@ -392,7 +392,12 @@ function countPerSection(doc: DocxDoc): Map<string, number> {
       if (current) out.set(current, out.get(current) ?? 0)
       continue
     }
-    if (current && p.text.length > 25) out.set(current, (out.get(current) ?? 0) + 1)
+    /* Findings are list items — in the references and in what this platform
+       writes. Counting every paragraph counted exhibit captions and section
+       intros as findings, which let a stray caption under a heading stand in
+       for content: Competition read as "1 finding" for as long as the homepage
+       capture happened to sit beneath it. */
+    if (current && p.listed && p.text.length > 25) out.set(current, (out.get(current) ?? 0) + 1)
   }
   return out
 }

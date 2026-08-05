@@ -4,6 +4,10 @@
 during the periodic human pass: generate the report, read it end to end beside
 `Oh Dental Online Presence Review.docx`, and write down what reads as machine-written.
 
+**Read `docs/fidelity/ceiling-<domain>.docx`, not `generated-<domain>.docx`.** The generated file is
+the unattended run, which §13.4 designs to be thin — read that one and every candidate finding looks
+like a hole in the platform. Pass 1 made this mistake and it cost two false observations (O3, O5).
+
 The harness checks structure. It cannot tell that a paragraph is *thin*, that two sentences
 contradict each other, or that a section admits it has nothing to say. Every entry below is
 something a structural check passed and a read did not.
@@ -38,7 +42,7 @@ announces its own emptiness tells the reader the document was assembled rather t
 is `empty_note` in `categories.json` doing exactly what it was designed to do, and the design was
 wrong.
 
-### O3 · The Recommendations opening has no closing paragraph — **major**
+### ~~O3 · The Recommendations opening has no closing paragraph~~ — **STRUCK 2026-08-05, not a defect**
 
 Reference reports close the Recommendations block with a standing second paragraph:
 
@@ -46,9 +50,13 @@ Reference reports close the Recommendations block with a standing second paragra
 > right guidance and implementation, we will be able to help your practice achieve your goals if
 > you're willing to step up to the challenge.
 
-**6 of 17** — above the threshold, so it is house copy and belongs in the snippet bank as a
-paragraph, not left to a model to reinvent each time. The generated report ends on the diagnosis
-and stops.
+**6 of 17** — above the threshold, so it is house copy. It already **is** house copy: `summary.closer.optimistic`
+is in the bank with `when: always`, and it ships at the reviewer ceiling. It is missing only from the
+*unattended* document, which is the reviewer's job, not a defect.
+
+**The mistake was mine and it is worth naming:** this pass read the unattended document. The human
+pass must read `ceiling-<domain>.docx`, not `generated-<domain>.docx` — otherwise every candidate
+finding looks like a hole in the platform.
 
 ### O4 · The summary paragraph names the same category as both weak and strong — **major**
 
@@ -65,7 +73,7 @@ today, but the grounding validator would pass it: every claim traces to a findin
 be fully grounded and still be nonsense**, which is the argument for the golden set in
 BLOCKERS.md rather than an argument against the validator.
 
-### O5 · Findings ship with their evidence stripped out — **major**
+### ~~O5 · Findings ship with their evidence stripped out~~ — **STRUCK 2026-08-05, 1 of 17**
 
 The reference report:
 
@@ -80,11 +88,13 @@ The generated report, same snippet:
 when the paragraph was mined into the bank. The finding still states the problem, but it no longer
 shows its working, and showing the working is most of why a practice believes the report.
 
-**9 paragraphs across 7 of 17** reports quote concrete evidence in brackets this way: hostnames,
-IPs, load times. No single one of those paragraphs recurs three times, so the *phrasing* is not
-house copy — but the *practice* is, and the collector already has the values.
+**Quantified and struck.** The "same server" paragraph appears in 3 reports and **exactly 1 of 17
+quotes the host**. The practice of bracketing evidence is 7 of 17 in aggregate, but no single
+paragraph does it three times — so adding `{{mail_host}}` to that snippet copies one reviewer's
+thoroughness on one report, which is the definition of overfitting this file exists to prevent.
+Kept here struck rather than deleted, so it is not proposed again.
 
-### O6 · The exhibit is orphaned at the end of the document — **major**
+### ~~O6 · The exhibit is orphaned at the end of the document~~ — **FIXED in §13.2 1.27**
 
 The last line of the generated report is the caption **"Homepage as it loads at 1440×900"**, sitting
 after Competition with nothing around it. Two problems: the screenshot belongs beside the finding
