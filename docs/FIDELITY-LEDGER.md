@@ -10,6 +10,10 @@ indistinguishable. The human pass is what catches the rest.
 - Generated: `ohdental.com.au`, unattended · 35 paragraphs · 1 table(s) · 1 exhibit(s)
 - Reference set: 17 reports in `Downloads/presence` · canonical `Oh Dental Online Presence Review.docx`
 
+Structure only. What a *read* catches — a section that admits it has nothing to say, a
+paragraph that contradicts itself — is in `FIDELITY-OBSERVATIONS.md`, which is written by
+hand and not overwritten by this run.
+
 ## Open gaps
 
 | # | Severity | Gap | Generated | References | Status |

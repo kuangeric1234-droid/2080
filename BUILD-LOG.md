@@ -4,6 +4,25 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## Human pass 1 — reading the document, not the checks — 2026-08-05
+
+**No code changed.** Every fifth iteration is a read rather than a build: generate the report, read it end to end beside `Oh Dental Online Presence Review.docx`, and write down what reads as machine-written. Recorded in the new `docs/FIDELITY-OBSERVATIONS.md`, which is hand-written and — unlike the ledger — not overwritten by the generator.
+
+**The ledger said 5 and the document is still not sendable.** That is the point of the pass. Structure was the easy half.
+
+**Six observations, each counted over the 17:**
+
+1. **Length — critical.** Findings per reference report: min 13, **median 34**, max 41. The generated report carries **10**. Every structural check passes and it is visibly a third of a real report. This is the parent of the four "thin section" gaps; Website (Business) is the buildable part of it, the rest is blocked on providers.
+2. **"Not assessed in this review." — critical, and the clearest tell in the document.** **0 of 17** references contain any such sentence. The generated report says it five times, plus "No competitors were identified for this review". `empty_note` is doing exactly what it was designed to do and the design was wrong: a section that announces its own emptiness tells the reader the document was assembled rather than written.
+3. **No closing paragraph — major.** 6 of 17 close Recommendations with the standing "The positive way of seeing this is that there is plenty of room for improvement…". Above the threshold, so it is house copy and belongs in the bank rather than being reinvented by a model.
+4. **The summary names the same category as weak and strong — major.** "…particularly around website technical, website usability. Your website technical and website usability already work in your favour". It also prints internal keys as prose. This is the mock, but the grounding validator would pass it: **a summary can be fully grounded and still be nonsense**, which is an argument for the golden set, not against the validator.
+5. **Evidence stripped out — major.** The reference says "hosted on the same server **(mail.ohdental.com.au. IP 43.250.142.92)**"; `tech.email.same_server` has no variable for it, so the finding states the problem without showing its working. 9 paragraphs across 7 of 17 quote evidence in brackets this way, and the collector already holds the values.
+6. **Orphaned exhibit — major.** The document's last line is the caption "Homepage as it loads at 1440×900", after Competition, with nothing around it. No reference captions its screenshots at all; they sit inline where the point is made.
+
+**Decisions:** (1) Observations live in their own file because the ledger is regenerated on every run and hand-written insight would be destroyed by it. (2) They are candidates, not truths — an observation is one read of one document, and each must be quantified before anything is built against it, with sub-threshold ones struck through rather than deleted so the same idea is not raised twice.
+
+---
+
 ## §13.2 step 1.22 — Severity ink on the bullet — 2026-08-05
 
 **Built:** the severity colour moved from the finding's `TextRun` to the paragraph mark (`run:` on the `Paragraph`), which is what Word paints the list bullet with. The finding text is black again. Before this, a report with thirty findings came out as thirty paragraphs of orange and red body text — it reads as a warning notice rather than a professional document, and moderate orange on white is genuinely hard to read at body size. The legend is now bulleted the same way, so it is a sample of the thing it explains instead of a differently-styled description of it.
