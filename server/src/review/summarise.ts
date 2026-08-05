@@ -14,9 +14,13 @@ import { getReview } from './store.ts'
    and nothing else. The check below is what makes that enforceable rather than
    a line in a prompt. */
 
+export interface CategoryComment { category: string; comment: string }
+
 export interface SummaryResult {
   summary_text: string
   overall_comment: string
+  /** The summary table's Comments column — one short verdict per category. */
+  category_comments: CategoryComment[]
   /** Non-empty means the output was refused and nothing was written. */
   unsourced: string[]
   runId: string
@@ -99,24 +103,30 @@ export async function summariseReview(
   })
 
   if (run.error || !run.output) throw new Error(run.error ?? 'summariser produced no output')
-  const out = run.output as { summary_text: string; overall_comment: string }
+  const out = run.output as { summary_text: string; overall_comment: string; category_comments?: CategoryComment[] }
 
   const evidence = evidenceFor(accepted as never, review)
+  const comments = out.category_comments ?? []
   const unsourced = [
     ...groundingViolations(out.summary_text, evidence),
     ...groundingViolations(out.overall_comment, evidence),
+    /* The Comments column is prose about the practice like any other, so it is
+       checked the same way — "Rank #1 for local suburb" needs a finding. */
+    ...comments.flatMap((c) => groundingViolations(c.comment, evidence)),
   ]
 
   /* Refuse rather than repair. A summary trimmed of its invented number still
      came from a run that invented one, and the reviewer should see that the
      skill misfired instead of a quietly patched paragraph. */
   if (unsourced.length > 0) {
-    return { ...out, unsourced: [...new Set(unsourced)], runId: run.runId }
+    return { ...out, category_comments: comments, unsourced: [...new Set(unsourced)], runId: run.runId }
   }
 
   await db.query(
-    `UPDATE reviews SET summary_text = $2, overall_comment = $3 WHERE id = $1`,
-    [reviewId, out.summary_text, out.overall_comment],
+    `UPDATE reviews SET summary_text = $2, overall_comment = $3, category_comments = $4
+      WHERE id = $1`,
+    [reviewId, out.summary_text, out.overall_comment,
+      JSON.stringify(Object.fromEntries(comments.map((c) => [c.category, c.comment])))],
   )
-  return { ...out, unsourced: [], runId: run.runId }
+  return { ...out, category_comments: comments, unsourced: [], runId: run.runId }
 }

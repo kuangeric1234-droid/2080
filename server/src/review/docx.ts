@@ -250,6 +250,7 @@ export async function exportReviewDocx(
   }
 
   const scores: Record<string, number | null> = review.category_scores ?? {}
+  const categoryComments: Record<string, string> = review.category_comments ?? {}
   const when = opts.date ?? new Date()
   const dateText = new Intl.DateTimeFormat('en-AU', {
     day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Australia/Melbourne',
@@ -306,8 +307,15 @@ export async function exportReviewDocx(
         headerCell('Comments', COL.comments),
       ],
     }),
+    /* The Comments column is a verdict, not a contents list. Every real report
+       writes a short line per category — "Great performance and diversified
+       email/server", "Abandoned social media"; the dimension list is only what
+       the *blank* template carries as a placeholder, so it is the fallback for
+       a review the summariser has not run over yet. "N/A" is what the reports
+       print for a category nothing was assessed in. */
     ...categories.map((cat, i) =>
-      dataRow(cat.label, stars(scores[cat.key] ?? null), cat.dimensions.join(', '), i)),
+      dataRow(cat.label, stars(scores[cat.key] ?? null),
+        categoryComments[cat.key] ?? cat.dimensions.join(', '), i)),
     dataRow('Overall Score', stars(review.overall_score ?? null),
       review.overall_comment ?? '', categories.length),
   ]

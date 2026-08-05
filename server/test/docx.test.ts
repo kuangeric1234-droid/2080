@@ -466,6 +466,33 @@ describe('exporting the review as .docx', () => {
       `the ${green.snippet_id} bullet carries no severity ink`).toBe(true)
   })
 
+  /* §13.2 step 1.18. The Comments column is a verdict per category in every
+     real report — "Great performance and diversified email/server" — not the
+     dimension list, which is only what the blank template carries. */
+  it('prints the summariser’s verdict in the Comments column', async () => {
+    const model = new MockModelClient((req) =>
+      mockReviewSummary(req.input as Parameters<typeof mockReviewSummary>[0]))
+    const res = await summariseReview(db, model, WORKSPACE_ID, reviewId)
+    expect(res!.category_comments.length, 'no per-category verdicts').toBeGreaterThan(0)
+
+    const { rows } = await db.query(
+      `SELECT category_comments FROM reviews WHERE id = $1`, [reviewId])
+    const stored = rows[0].category_comments as Record<string, string>
+    expect(Object.keys(stored).length).toBe(res!.category_comments.length)
+
+    const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
+    /* `recommendations` is a finding category but has no row in the summary
+       table, so pin to one the table actually prints. */
+    const bank = loadBank()
+    const one = res!.category_comments.find(
+      (c) => bank.categories.some((cat) => cat.key === c.category))!
+    expect(one, 'no verdict for any table row').toBeTruthy()
+    expect(text, 'the verdict never reached the table').toContain(one.comment)
+    // and the placeholder it replaces is gone for that category
+    const cat = bank.categories.find((c) => c.key === one.category)!
+    expect(text).not.toContain(cat.dimensions.join(', '))
+  })
+
   it('puts issues before strengths inside a category', async () => {
     const text = await documentText((await exportReviewDocx(db, WORKSPACE_ID, reviewId)).buffer)
     const tech = text.slice(text.indexOf('Website (Technical):'))

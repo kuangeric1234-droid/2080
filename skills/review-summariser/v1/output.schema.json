@@ -1,9 +1,36 @@
 {
   "type": "object",
   "properties": {
-    "summary_text": { "type": "string" },
-    "overall_comment": { "type": "string" }
+    "summary_text": {
+      "type": "string"
+    },
+    "overall_comment": {
+      "type": "string"
+    },
+    "category_comments": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "comment": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "category",
+          "comment"
+        ],
+        "additionalProperties": false
+      }
+    }
   },
-  "required": ["summary_text", "overall_comment"],
+  "required": [
+    "summary_text",
+    "overall_comment",
+    "category_comments"
+  ],
   "additionalProperties": false
 }

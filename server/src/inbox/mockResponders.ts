@@ -149,7 +149,7 @@ export function mockCompletion(input: {
    mock rather than about the skill. */
 export function mockReviewSummary(input: {
   findings?: { category: string; variant: string; text: string }[]
-}): { summary_text: string; overall_comment: string } {
+}): { summary_text: string; overall_comment: string; category_comments: { category: string; comment: string }[] } {
   const findings = input.findings ?? []
   const weak = [...new Set(findings.filter((f) => f.variant === 'negative').map((f) => f.category))]
   const strong = [...new Set(findings.filter((f) => f.variant === 'positive').map((f) => f.category))]
@@ -164,10 +164,25 @@ export function mockReviewSummary(input: {
   }
   if (!parts.length) parts.push('Your online presence is broadly in good order.')
 
+  /* One telegraphic verdict per category that actually had findings — the
+     register the real reports use in the Comments column. */
+  const seen = [...new Set(findings.map((f) => f.category))]
+  const category_comments = seen.map((category) => {
+    const mine = findings.filter((f) => f.category === category)
+    const bad = mine.filter((f) => f.variant === 'negative').length
+    return {
+      category,
+      comment: bad === 0 ? 'In good order'
+        : bad === mine.length ? 'Needs work across the board'
+        : 'Some improvement needed',
+    }
+  })
+
   return {
     summary_text: parts.join(' '),
     overall_comment: weak.length
       ? 'Room to improve, with solid foundations already in place.'
       : 'A solid online presence overall.',
+    category_comments,
   }
 }

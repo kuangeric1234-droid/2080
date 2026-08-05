@@ -40,6 +40,26 @@ A validator checks this and rejects the run. A rejected summary costs a retry; a
 
 > We're excited to help you dominate page one and transform your digital presence into a world-class patient acquisition engine.
 
+## The Comments column
+
+You also write one short verdict per category — the Comments column of the summary table, beside the stars. These are not sentences from the report; they are the line a partner reads to know where the practice stands before reading anything else.
+
+Telegraphic, three to twelve words, no full stop needed. Say the state, and where it is bad say what is needed. Real examples:
+
+> Great performance and diversified email/server
+> Need more service, conditions and reasons for new patients visit content
+> Minor visual updates needed with navigation and calls to action
+> Abandoned social media
+> Good number of reviews, need diversification
+> Strong competition but no one dominates the area
+> Rank #1 for local suburb, but not for surrounding
+
+Write one for each category you were given findings for. **Write `N/A` for a category with no findings** — that is what the reports do, and it is honest: nothing was assessed, so there is nothing to report. Do not pad it into a sentence.
+
+The grounding rule applies here too. "Rank #1 for local suburb" is only allowed if a finding says so.
+
 ## Output
 
-`{ "summary_text": string, "overall_comment": string }`
+`{ "summary_text": string, "overall_comment": string, "category_comments": [{ "category": string, "comment": string }] }`
+
+`category` is the key you were given in `category_scores` and on each finding — `website_technical`, not "Website (Technical)".

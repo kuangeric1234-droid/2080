@@ -4,6 +4,20 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.18 — The summary-table Comments column — 2026-08-05
+
+**Built:** the Comments cell beside each star score is now a written verdict rather than the category's dimension list. Reading all 17 completed reports, that column is never the dimensions — it is three to twelve telegraphic words that let a partner read the table and know where the practice stands: *"Great performance and diversified email/server"*, *"Need more service, conditions and reasons for new patients visit content"*, *"Minor visual updates needed with navigation and calls to action"*, *"Abandoned social media"*, *"Rank #1 for local suburb, but not for surrounding"*, and `N/A` where nothing was assessed. The dimension list is what the **blank** template carries as a prompt to the writer; shipping it was shipping the prompt instead of the answer. `review-summariser` now returns `category_comments: [{category, comment}]` (schema + SKILL.md register with the real examples and the `N/A` rule), each comment passes the same grounding validator as the two paragraphs — *"Rank #1 for local suburb"* needs a finding behind it — the map persists to `reviews.category_comments` (migration 0012, jsonb default `{}`), and `docx.ts` prints it, falling back to the dimension list only for a category the summariser did not write.
+
+**Evidence:** `docx.test.ts` 18/18 including the new case — the summariser's verdict appears in the document, the stored map matches what the run returned row-for-row, and the dimension list for that category is **absent**. Full server suite: **222/222 assertions pass**, typecheck clean.
+
+**Files:** `server/migrations/0012_category_comments.sql` (new) · `skills/review-summariser/v1/{SKILL.md,output.schema.json}`, `server/src/review/{summarise,docx}.ts`, `server/src/inbox/mockResponders.ts`, `server/test/docx.test.ts` (edited).
+
+**Decisions:** (1) Written by the skill, not templated per category — a canned line per category is house copy that says nothing, and this column is the one a reader treats as the executive summary. (2) Grounded like any other prose: the column is short enough to look like a label, which is exactly why an ungrounded number in it would pass unnoticed. (3) Refuse-don't-repair applies here too — an invented comment fails the whole run rather than being dropped from the map, so the reviewer sees the skill misfired. (4) The test pins to a category that actually has a table row: `recommendations` is a valid finding category with no row, and picking `category_comments[0]` blind made the assertion depend on ordering.
+
+**Note — Windows test teardown:** the full suite reports file-level `EBUSY … rmdir` failures on some files while every assertion passes. `embedded-postgres` deletes its own data directory on `stop()` and Windows has not released the handles yet. Untouched by this step, and it accumulated 43 orphaned `postgres.exe` processes and 140 stale temp directories on this machine, which were cleared. Fixing the teardown itself is its own change.
+
+---
+
 ## §13.2 step 1.17 — The severity legend — 2026-08-04
 
 **Found by reading Oh Dental.** Every real report prints a Legend between Recommendations and the first section — Positive, Negative (Moderate), Negative (Critical) — and colours every finding paragraph to match. The exporter printed everything in black.
