@@ -210,7 +210,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Take an active role in your dental health",
+          "reason": "The banner copy is a generic wellness slogan rather than a specific offer, promotion or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/implants-dentist-false-teeth",
+          "reason": "Each service has its own dedicated path (crowns, dentures, implants, invisalign, etc.), so services are not confined to one list page despite servicePages being counted as 0."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": true,
+          "evidence": "Aboriginal Torres Strait Islander Resources About teeth.org.au About you Accidents Adults dental health Bad breath Calculus formation",
+          "reason": "The homepage dumps a long undifferentiated menu of link phrases with dated structure and no clear calls to action, reading like an older site."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "Our friendly dentists are here to look after you and your family",
+          "reason": "The stated reasons — friendly, dedicated, comprehensive, professionalism — are generic, though 'since 1974' is concrete; the dominant framing is generic caring language."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "Our practice image",
+          "reason": "Image alts show only logos and generic labels like 'Our practice image' and 'about Camberwell dentists' with no named practitioner photos, suggesting real team photos are absent."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": false,
+          "evidence": "/about-camberwell-dentists",
+          "reason": "bioPages is 0 and paths contains no individual doctor bio pages, but the About page lists all clinicians collectively rather than giving each their own page — no individual bio path exists so the finding could apply, yet the practice lists named clinicians; treating as present would over-reach given the shared clinician listing.[correction] Actually no per-doctor bio pages exist in paths."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": true,
+          "evidence": "Crowns Dentures Implants Invisalign",
+          "reason": "Service navigation lists treatments the practice does; although some condition topics exist under education, the core service pages are treatment-focused with only one conditionPage."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery in the paths or text, so the framing finding cannot apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "At Camberwell Dental Group we aim to promote dental health for life, encouraging you to understand that oral healthcare is a high priority.",
+          "reason": "The body copy is written in short, digestible sentences and paragraphs, so readability of the prose is not a genuine problem."
+        }
+      ]
     },
     {
       "report": "Chiropractic Symphony Online Presence Review.docx",
@@ -287,7 +343,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Providing personalised and high-quality chiropractic care for the whole family",
+          "reason": "The banner copy is a generic quality-care statement with no specific offer or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": true,
+          "evidence": "/chiropractic/",
+          "reason": "servicePages is 0 and there is a single /chiropractic/ page rather than individual service pages."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": null,
+          "reason": "The copy reads modern with clear calls to action, and I cannot see the design to judge it dated."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "personalised and high-quality chiropractic care",
+          "reason": "Reasons given are subjective terms like personalised, high-quality and caring rather than tangible factors, though Gonstead method is a partial specific."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": false,
+          "evidence": "dr chew huay lua gonstead family chiropractic",
+          "reason": "An alt names the practitioner Dr Chew, indicating a real photo of the named practitioner is present."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "/about/",
+          "reason": "bioPages is 0 and paths contains only a single /about/ page, so the doctor has no dedicated biography page."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "If you or your family member have been suffering too long from any of these common conditions",
+          "reason": "The homepage addresses patient conditions such as sciatica, headaches, migraines and vertigo, not just treatments."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery referenced in the text or image alts."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "With an honest and open approach, we’re committed to improving your wellbeing",
+          "reason": "The homepage text is broken into short readable sentences and lists rather than dense unreadable walls of copy."
+        }
+      ]
     },
     {
       "report": "DentalArt Online Presence Review.docx",
@@ -380,7 +492,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "What is your concept of the ideal dental clinic?",
+          "reason": "The homepage opens with generic rhetorical questions rather than a specific promotion, offer or timely message."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/html/cosmetic_whitening.html",
+          "reason": "The paths show individual cosmetic service pages such as whitening, replacement and single tooth, so services already have their own pages."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": true,
+          "evidence": "Site by Hunter Online",
+          "reason": "The .html file paths, dense unbroken prose and old-style structure genuinely read as an older, dated site."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": false,
+          "evidence": "relationship based treatment",
+          "reason": "The site offers a concrete differentiator with its 'relationship based treatment' approach and healthcare-provider positioning rather than only 'caring and professional'."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "DentalArt",
+          "reason": "The only image alt is the brand name and there is no indication of real photographs of the named practitioners."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": false,
+          "evidence": "/html/team_anthony_burke.html",
+          "reason": "The paths include individual bio pages for each of the three named doctors, so bio pages exist."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "/html/health_toothhurt.html",
+          "reason": "The site addresses patient conditions such as 'Why Does My Tooth Hurt', sensitive teeth and knockouts, not only treatments."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery indicated in the text, paths or alts, so the framing finding cannot apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": true,
+          "evidence": "Just as our initial questions showed that people’s expectations differ, we aim to tailor your dental experience to your needs and wants.",
+          "reason": "The homepage is dense blocks of long prose paragraphs with lengthy sentences and little layout differentiation."
+        }
+      ]
     },
     {
       "report": "drtlu.com.au Online Presence Review.docx",
@@ -460,7 +628,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": "no nav links parsed — page counts unscorable"
+      "excluded_reason": "no nav links parsed — page counts unscorable",
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "High Innovative Professional Dentists We believe in providing you with the best in dentistry",
+          "reason": "The banner copy is a generic quality claim with no specific offer or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": true,
+          "evidence": "Cosmetic Dentistry Cosmetic dentistry mainly concerns improving the appearance of your teeth",
+          "reason": "servicePages is 0 and services appear only as short blurbs with 'More Details' on the homepage list."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": "Modern-day Caring Technologies for Your Dental Health",
+          "reason": "The copy reads as a modern template and I cannot see the design, so I won't call it dated."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": false,
+          "evidence": null,
+          "reason": "no verdict returned"
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "Dollie Horton",
+          "reason": "The team names (Dollie Horton, Theresa Cruz, etc.) are placeholder theme content, not real photos of actual practitioners."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": false,
+          "evidence": null,
+          "reason": "paths is empty so bio pages cannot be determined."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": true,
+          "evidence": "Services At Our Clinic Our clinic offers all kinds of services",
+          "reason": "The site lists treatments (cosmetic, implants, whitening) but never addresses patient conditions or symptoms."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery mentioned in the text or alts."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "SmilePure always places patients at the center of our attention, and concentrate on improving their experience with the aid of technologies.",
+          "reason": "The homepage text uses short blurbs and manageable sentences rather than dense walls of copy."
+        }
+      ]
     },
     {
       "report": "Eaglehawk Dental Online Presence Review (new).docx",
@@ -566,7 +790,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Let's get your smile back!",
+          "reason": "The banner copy is a generic slogan with no specific offer or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/general-dentistry/",
+          "reason": "Each service has its own page in paths despite servicePages counting 0, so services are not just a list."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": true,
+          "evidence": "Copyright © 2019 Eaglehawk Dental",
+          "reason": "Copyright 2019 and Jan 2019 posts plus a stale, dense homepage suggest an older, unmaintained site."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "caring team of dental experts",
+          "reason": "Reasons given are generic — state-of-the-art, stress-free, caring — with no tangible checkable factors."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "Dr. Maheesh Nair",
+          "reason": "Image alts contain only logo, slider and blog thumbnails with no named practitioner photos, suggesting real team photos are absent."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": false,
+          "evidence": "/ourteam/",
+          "reason": "bioPages is 1 and a team page exists, so bio content is present."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": true,
+          "evidence": "Our dental services include general dentistry, restorative dentistry and cosmetic dentistry.",
+          "reason": "The site lists treatments only and does not address patient conditions or symptoms."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery in the text or paths, so the framing finding does not apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "At Eaglehawk Dental, we are committed to providing you with peace of mind during your time with us, and confidence as you walk out.",
+          "reason": "The homepage uses short sections and reasonably concise sentences rather than dense walls of jargon."
+        }
+      ]
     },
     {
       "report": "Expert Smiles Online Presence Review.docx",
@@ -680,7 +960,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "We Focus on Your Dental Health with Lasting Perfect Smiles Experience Advanced Dental Care",
+          "reason": "The banner copy is generic aspirational phrasing with no specific offer or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/veneers/",
+          "reason": "The paths list shows dedicated pages per service (veneers, teeth-whitening, dental-implants, etc.), so services are not confined to one page."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": "COPYRIGHT ©2023 – EXPERT SMILES",
+          "reason": "Copy reads as modern with clear services structure and I cannot see the design, so no evidence it is dated."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": false,
+          "evidence": "04 2258 6540 (中文联系)",
+          "reason": "The homepage gives concrete differentiators like Mandarin contact, on-site parking, 25 years experience, and payment plans from $38/week."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": false,
+          "evidence": "Meet Dr Philip Tan",
+          "reason": "Named practitioners with detailed bios are presented, suggesting real team presence rather than stock branding."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "/about-us/",
+          "reason": "bioPages is zero and the populated paths list has only a single /about-us/ page rather than individual doctor bio pages for the two named dentists."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": true,
+          "evidence": "Our star product, \"All-at-Once,\"",
+          "reason": "Homepage and paths list only treatments/services (veneers, implants, crowns) with no patient-condition pages, plus a 'Problems we solve' link that isn't a condition page structure."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": "Before & After Transformation page",
+          "reason": "A smile gallery exists but I only see alt labels like 'Changed 4' and cannot tell whether images show the whole face, so no positive evidence of clinical-only framing."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "Our comprehensive approach ranges from preventative maintenance to advanced rehabilitations, all delivered by our highly experienced and skilled team.",
+          "reason": "The homepage text uses short sections and reasonable sentences rather than dense walls of jargon."
+        }
+      ]
     },
     {
       "report": "Goolwa Dental Surgery Online Presence Review.docx",
@@ -754,7 +1090,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Gentle, Professional Dental Care In Goolwa",
+          "reason": "The banner leads with generic adjectives rather than any specific promotion or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/dental-services/general-dentistry/",
+          "reason": "There are 7 service pages, each with its own URL, so services are not confined to one list."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": "Providing personalised service and customised treatment plans",
+          "reason": "The copy reads as modern with clear structure and CTAs, and I cannot see the design to judge otherwise."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "With our caring approach and quality dental care",
+          "reason": "The stated reasons are generic adjectives like caring, professional and quality rather than concrete checkable facts."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "QIP Dental_Practice_Symbol",
+          "reason": "The only image alts are accreditation logos with no named practitioner photos and no mention of the team by name."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "/about/",
+          "reason": "bioPages is 0 with a populated paths list, so no individual doctor bio pages exist."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": true,
+          "evidence": "general dentistry, preventative dentistry, cosmetic dentistry, teeth whitening, endodontic treatments",
+          "reason": "The site lists treatments the practice offers but never addresses patient conditions or symptoms, and conditionPages is 0."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery mentioned in the text or paths, so the framing finding does not apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "Our Goolwa Dentists will take the time to listen to your needs during your dental consultation.",
+          "reason": "The homepage text uses short, plain sentences and clear sections rather than dense walls of jargon."
+        }
+      ]
     },
     {
       "report": "Holistic Dental Brunswick Online Presence Review.docx",
@@ -872,7 +1264,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Holistic Approach Treatment",
+          "reason": "The banner copy reads as a generic slogan (\"Holistic Approach Treatment\") with no specific promotion, offer or timely message."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/service/root-canal-treatment/",
+          "reason": "With 29 service pages in paths, each service already has its own dedicated page."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": "Advanced camera systems in the dental chairs capable of detecting even the tiniest problem",
+          "reason": "Cannot see the design and the copy does not clearly read as dated, so this is not supported."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "we truly put our patients first",
+          "reason": "The reasons given are subjective clichés (\"put our patients first\", \"state of the art technology\", \"comforting and stress free\") rather than tangible differentiators."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "Holistic Dentist Brunswick",
+          "reason": "Image alts are only generic keyword phrases and review names with no alts indicating real photos of named practitioners."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "/about-us/",
+          "reason": "bioPages is 0 with a populated paths list containing only /about-us/ and no individual practitioner pages, despite many dentists being named."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "Bleeding Gums Gum Disease Pregnancy Oral Care Bad Breath",
+          "reason": "The site addresses patient conditions like bleeding gums, tooth pain, bad breath and snoring, not just treatments."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery indicated in the text, paths or alts, so the framing finding does not apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": true,
+          "evidence": "Different types of fillings and silver/mercury/amalgam removal and replacement, Braces or orthodontics, Teeth whitening, Cosmetic makeovers , Paediatric/Child dentistry, Sleep apnoea solutions",
+          "reason": "The homepage has long run-on sentences and dense repeated paragraphs making the content hard to consume."
+        }
+      ]
     },
     {
       "report": "Holistic Dental Donvale Online Presence Review.docx",
@@ -997,7 +1445,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Dentist Donvale Helping you recapture and maintain your dental health",
+          "reason": "The banner copy is a generic tagline about maintaining dental health with no specific offer, promotion or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/cosmetic-dentistry-melbourne/",
+          "reason": "The paths list shows each treatment has its own dedicated page such as veneers, whitening and implants, so services are not merely listed on one page."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": "Contact Us Now",
+          "reason": "The copy has clear calls to action and modern structure, and I cannot see the design, so there is no positive reason to call it dated."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "We give each and every client the same level of care and attention to detail",
+          "reason": "The reasons offered are generic subjective claims about care, attention and affordability rather than tangible factors like years of experience or languages spoken."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "Man Image",
+          "reason": "Image alts are generic ('Man Image', 'Brand Logo', 'dentist in Donvale') with no named practitioner photos, suggesting real team photos are absent."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "/our-team/",
+          "reason": "pages.bioPages is 0 and the populated paths list contains only a single '/our-team/' link with no individual doctor bio pages."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "/chronic-gum-disease-treatment/",
+          "reason": "The site addresses patient conditions such as snoring, teeth grinding, sleep apnoea, TMJ pain and gum disease, not just treatments."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery referenced in the text, paths or image alts, so the finding does not apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "We take a holistic approach to dental care.",
+          "reason": "The homepage text is broken into short readable paragraphs with reasonable sentence length and no jargon walls."
+        }
+      ]
     },
     {
       "report": "Novus Dermatology Online Presence Review.docx",
@@ -1076,7 +1580,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "A specialist medical clinic caring for your skin health and renewed confidence.",
+          "reason": "The banner copy is a generic mission statement rather than a specific offer, promotion or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/psoriasis-and-eczema-clinic/",
+          "reason": "The paths list shows dedicated pages for dermatology, cosmetic/laser, laser, injectables, skin rejuvenation, dermal fillers and psoriasis/eczema, so services do have their own pages despite servicePages counting zero."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": true,
+          "evidence": "However, they fail to understand that without these procedures they are more than likely to suffer some form of skin condition down the line.",
+          "reason": "The copy is dense SEO-padded blocks of long paragraphs with dated phrasing, suggesting an older-style site."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": false,
+          "evidence": "Backed up by over 20 years of experience, we deliver the highest standard of care.",
+          "reason": "Although much of the copy is generic, the homepage does give a concrete, checkable reason (over 20 years of experience) alongside a named specialist dermatologist."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "skin specialist geelong",
+          "reason": "The image alts are only generic 'skin specialist geelong' and reviewer names, with no alt indicating a real photo of Dr Taklif or named practitioners."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "/about-us/",
+          "reason": "bioPages is zero and the populated paths list contains only a single /about-us/ page with no individual doctor bio pages."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "we treat a wide range of skin conditions, including acne, rosacea, psoriasis and eczema",
+          "reason": "The site addresses patient conditions such as acne, rosacea, psoriasis, eczema and hair loss, not only treatments, and has a dedicated psoriasis-and-eczema page."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": true,
+          "evidence": "Severe Acne: before and after treatment.",
+          "reason": "There is a before/after gallery labelled clinically by condition (Severe Acne, Severe Rosacea) rather than shown as a patient story."
+        },
+        {
+          "id": "use.content.readability",
+          "present": true,
+          "evidence": "As such, it is important to find a reputable and reliable Skin Clinic in Geelong which can provide you with appropriate treatments and has the requisite facilities to ensure that your skincare treatment is not compromised in the least.",
+          "reason": "The homepage is long undifferentiated paragraphs with sentences well over 20 words, making it hard to consume."
+        }
+      ]
     },
     {
       "report": "Oh Dental Online Presence Review.docx",
@@ -1177,7 +1737,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Your local and trusted dental experts. Giving you a brighter smile now, and for years to come.",
+          "reason": "The banner copy is a generic trust-and-smile slogan with no specific offer or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/dental-implants/",
+          "reason": "Paths show individual service pages exist (implants, crowns, veneers, invisalign, etc.), so services are not confined to one list page despite the servicePages count of 0."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": "© Copyright 2016 - 2026 | Website & SEO by Digital Getup",
+          "reason": "The copy has clear CTAs (Book Online) and modern structure, and I cannot see the design, so there is no textual basis to call it dated."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "Your local and trusted dental experts.",
+          "reason": "Reasons to choose are subjective adjectives like trusted and expert rather than tangible checkable factors."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "smile dental Adelaide health fund",
+          "reason": "Image alts are only logo/health-fund and generic stock imagery with no alts indicating real photos of the named practitioners."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": false,
+          "evidence": "/dr-adelia-ng/",
+          "reason": "bioPages is 7 and paths show individual doctor bio pages, so the practice already has them."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": true,
+          "evidence": "Dental Crowns Dental Implants Dental Veneers Invisalign Teeth Whitening",
+          "reason": "conditionPages is 0 and the site lists only treatments, not patient problems like toothache or missing teeth."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery indicated in text or paths, so this finding does not apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "Take a look at some of our most common services, and let us answer your questions.",
+          "reason": "The homepage text uses short, plain sentences without dense jargon-heavy walls of copy."
+        }
+      ]
     },
     {
       "report": "Online Presence Review (Windsor Dental Care).docx",
@@ -1232,7 +1848,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": "no nav links parsed — page counts unscorable"
+      "excluded_reason": "no nav links parsed — page counts unscorable",
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": false,
+          "evidence": null,
+          "reason": "The only homepage_text is the title with no banner copy to judge, so I cannot confirm a generic banner message."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": null,
+          "reason": "paths is empty and homepage_text contains no service content, so I cannot tell whether services have their own pages."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": null,
+          "reason": "No body text or design is available to judge, and this call requires positive evidence the site reads as dated."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": false,
+          "evidence": null,
+          "reason": "The homepage_text is only the title with no stated reasons to choose the practice, so no generic UVP can be confirmed."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": false,
+          "evidence": null,
+          "reason": "image_alts is empty and there is no text about practitioners, so I have no positive evidence real team photos are absent."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": false,
+          "evidence": null,
+          "reason": "paths is empty so bio page presence cannot be determined."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": null,
+          "reason": "No treatment or condition content is present in the input, so I cannot tell whether the site covers only treatments."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no evidence of any before/after or smile gallery in the provided text or alts."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": null,
+          "reason": "The only homepage_text is the title, providing no body copy to assess readability."
+        }
+      ]
     },
     {
       "report": "Paladin Online Presence Review.docx",
@@ -1329,7 +2001,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": false,
+          "evidence": "Make Your Kids Brighter BEFORE They Go Back to School!",
+          "reason": "The banner area carries a specific, timely back-to-school promotion with gap-free checkup offer rather than a generic tagline."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/general-dentistry/",
+          "reason": "Paths show individual service pages (general-dentistry, cosmetic-dentistry, dental-implants, etc.) despite the servicePages count being zero due to classification."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": "our new and modern clinic",
+          "reason": "The copy reads modern with clear calls to action and no dated phrasing, so a dated-website claim cannot be supported from the text."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "Looking for a gentle and caring family dentist?",
+          "reason": "Reasons to choose lean on generic 'gentle', 'caring', 'experienced' language rather than concrete differentiators, though parking and multi-suburb access appear elsewhere."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": false,
+          "evidence": "Dr Greg Hsiao highly respected Northcote dentist",
+          "reason": "An image alt names Dr Greg Hsiao, indicating a real photo of a named practitioner rather than only stock imagery."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "why are Dr greg's patients so loyal?",
+          "reason": "bioPages is zero and paths list has no individual dentist bio pages, only short blurbs for Dr Greg and Dr Vicky on the homepage."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "Periodontal Disease​",
+          "reason": "Footer links include condition-oriented pages like Periodontal Disease and Root Canals, and text addresses oral hygiene issues, not only treatments."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "No before/after or smile gallery is indicated in the text, paths or image alts, so the framing finding does not apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": true,
+          "evidence": "What some people be aware of is that poor oral hygiene can not only have deleterious impacts beyond teeth and gums.",
+          "reason": "The homepage has long dense paragraphs and awkward run-on sentences that make the content hard to consume."
+        }
+      ]
     },
     {
       "report": "Periodontal Associates Online Presence Review_.docx",
@@ -1449,7 +2177,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Specialists in Periodontics including Implant Surgery.",
+          "reason": "The top-of-page message is a generic specialty descriptor with no specific offer or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/services/scaling-and-root-planing/",
+          "reason": "servicePages is 10 and each service has its own dedicated path, so services are not confined to one page."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": true,
+          "evidence": "Periodontic Website Design by PBHS &copy; 2019",
+          "reason": "Dense undifferentiated blocks, placeholder 'Dr. Drs.' text and 'Procedure 1/2/3/4' stubs indicate an old templated site."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": true,
+          "evidence": "dedicated to providing evidence based Periodontal and Dental Implant treatment",
+          "reason": "The reasons given are generic ('evidence based', 'great looking teeth') with no tangible checkable factors like years, languages or payment options."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": true,
+          "evidence": "Dental Implants Presentation",
+          "reason": "The only image alt is a presentation graphic and text uses placeholder 'Dr. Drs.' names, giving no indication of real photos of the named practitioners."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "/meet-us/",
+          "reason": "bioPages is 0 and paths show only a single '/meet-us/' page with no per-doctor bio pages despite four named practitioners."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "/patient-information/periodontal-disease/about-periodontal-disease/",
+          "reason": "The site addresses patient conditions like gum disease and missing teeth, not only treatments."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "No before/after or smile gallery is present in the text or paths, so the framing finding does not apply."
+        },
+        {
+          "id": "use.content.readability",
+          "present": true,
+          "evidence": "It is estimated that 30% of the population are susceptible to gum disease that is left undiagnosed and untreated can lead gradually to loss of teeth.",
+          "reason": "The homepage is long dense clinical paragraphs with run-on jargon-heavy sentences that are hard to consume."
+        }
+      ]
     },
     {
       "report": "Queen Napier Dental Online Presence Review.docx",
@@ -1524,7 +2308,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": "no nav links parsed — page counts unscorable"
+      "excluded_reason": "no nav links parsed — page counts unscorable",
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": true,
+          "evidence": "Your friendly, neighbourhood dental team...",
+          "reason": "The banner copy is a generic friendly-team tagline with no specific offer, promotion or point of difference."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": true,
+          "evidence": "Our Services",
+          "reason": "servicePages is 0 and services appear as a list on the homepage rather than individual pages."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": true,
+          "evidence": "&copy; 2017 by Queen Napier Warragul Dentists.",
+          "reason": "The 2017 copyright and dense, undifferentiated service blocks suggest an older site, though design isn't visible."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": false,
+          "evidence": "All children 16 years and under receive 50% discounted dental treatment...",
+          "reason": "The site gives concrete, checkable reasons like discounts, warranties, extended hours and same-day emergency care rather than only generic adjectives."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": false,
+          "evidence": "Dr George Gibson Dentist",
+          "reason": "Image alts name individual dentists suggesting real practitioner photos are present."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": false,
+          "evidence": null,
+          "reason": "The paths list is empty so I cannot determine whether individual bio pages exist."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "there's nothing worse than a toothache keeping you up at night!",
+          "reason": "The site addresses patient problems like toothache and emergencies, not only treatment types."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": false,
+          "evidence": null,
+          "reason": "There is no before/after or smile gallery evident in the text or alts, only 'Success Stories' with no gallery content."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "We focus strongly on preventive care in order to prevent small cavities from turning into larger ones.",
+          "reason": "The copy uses short sentences and broken-up service blocks rather than dense walls of jargon-heavy text."
+        }
+      ]
     },
     {
       "report": "With U Dental Online Presence Review.docx",
@@ -1715,7 +2555,63 @@
         "biz.gallery.framing",
         "use.content.readability"
       ],
-      "excluded_reason": null
+      "excluded_reason": null,
+      "verdicts": [
+        {
+          "id": "biz.banner.generic",
+          "present": false,
+          "evidence": "Experience the ‘U’ in Dental Care",
+          "reason": "The banner carries a specific brand message about Korean dental aesthetics and dentists who teach at Melbourne University, not a stock phrase."
+        },
+        {
+          "id": "biz.service_pages.missing",
+          "present": false,
+          "evidence": "/our-services/dental-veneers/",
+          "reason": "pages.servicePages is 42 with each service on its own path, so services already have dedicated pages."
+        },
+        {
+          "id": "biz.website.dated",
+          "present": false,
+          "evidence": "Say goodbye to traditional teeth cleaning and hello to EMS Airflow",
+          "reason": "The copy is modern and conversational with clear calls to action, giving no textual reason to call the site dated."
+        },
+        {
+          "id": "biz.uvp.generic",
+          "present": false,
+          "evidence": "care from practising dentists who also teach their craft at the prestigious Melbourne University and the Implant Institute",
+          "reason": "The homepage gives concrete differentiators like teaching dentists, Korean aesthetics, and being one of few Australian clinics placing Zirconia implants."
+        },
+        {
+          "id": "biz.team_photos.missing",
+          "present": false,
+          "evidence": "Great service from Dr Edward Lee always",
+          "reason": "There are an /our-team/ page and named practitioners referenced, but the image_alts show only logos, partners and makeover cases, so I cannot confirm real team photos exist from what I was given—answering false as there is no positive evidence they are absent either."
+        },
+        {
+          "id": "biz.bio_pages.missing",
+          "present": true,
+          "evidence": "/our-team/",
+          "reason": "pages.bioPages is 0 and paths is populated with only a single /our-team/ page rather than individual doctor bio pages."
+        },
+        {
+          "id": "biz.conditions_content.missing",
+          "present": false,
+          "evidence": "/our-services/toothaches/",
+          "reason": "The site addresses patient conditions like bad breath, broken teeth, gum disease, missing teeth and toothaches, not just treatments."
+        },
+        {
+          "id": "biz.gallery.framing",
+          "present": true,
+          "evidence": "Efa Of Balwyn's Porcelain Veneer Makeover In With U Dental",
+          "reason": "A before/after smile gallery exists and the alts frame cases by treatment type rather than as whole-face patient stories."
+        },
+        {
+          "id": "use.content.readability",
+          "present": false,
+          "evidence": "If most or all of your teeth are missing, All-On-X implants are the game-changer you’ve been waiting for.",
+          "reason": "The homepage text uses short, punchy sentences and clearly separated service blocks rather than dense walls of copy."
+        }
+      ]
     }
   ],
   "drift_max_days": 120,

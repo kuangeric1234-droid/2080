@@ -4,6 +4,36 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.41 — review-judge sat the exam and failed it — 2026-08-06
+
+**Result first: 80 of 135 cells, 59%, against a majority baseline of 73%.** A skill that answered "whatever the commoner label is" for every call would beat it. `review-judge` is written, tested end to end and **not wired into collection**, and it stays that way until it beats the baseline.
+
+Per call, accuracy against the baseline it has to clear:
+
+| finding | n | acc | baseline | precision | recall |
+|---|---|---|---|---|---|
+| `biz.bio_pages.missing` | 13 | 77% | 62% | 78% | 88% |
+| `biz.service_pages.missing` | 13 | 77% | 69% | 100% | 25% |
+| `biz.banner.generic` | 16 | 75% | 69% | 77% | 91% |
+| `biz.uvp.generic` | 16 | 63% | 81% | 89% | 62% |
+| `biz.gallery.framing` | 16 | 63% | 63% | 50% | 17% |
+| `biz.conditions_content.missing` | 13 | 54% | 85% | 100% | 45% |
+| `use.content.readability` | 16 | 50% | 69% | 80% | 36% |
+| `biz.team_photos.missing` | 16 | 50% | 88% | **20%** | 100% |
+| `biz.website.dated` | 16 | **31%** | 69% | 50% | 27% |
+
+**The pattern is the actual finding.** The two calls with a real count behind them — bio pages and service pages, both reading `classifyPaths` output — are the two that clear their baseline properly. Every call that loses is one a person makes *by looking at the page*: whether it looks dated, whether those are real photographs of the team, whether the gallery reads clinically. `website.dated` at 31% against a 69% baseline is not weak, it is anti-correlated: the model is systematically calling modern sites dated. `team_photos.missing` at 20% precision and 100% recall means it answers "missing" almost every time and happens to be right when the truth is "missing".
+
+**The most likely cause is the input, and I built the input.** The exam gives the model visible text, internal paths and image alt attributes. It gives it no picture. Three of the four worst calls are visual. The render layer already screenshots every live audit and the archive will serve a captured page to a browser, so the experiment is available: re-run the identical exam with a rendered screenshot of the same capture and see which calls move. That is a hypothesis with a clean test, **not** a conclusion — the model may also simply be bad at this, and the exam is now capable of telling the difference.
+
+**What this vindicates.** Building the exam first cost two steps and caught a skill that would otherwise have gone into the product looking plausible: it produces confident, well-written verdicts with quoted evidence for every call, and it is wrong more often than a coin weighted to the majority. Nothing in a code review would have shown that.
+
+**Files:** `skills/review-judge/v1/` (new — SKILL.md, skill.json, output.schema.json) · `server/src/review/judge.ts` (new).
+
+**Decisions:** (1) G2 and `auto_safe` untouched at false on all nine snippets — even a passing version produces candidates a reviewer accepts, never findings that ship unread. (2) Scoring reports precision and recall per class and both trivial baselines, because three of the nine are lopsided enough that accuracy alone flatters anything: always-yes scores 88% on `team_photos.missing`. (3) The verdicts are stored back into `golden.json` beside the labels, so the next attempt can be diffed against this one rather than re-argued.
+
+---
+
 ## §13.2 step 1.40 — What the model is shown, and three faults in getting it — 2026-08-06
 
 **Built:** the input side of the judgement exam. Each of the 17 cases is reconstructed from the Wayback capture nearest its report date, fetched through the `id_` raw endpoint so the archive's replay toolbar is not in the text or a future screenshot. Page types come from `classifyPaths`, extracted from `collect.ts` in this step so the live collector and the exam share one implementation — an exam with its own classifier measures the classifier.

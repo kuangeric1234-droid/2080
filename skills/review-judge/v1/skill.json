@@ -1,0 +1,9 @@
+{
+  "name": "review-judge",
+  "version": "v1",
+  "description": "Decides which judgement findings apply to a practice website from what the crawler saw. Output is always a candidate for a reviewer — G2, never auto-accepted, never sent.",
+  "gate": "G2",
+  "model_tier": "top",
+  "expires_hours": 24,
+  "action": "none"
+}
