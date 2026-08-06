@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "present": { "type": "boolean" },
+          "quote": { "type": ["string", "null"] },
+          "note": { "type": ["string", "null"] }
+        },
+        "required": ["id", "present"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["verdicts"],
+  "additionalProperties": false
+}

@@ -4,6 +4,26 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.39 — The exam before the skill — 2026-08-06
+
+**Why this before the skill.** Website (Business) produces 2 findings against a reference average of 10 — a third of the whole content gap — and every one of its nine `judgement` paragraphs is a call about something already in hand: the homepage screenshot and the crawled copy. The question is whether a model can make those calls like Wally. That is answerable *before* building anything, because the answers exist: across the 17 completed reports, the human either made each call or did not.
+
+**The first way of building it was wrong, and the way it was wrong matters.** Trigram overlap against the house wording scored Paladin **0 of 9** when the report plainly makes at least five of the calls in its own words. Measured across the set, house voice runs from **23% to 81%** (median ~67%), so roughly a third of every report is rewritten and string matching cannot see it.
+
+Worse than under-matching: the bank contains positive/negative twins that share an opening sentence, and overlap **inverts** them. At 0.88 similarity it matched *"Each of the doctors needs to have their own biography page"* to *"Each of the doctors **has** their own biography page which is good"*. Also *"Lack of real photos of the practitioners"* to *"It's **great to have** real photos"*, and *"Your website isn't taking advantage of that"* to *"Your website **has a really good banner**"*. An exam built on that would have taught a judgement skill to say the opposite of what the reviewer concluded.
+
+**Built:** `review-judge-labeller` — G0, labelling only, never audits a site and never reaches a client. It reads one report and says which of the nine findings it makes, judging *finding* not *sentence*, and **must quote the paragraph** behind every `true`. A quote that does not appear in the report is discarded here rather than trusted, so the labeller cannot assert its way to a label.
+
+**Evidence:** 153 labels, 87 present. **Zero quotes rejected** — every positive cited real text. 27 disagreements with the string method, all read by hand: of the 9 where string said yes and the model said no, **6 are the model correctly catching an inverted twin** and 3 are defensible calls on a related-but-distinct finding (*"the UVP is not mentioned"* is arguably not *"the UVP is too generic"*). The 18 the string method missed are the paraphrase cases it was always going to miss.
+
+**Files:** `skills/review-judge-labeller/v1/` (new) · `server/src/review/{judge-golden,judge-label}.ts` (new) · `skills/review-judge/v1/golden.json` (new, real — not PROVISIONAL).
+
+**Decisions:** (1) A model builds the exam that will grade a model, which is a real weakness — mitigated by making the labelling task strictly easier than the judgement (comparing two paragraphs, with the report in front of it), forcing a citation, and reading every disagreement by hand. The agreement figures are recorded here so the exam's own reliability is known rather than assumed. (2) The trigram extractor is kept rather than deleted: it is the control the model labels were checked against, and its failures are the reason the labeller's prompt spends its length on direction and paraphrase. (3) **Three of the nine are too lopsided to score on accuracy** — `uvp.generic` 14/3, `conditions_content` 14/3, `team_photos` 2/15. Always-yes scores 82% on the first two. The eval must report per-class recall, not accuracy, and that constraint is now known before a skill exists to game it.
+
+**Not yet decided — the input side.** The labels say what the human concluded; they do not say what the model should be shown. Seven of the 17 reports are from 2025 or later, where today's site is a fair input. The rest audited a site that has since changed, and scoring today's homepage against a 2019 verdict would be measuring drift. Every report carries its domain and date in the title, and the Wayback provider from 1.26 can fetch the site as it was — so all 17 are recoverable, at the cost of a capture per practice. That is the next decision, not a blocker.
+
+---
+
 ## Fix — the competitor finding carried the bank's worked example — 2026-08-05
 
 **Reported from the UI**, not from a test: the Competition section showed *"Chapel Gate Dental - #1 in Google search, #1 in Google Map search, not secure, generic content, old website, lack personality, online booking, open 6 days, Google: 23x 4.7* reviews, FB Likes: 5, not active, mixed posts, no engagement - Threat: 7/10"* — a St Kilda practice, on a South Australian audit, with invented Facebook numbers and a threat score nobody assessed.

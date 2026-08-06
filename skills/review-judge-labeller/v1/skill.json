@@ -1,0 +1,9 @@
+{
+  "name": "review-judge-labeller",
+  "version": "v1",
+  "description": "Reads a completed Online Presence Review and records which standard findings it makes, so 17 human-written reports can be used as an exam. Labelling only — it never audits a website and never reaches a client.",
+  "gate": "G0",
+  "model_tier": "top",
+  "expires_hours": 24,
+  "action": "none"
+}

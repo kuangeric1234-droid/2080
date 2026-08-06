@@ -1,0 +1,510 @@
+{
+  "version": 1,
+  "extracted_from": "C:/Users/61406/Downloads/presence",
+  "snippets": [
+    "biz.banner.generic",
+    "biz.service_pages.missing",
+    "biz.website.dated",
+    "biz.uvp.generic",
+    "biz.team_photos.missing",
+    "biz.bio_pages.missing",
+    "biz.conditions_content.missing",
+    "biz.gallery.framing",
+    "use.content.readability"
+  ],
+  "cases": [
+    {
+      "report": "Advanced Chiropractic Online Presence Review.docx",
+      "practice": "Advanced Chiropractic",
+      "date": "26/08/2024",
+      "domain": "Advancedchiropractic.com.au",
+      "labels": {
+        "biz.banner.generic": false,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": false,
+        "biz.gallery.framing": false,
+        "use.content.readability": false
+      },
+      "quotes": {
+        "biz.banner.generic": null,
+        "biz.service_pages.missing": null,
+        "biz.website.dated": "The website looks like it hasn’t been updated since 2017",
+        "biz.uvp.generic": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional, caring",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each of the doctors needs to have their own biography page.",
+        "biz.conditions_content.missing": null,
+        "biz.gallery.framing": null,
+        "use.content.readability": null
+      },
+      "rejected": []
+    },
+    {
+      "report": "Camberwell Dental Group Online Presence Review.docx",
+      "practice": "Camberwell Dental Group",
+      "date": "18/07/2025",
+      "domain": "camberwelldentalgroup.com.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": true,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages.",
+        "biz.service_pages.missing": null,
+        "biz.website.dated": "the website looks a little dated and lacks the personality (eg, stock photos, no photos of the actual dentists)",
+        "biz.uvp.generic": "Every medical professional out there says they are professional and caring. We would advise adding more tangible factors such as ‘number of years experience’, ‘multilingual’, take ‘Amex’ etc",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each of the doctors needs to have their own biography page. This ensures the patient gets to know their doctors better.",
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": "it’s important to show images that make sense to the average patient by showing the whole face",
+        "use.content.readability": "Content on the website isn’t easy to consume/read because the text is just copied and pasted into the system without much thought about the layout."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Chiropractic Symphony Online Presence Review.docx",
+      "practice": "Chiropractic Symphony",
+      "date": "21/01/25",
+      "domain": "chiropracticsymphony.com.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": true,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages. Consider making the first one impactful with banners that focus on specific promotions or timely activities",
+        "biz.service_pages.missing": "We would suggest to have dedicated pages created for the condition you treat as people often searches for the issue they are facing for eg. “Neck Pain Treatment”",
+        "biz.website.dated": "The website looks like it was built in 2023, according to [web archive]. Usually, websites should be refreshed every 2 to 3 years to keep up to standards and business direction.",
+        "biz.uvp.generic": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional and caring.",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "We would advice to have your own dedicated bio page, rather than having it as a section on the About page.",
+        "biz.conditions_content.missing": "people often searches for the issue they are facing for eg. “Neck Pain Treatment”",
+        "biz.gallery.framing": null,
+        "use.content.readability": "Content on the website isn’t easy to consume/read because the text is just copied and pasted into the system without much thought about the layout."
+      },
+      "rejected": []
+    },
+    {
+      "report": "DentalArt Online Presence Review.docx",
+      "practice": "DentalArt",
+      "date": "27/08/2024",
+      "domain": "dentalart.net.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": true,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": false,
+        "biz.conditions_content.missing": false,
+        "biz.gallery.framing": false,
+        "use.content.readability": false
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages.",
+        "biz.service_pages.missing": "You need more dental services and conditions pages and have them separated to allow visitors to find them easier.",
+        "biz.website.dated": "The website looks like it hasn’t been updated since forever. Usually, websites should be refreshed every 2 to 3 years to keep up to standards and business direction.",
+        "biz.uvp.generic": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional and caring.",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": null,
+        "biz.conditions_content.missing": null,
+        "biz.gallery.framing": null,
+        "use.content.readability": null
+      },
+      "rejected": []
+    },
+    {
+      "report": "drtlu.com.au Online Presence Review.docx",
+      "practice": "drtlu.com.au",
+      "date": "03/06/25",
+      "domain": "drtlu.com.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": true,
+        "biz.website.dated": true,
+        "biz.uvp.generic": false,
+        "biz.team_photos.missing": true,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages and a stock image.",
+        "biz.service_pages.missing": "The dental service content is good, but they deserve to have their own page (and thus need more written). This will ensure your practice rank better when it comes to search engine searches.",
+        "biz.website.dated": "The website looks like it was last updated in 2023-24, according to [web archive]. The website is an extension of our personal brand, therefore, the website should evolve with your business.",
+        "biz.uvp.generic": null,
+        "biz.team_photos.missing": "Lack of real photos of the practitioners means you’re hiding behind your ‘brand’ thus effectively competing with corporates who will beat you at their game",
+        "biz.bio_pages.missing": "Each of the doctors needs to have their own biography page. This ensures the patient gets to know their doctors better.",
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": null,
+        "use.content.readability": "Content on the website isn’t easy to consume/read because the text is just copied and pasted into the system without much thought about the layout."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Eaglehawk Dental Online Presence Review (new).docx",
+      "practice": "Eaglehawk Dental",
+      "date": "21/05/19",
+      "domain": "Eaglehawkdental.com.au",
+      "labels": {
+        "biz.banner.generic": false,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": false,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": false,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": null,
+        "biz.service_pages.missing": null,
+        "biz.website.dated": null,
+        "biz.uvp.generic": "The reasons why new patients should come see you is too vague and common. Every medical professional out there says they are professional, uses state-of-art technology etc. I would advice adding more tangible factors such as ‘number of years experience’, ‘multilingual’, take ‘Amex’ etc",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": null,
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients knows what they need, which isn’t necessary true. It’s important to make sure the website caters for patients who are searching for solutions to their issues",
+        "biz.gallery.framing": null,
+        "use.content.readability": "Content on the website isn’t easy to consume/read because the text is just copy and pasted into the system without much thought about the layout. Best practice is to ensure no more than 20 words per sentence by using columns."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Expert Smiles Online Presence Review.docx",
+      "practice": "Expert Smiles",
+      "date": "16/07/2024",
+      "domain": "expertsmiles.com.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": false,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": true,
+        "use.content.readability": false
+      },
+      "quotes": {
+        "biz.banner.generic": "Your website isn’t taking advantage of that with generic messages. Consider making the first one impactful with banners that focus on specific promotions or timely activities (eg, Winter promos).",
+        "biz.service_pages.missing": null,
+        "biz.website.dated": null,
+        "biz.uvp.generic": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional and caring.",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each of the doctors needs to have their own biography page. This ensures the patient gets to know their doctors better.",
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": "The before/after photo gallery is great from a clinical perspective, however it’s important to show images that make sense to the average patient by showing the whole face.",
+        "use.content.readability": null
+      },
+      "rejected": []
+    },
+    {
+      "report": "Goolwa Dental Surgery Online Presence Review.docx",
+      "practice": "Goolwa Dental Surgery",
+      "date": "07/08/24",
+      "domain": "goolwadentalsurgery.com",
+      "labels": {
+        "biz.banner.generic": false,
+        "biz.service_pages.missing": true,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": false,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": false
+      },
+      "quotes": {
+        "biz.banner.generic": null,
+        "biz.service_pages.missing": "The dental service content is great, but they deserve to have their own internal page (and thus need more written). This will ensure your practice rank better when it comes to search engine searches",
+        "biz.website.dated": "The website looks like it hasn’t been updated since 2022, according to web archive. Usually, websites should be refreshed every 2 to 3 years",
+        "biz.uvp.generic": "The reasons why new patients should come see you are not mentioned on the homepage clearly. We would advise adding tangible factors such as ‘number of years experience’, ‘multilingual’, take ‘Amex’ etc",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": null,
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": null,
+        "use.content.readability": null
+      },
+      "rejected": []
+    },
+    {
+      "report": "Holistic Dental Brunswick Online Presence Review.docx",
+      "practice": "Holistic Dental Brunswick",
+      "date": "12/06/2024",
+      "domain": "holisticdentalbw.com.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": true,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages.",
+        "biz.service_pages.missing": null,
+        "biz.website.dated": "The website looks like it hasn’t been updated since 2020, according to the footer. Usually, websites should be refreshed every 2 to 3 years",
+        "biz.uvp.generic": "The reasons why new patients should come see you are too wordy and common. Every medical professional out there says they put patient first and have good technology.",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each of the dentist needs to have their own biography page (right now it’s a popup).",
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": "the before/after photo gallery. It’s important to show images that make sense to the average patient by showing the whole face.",
+        "use.content.readability": "Content on the website isn’t easy to consume/read because the text is just copied and pasted into the system without much thought about the layout."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Holistic Dental Donvale Online Presence Review.docx",
+      "practice": "Holistic Dental Donvale",
+      "date": "15/08/25",
+      "domain": "holisticdentaldonvale.com.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": true,
+        "biz.uvp.generic": false,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": false,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": "Your website isn’t taking advantage of that with generic messages. Consider making the first one impactful with banners that focus on specific promotions or timely activities (eg, Winter promos).",
+        "biz.service_pages.missing": null,
+        "biz.website.dated": "The website looks like it hasn’t been updated since 2019",
+        "biz.uvp.generic": null,
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": null,
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": null,
+        "use.content.readability": "Content on the website isn’t easy to consume/read because the text is just copied and pasted into the system without much thought about the layout."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Novus Dermatology Online Presence Review.docx",
+      "practice": "Novus Dermatology",
+      "date": "15/07/2024",
+      "domain": "novusdermatology.com.au",
+      "labels": {
+        "biz.banner.generic": false,
+        "biz.service_pages.missing": true,
+        "biz.website.dated": false,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": false,
+        "biz.gallery.framing": true,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": null,
+        "biz.service_pages.missing": "The dermatology services content is great, but they deserve to have their own page (and thus need more written). This will ensure your practice rank better",
+        "biz.website.dated": null,
+        "biz.uvp.generic": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional and caring.",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each of the doctors needs to have their own biography page. This ensures the patient gets to know their doctors better.",
+        "biz.conditions_content.missing": null,
+        "biz.gallery.framing": "The before/after photo gallery is great from a clinical perspective, however it’s important to show images that make sense to the average patient by showing the whole face.",
+        "use.content.readability": "Content on the website isn’t easy to consume/read because the text is just copied and pasted into the system without much thought about the layout."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Oh Dental Online Presence Review.docx",
+      "practice": "Oh Dental",
+      "date": "31/07/2026",
+      "domain": "ohdental.com.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": false,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages. Consider making the first one impactful with banners that focus on specific promotions or timely activities (eg, Winter promos).",
+        "biz.service_pages.missing": null,
+        "biz.website.dated": "the website looks a little dated and lacks the personality (eg, stock photos, no photos of the actual dentists)",
+        "biz.uvp.generic": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional and caring.",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": null,
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": null,
+        "use.content.readability": "Some content on the website isn’t easy to consume/read because the text is just copied and pasted into the system without much thought about the layout."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Online Presence Review (Windsor Dental Care).docx",
+      "practice": "",
+      "date": "10/04/2026",
+      "domain": "windsordentalcare.com.au",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": true,
+        "use.content.readability": false
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages.",
+        "biz.service_pages.missing": null,
+        "biz.website.dated": "Unfortunately, the website looks a little dated and lacks the personality (eg, stock photos, no photos of the actual dentists).",
+        "biz.uvp.generic": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional and caring.",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each of the doctors needs to have their own biography page (not just popup). This ensures the patient gets to know their doctors better.",
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": "a before/after photo gallery is great from a clinical perspective, however it’s important to show images that make sense to the average patient by showing the whole face.",
+        "use.content.readability": null
+      },
+      "rejected": []
+    },
+    {
+      "report": "Paladin Online Presence Review.docx",
+      "practice": "Paladin",
+      "date": "07/02/2025",
+      "domain": "https://paladindental.com.au/",
+      "labels": {
+        "biz.banner.generic": false,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": null,
+        "biz.service_pages.missing": null,
+        "biz.website.dated": "the website's design is dated, cluttered, and misaligned with the brand",
+        "biz.uvp.generic": "The reasons listed for attracting new patients are subjective and commonplace. Instead of focusing on qualities like being professional, caring, and committed",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each doctor should have a biography page to help patients become more acquainted with them.",
+        "biz.conditions_content.missing": "exclusive focus on various dental treatments assumes that patients already know their needs, which may not always be accurate. It is crucial to also address patients who are searching for solutions to specific problems",
+        "biz.gallery.framing": null,
+        "use.content.readability": "The content on the website is difficult to read and consume due to poor text layout. The text has been copied and pasted without formatting, resulting in sentences exceeding 20 words."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Periodontal Associates Online Presence Review_.docx",
+      "practice": "Periodontal Associates",
+      "date": "08/07/2019",
+      "domain": "http://www.periodontalassociates.com.au/",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": false,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": true,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Your website isn’t taking advantage of that with generic messages.",
+        "biz.service_pages.missing": null,
+        "biz.website.dated": null,
+        "biz.uvp.generic": "The reasons why new patients should come see you are too subjective and common. Every medical professional out there says they are professional and caring.",
+        "biz.team_photos.missing": "lack of real photos of the practitioners means you’re hiding behind your ‘brand’ thus effectively competing with corporates",
+        "biz.bio_pages.missing": "Each of the periodontists needs to have their own biography page.",
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": null,
+        "use.content.readability": "Content on some of the pages in particular home page, isn’t easy to consume/read because the text is just copy and pasted into the system without much thought about the layout."
+      },
+      "rejected": []
+    },
+    {
+      "report": "Queen Napier Dental Online Presence Review.docx",
+      "practice": "Queen Napier Dental",
+      "date": "18/12/23",
+      "domain": "warragul.dentist",
+      "labels": {
+        "biz.banner.generic": true,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": true,
+        "biz.uvp.generic": true,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": true,
+        "use.content.readability": false
+      },
+      "quotes": {
+        "biz.banner.generic": "The homepage banner is the most valuable real estate space on the website. Although the website uses very personalized photos, it is not very professional and has very generic statements. Consider making the first one impactful with banners that focus on specific promotions or timely activities",
+        "biz.service_pages.missing": null,
+        "biz.website.dated": "The website looks like it hasn’t been updated since late 2017",
+        "biz.uvp.generic": "Instead the website only focuses on the services you provide, which every other dentist can also do. We would advise adding more tangible factors such as ‘number of years experience’ or ‘multilingual’ to mix it up a little.",
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each of the doctors needs to have their own biography page. This ensures the patient gets to know their doctors better.",
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": "the before/after photo gallery of the cosmetic work you have done. However it’s important to show images that make sense to the average patient by showing the whole face.",
+        "use.content.readability": null
+      },
+      "rejected": []
+    },
+    {
+      "report": "With U Dental Online Presence Review.docx",
+      "practice": "With U Dental",
+      "date": "18/12/2024",
+      "domain": "withudental.com.au",
+      "labels": {
+        "biz.banner.generic": false,
+        "biz.service_pages.missing": false,
+        "biz.website.dated": false,
+        "biz.uvp.generic": false,
+        "biz.team_photos.missing": false,
+        "biz.bio_pages.missing": true,
+        "biz.conditions_content.missing": true,
+        "biz.gallery.framing": false,
+        "use.content.readability": true
+      },
+      "quotes": {
+        "biz.banner.generic": null,
+        "biz.service_pages.missing": null,
+        "biz.website.dated": null,
+        "biz.uvp.generic": null,
+        "biz.team_photos.missing": null,
+        "biz.bio_pages.missing": "Each of the doctors needs to have their own biography page.",
+        "biz.conditions_content.missing": "The website only focuses on the different types of dental treatments and thus assumes that the patients know what they need, which isn’t necessarily true.",
+        "biz.gallery.framing": null,
+        "use.content.readability": "Content on the website isn’t easy to consume/read because the overall website is too content heavy."
+      },
+      "rejected": []
+    }
+  ]
+}
