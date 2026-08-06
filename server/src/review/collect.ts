@@ -346,14 +346,7 @@ function structureSignals(pages: Page[], sitemap: string[]): Signal[] {
   const basis = haveFullView ? `the ${sitemap.length}-page sitemap` : `the ${pages.length} pages crawled`
   const allHtml = pages.map((p) => p.root.toString()).join('\n').toLowerCase()
 
-  const servicePages = paths.filter(
-    (p) => /\/(service|treatment|procedure)s?\/[^/]+\/?$/.test(p) || /\/(dental-|our-)?services?\/[^/]+\/?$/.test(p),
-  ).length
-  const bioPages = paths.filter(
-    (p) => /\/(dr|doctor|team|about-us|our-team|staff|practitioners?|meet)[^/]*\/[^/]+\/?$/.test(p) || /\/(dr|doctor)-[a-z-]+\/?$/.test(p),
-  ).length
-  const conditionPages = paths.filter((p) => CONDITION_HINTS.some((h) => p.includes(h))).length
-  const blogPresent = paths.some((p) => BLOG_HINTS.some((h) => p.includes(`/${h}`)))
+  const { servicePages, bioPages, conditionPages, blogPresent } = classifyPaths(paths)
   const booking =
     paths.some((p) => BOOKING_HINTS.some((h) => p.includes(h))) ||
     BOOKING_HINTS.some((h) => allHtml.includes(h))
@@ -537,6 +530,24 @@ function postalLocality(pages: Page[]): string | null {
     if (m) return `${m[1]} ${m[2]} ${m[3]}`
   }
   return null
+}
+
+/* What kind of page each URL is, by its path.
+   Shared with the judgement exam (1.40), which reconstructs these counts from
+   an archived homepage's nav links rather than a live crawl — the same rules
+   have to apply on both sides or the exam measures the classifier, not the
+   model. */
+export function classifyPaths(paths: string[]) {
+  return {
+    servicePages: paths.filter(
+      (p) => /\/(service|treatment|procedure)s?\/[^/]+\/?$/.test(p) || /\/(dental-|our-)?services?\/[^/]+\/?$/.test(p),
+    ).length,
+    bioPages: paths.filter(
+      (p) => /\/(dr|doctor|team|about-us|our-team|staff|practitioners?|meet)[^/]*\/[^/]+\/?$/.test(p) || /\/(dr|doctor)-[a-z-]+\/?$/.test(p),
+    ).length,
+    conditionPages: paths.filter((p) => CONDITION_HINTS.some((h) => p.includes(h))).length,
+    blogPresent: paths.some((p) => BLOG_HINTS.some((h) => p.includes(`/${h}`))),
+  }
 }
 
 function contactEmail(pages: Page[]): string | null {

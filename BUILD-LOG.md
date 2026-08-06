@@ -4,6 +4,26 @@ The loop appends one entry per completed §13 step: step id · what was built ·
 
 ---
 
+## §13.2 step 1.40 — What the model is shown, and three faults in getting it — 2026-08-06
+
+**Built:** the input side of the judgement exam. Each of the 17 cases is reconstructed from the Wayback capture nearest its report date, fetched through the `id_` raw endpoint so the archive's replay toolbar is not in the text or a future screenshot. Page types come from `classifyPaths`, extracted from `collect.ts` in this step so the live collector and the exam share one implementation — an exam with its own classifier measures the classifier.
+
+**Source is chosen per case, and the measurement is why.** Archive drift versus live drift, across all 17: the archive is closer 15 times, median about a month, five cases inside a fortnight (With U Dental 5 days, Chiropractic Symphony 7, Holistic Donvale 11). Live wins twice, both on reports written so recently the archive has not caught up — Oh Dental was reported six days ago and its nearest capture is 513 days old.
+
+**Three faults, and the first one is the one worth remembering.**
+
+1. **A rate limit became a data-quality problem.** `buildCaseInput` queried the CDX index, then `buildJudgeInput` queried it again for the same capture. Seventeen cases at two calls each started returning 503s, the `catch` turned that into "no archive available", and cases fell through to live. The run *reported success on 14 of 17* while silently scoring Chiropractic Symphony's January-2025 verdict against a 2026 website — its archive capture is **7 days** from the report and it used one **562 days** away. No error, no warning. The capture is now passed through instead of re-fetched, and the retry loop backs off.
+2. **No quality floor on the input.** Two cases came back with homepages of 24 and 50 visible characters — client-rendered shells. A model would have been marked against Wally's verdict on an empty string. There is now a 400-character floor, and a case that fails it falls through to the other source.
+3. **Timeouts too tight and no pacing** — 25s, back to back. Now 45s with a gap between cases, and the two stubborn archive replays needed 120s.
+
+**What the exam actually is: 16 of 17 cases, 135 of 153 cells.** Advanced Chiropractic is excluded at 314 days drift. Three sites (drtlu, Queen Napier, Windsor) render their navigation in JavaScript, so no links parse — for those the three page-count calls are marked unscorable rather than counted, because zero parsed links is indistinguishable from a site that genuinely has no bio pages, and scoring it as the latter would mark a correct model wrong.
+
+**Files:** `server/src/review/judge-input.ts` (new) · `server/src/review/collect.ts` (`classifyPaths` extracted, no behaviour change) · `skills/review-judge/v1/golden.json`.
+
+**Decisions:** (1) Prefer a capture from *before* the report date: a later one can show a rebuild the report is the reason for, which would mark the model wrong for agreeing with the reviewer. (2) Every case stores its `replayUrl`, so any disputed score can be settled by opening the page the model was given. (3) Drift and scorability are recorded per case rather than filtered out of the file — the excluded case and the unscorable cells stay visible, so nobody later mistakes a 16-case exam for a 17-case one.
+
+---
+
 ## §13.2 step 1.39 — The exam before the skill — 2026-08-06
 
 **Why this before the skill.** Website (Business) produces 2 findings against a reference average of 10 — a third of the whole content gap — and every one of its nine `judgement` paragraphs is a call about something already in hand: the homepage screenshot and the crawled copy. The question is whether a model can make those calls like Wally. That is answerable *before* building anything, because the answers exist: across the 17 completed reports, the human either made each call or did not.
